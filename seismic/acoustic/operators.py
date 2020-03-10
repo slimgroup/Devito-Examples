@@ -1,7 +1,7 @@
 from sympy import Symbol
 
 from devito import Eq, Operator, Function, TimeFunction, Inc, solve
-from examples.seismic import PointSource, Receiver
+from seismic import PointSource, Receiver
 
 
 def laplacian(field, m, s, kernel):

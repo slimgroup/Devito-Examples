@@ -2,7 +2,7 @@ import sympy as sp
 
 from devito import (Eq, Operator, VectorTimeFunction, TensorTimeFunction,
                     div, grad, diag)
-from examples.seismic.elastic import src_rec
+from seismic.elastic import src_rec
 
 
 def ForwardOperator(model, geometry, space_order=4, save=False, **kwargs):

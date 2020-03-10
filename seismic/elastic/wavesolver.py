@@ -1,8 +1,8 @@
 from devito.tools import memoized_meth
 from devito import VectorTimeFunction, TensorTimeFunction
 
-from examples.seismic import Receiver
-from examples.seismic.elastic.operators import ForwardOperator
+from seismic import Receiver
+from seismic.elastic.operators import ForwardOperator
 
 
 class ElasticWaveSolver(object):

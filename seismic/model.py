@@ -198,12 +198,13 @@ class Model(GenericModel):
     """
     def __init__(self, origin, spacing, shape, space_order, vp, nbl=20,
                  dtype=np.float32, epsilon=None, delta=None, theta=None, phi=None,
-                 subdomains=(), **kwargs):
+                 rho=1, subdomains=(), **kwargs):
         super(Model, self).__init__(origin, spacing, shape, space_order, nbl, dtype,
                                     subdomains)
 
         # Create square slowness of the wave as symbol `m`
         self._vp = self._gen_phys_param(vp, 'vp', space_order)
+        self.irho = self._gen_phys_param(1./rho, 'irho', space_order, default_value=1)
 
         # Additional parameter fields for TTI operators
         self.epsilon = self._gen_phys_param(epsilon, 'epsilon', space_order)

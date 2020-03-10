@@ -1,8 +1,7 @@
 from sympy import cos, sin, sqrt
 
 from devito import Eq, Operator, TimeFunction, NODE
-from examples.seismic import PointSource, Receiver
-from devito.finite_differences import centered, first_derivative, transpose
+from seismic import PointSource, Receiver, rotated_fd
 
 
 def second_order_stencil(model, u, v, H0, Hz):
@@ -13,6 +12,7 @@ def second_order_stencil(model, u, v, H0, Hz):
     """
     # Stencils
     m, damp, delta, epsilon = model.m, model.damp, model.delta, model.epsilon
+    m = m * model.irho
     epsilon = 1 + 2 * epsilon
     delta = sqrt(1 + 2 * delta)
     s = model.grid.stepping_dim.spacing
@@ -27,143 +27,6 @@ def second_order_stencil(model, u, v, H0, Hz):
     second_stencil = Eq(v.forward, stencilr)
     stencils = [first_stencil, second_stencil]
     return stencils
-
-
-def Gzz_centered(field, costheta, sintheta, cosphi, sinphi, space_order):
-    """
-    3D rotated second order derivative in the direction z.
-
-    Parameters
-    ----------
-    field : Function
-        Input for which the derivative is computed.
-    costheta : Function or float
-        Cosine of the tilt angle.
-    sintheta : Function or float
-        Sine of the tilt angle.
-    cosphi : Function or float
-        Cosine of the azymuth angle.
-    sinphi : Function or float
-        Sine of the azymuth angle.
-    space_order : int
-        Space discretization order.
-
-    Returns
-    -------
-    Rotated second order derivative w.r.t. z.
-    """
-    order1 = space_order // 2
-    x, y, z = field.space_dimensions
-    Gz = -(sintheta * cosphi * first_derivative(field, dim=x,
-                                                side=centered, fd_order=order1) +
-           sintheta * sinphi * first_derivative(field, dim=y,
-                                                side=centered, fd_order=order1) +
-           costheta * first_derivative(field, dim=z,
-                                       side=centered, fd_order=order1))
-
-    Gzz = (first_derivative(Gz * sintheta * cosphi,
-                            dim=x, side=centered, fd_order=order1,
-                            matvec=transpose) +
-           first_derivative(Gz * sintheta * sinphi,
-                            dim=y, side=centered, fd_order=order1,
-                            matvec=transpose) +
-           first_derivative(Gz * costheta,
-                            dim=z, side=centered, fd_order=order1,
-                            matvec=transpose))
-    return Gzz
-
-
-def Gzz_centered_2d(field, costheta, sintheta, space_order):
-    """
-    2D rotated second order derivative in the direction z.
-
-    Parameters
-    ----------
-    field : Function
-        Input for which the derivative is computed.
-    costheta : Function or float
-        Cosine of the tilt angle.
-    sintheta : Function or float
-        Sine of the tilt angle.
-    space_order : int
-        Space discretization order.
-
-    Returns
-    -------
-    Rotated second order derivative w.r.t. z.
-    """
-    order1 = space_order // 2
-    x, y = field.space_dimensions[:2]
-    Gz = -(sintheta * first_derivative(field, dim=x, side=centered, fd_order=order1) +
-           costheta * first_derivative(field, dim=y, side=centered, fd_order=order1))
-    Gzz = (first_derivative(Gz * sintheta, dim=x,
-                            side=centered, fd_order=order1,
-                            matvec=transpose) +
-           first_derivative(Gz * costheta, dim=y,
-                            side=centered, fd_order=order1,
-                            matvec=transpose))
-    return Gzz
-
-
-# Centered case produces directly Gxx + Gyy
-def Gxxyy_centered(field, costheta, sintheta, cosphi, sinphi, space_order):
-    """
-    Sum of the 3D rotated second order derivative in the direction x and y.
-    As the Laplacian is rotation invariant, it is computed as the conventional
-    Laplacian minus the second order rotated second order derivative in the direction z
-    Gxx + Gyy = field.laplace - Gzz
-
-    Parameters
-    ----------
-    field : Function
-        Input field.
-    costheta : Function or float
-        Cosine of the tilt angle.
-    sintheta : Function or float
-        Sine of the tilt angle.
-    cosphi : Function or float
-        Cosine of the azymuth angle.
-    sinphi : Function or float
-        Sine of the azymuth angle.
-    space_order : int
-        Space discretization order.
-
-    Returns
-    -------
-    Sum of the 3D rotated second order derivative in the direction x and y.
-    """
-    Gzz = Gzz_centered(field, costheta, sintheta, cosphi, sinphi, space_order)
-    return field.laplace - Gzz
-
-
-def Gxx_centered_2d(field, costheta, sintheta, space_order):
-    """
-    2D rotated second order derivative in the direction x.
-    As the Laplacian is rotation invariant, it is computed as the conventional
-    Laplacian minus the second order rotated second order derivative in the direction z
-    Gxx = field.laplace - Gzz
-
-    Parameters
-    ----------
-    field : TimeFunction
-        Input field.
-    costheta : Function or float
-        Cosine of the tilt angle.
-    sintheta : Function or float
-        Sine of the tilt angle.
-    cosphi : Function or float
-        Cosine of the azymuth angle.
-    sinphi : Function or float
-        Sine of the azymuth angle.
-    space_order : int
-        Space discretization order.
-
-    Returns
-    -------
-    Sum of the 3D rotated second order derivative in the direction x.
-    """
-    return field.laplace - Gzz_centered_2d(field, costheta, sintheta, space_order)
-
 
 def kernel_centered_2d(model, u, v, space_order):
     """

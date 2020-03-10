@@ -1,7 +1,7 @@
 from devito import Function, TimeFunction
 from devito.tools import memoized_meth
-from examples.seismic import PointSource, Receiver
-from examples.seismic.acoustic.operators import (
+from seismic import PointSource, Receiver
+from seismic.acoustic.operators import (
     ForwardOperator, AdjointOperator, GradientOperator, BornOperator
 )
 from examples.checkpointing.checkpoint import DevitoCheckpoint, CheckpointOperator

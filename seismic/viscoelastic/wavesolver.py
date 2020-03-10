@@ -1,7 +1,7 @@
 from devito import VectorTimeFunction, TensorTimeFunction
 from devito.tools import memoized_meth
-from examples.seismic import Receiver
-from examples.seismic.viscoelastic.operators import ForwardOperator
+from seismic import Receiver
+from seismic.viscoelastic.operators import ForwardOperator
 
 
 class ViscoelasticWaveSolver(object):

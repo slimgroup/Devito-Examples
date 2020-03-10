@@ -1,5 +1,4 @@
 
-
 # Devito-Examples
 
 This repository contains a set of examples and tutorials for seismic modeling and inversion using [Devito].
@@ -12,7 +11,16 @@ These examples use four different wave equations, namely
 
 Currently, the acoustic isotropic wave equation solver also contains the propagator associated with the adjoint and linearized (Born) wave-equation solution and the gradient of the FWI objective (application of the Jacobian to data residual)
 
-[Devito]:https://www.devitoproject.org
+## Installation
+
+To install this set of examples with it's dependencies run:
+
+```
+git clone https://github.com/slimgroup/Devito-Examples
+pip install -e .
+```
+This command will install all dependencies including [Devito](https://github.com/devitocodes/devito/).
+
 
 ## How to navigate this directory
 

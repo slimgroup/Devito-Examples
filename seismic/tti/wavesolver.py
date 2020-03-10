@@ -1,8 +1,8 @@
 # coding: utf-8
 from devito import TimeFunction, warning
 from devito.tools import memoized_meth
-from examples.seismic.tti.operators import ForwardOperator, particle_velocity_fields
-from examples.seismic import Receiver
+from seismic.tti.operators import ForwardOperator, particle_velocity_fields
+from seismic import Receiver
 
 
 class AnisotropicWaveSolver(object):

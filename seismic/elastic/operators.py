@@ -1,6 +1,6 @@
 from devito import Eq, Operator, VectorTimeFunction, TensorTimeFunction
 from devito import div, grad, diag
-from examples.seismic import PointSource, Receiver
+from seismic import PointSource, Receiver
 
 
 def src_rec(v, tau, model, geometry):

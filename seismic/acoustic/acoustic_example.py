@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 
 from devito.logger import info
 from devito import Constant, Function, smooth, configuration
-from examples.seismic.acoustic import AcousticWaveSolver
-from examples.seismic import demo_model, setup_geometry
+from seismic.acoustic import AcousticWaveSolver
+from seismic import demo_model, setup_geometry
 
 
 def acoustic_setup(shape=(50, 50, 50), spacing=(15.0, 15.0, 15.0),
@@ -92,9 +92,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # 3D preset parameters
-    shape = tuple(args.ndim * [51])
+    shape = tuple(args.ndim * [151])
     spacing = tuple(args.ndim * [15.0])
-    tn = 750. if args.ndim < 3 else 250.
+    tn = 1500.
     preset = 'constant-isotropic' if args.constant else 'layers-isotropic'
     run(shape=shape, spacing=spacing, nbl=args.nbl, tn=tn,
         space_order=args.space_order, preset=preset, kernel=args.kernel,
