@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 
 from devito import configuration
 from devito.logger import info
-from examples.seismic.viscoelastic import ViscoelasticWaveSolver
-from examples.seismic import demo_model, setup_geometry
+from seismic.viscoelastic import ViscoelasticWaveSolver
+from seismic import demo_model, setup_geometry
 
 
 def viscoelastic_setup(shape=(50, 50), spacing=(15.0, 15.0), tn=500., space_order=4,
@@ -45,8 +45,8 @@ def test_viscoelastic():
 if __name__ == "__main__":
     description = ("Example script for a set of viscoelastic operators.")
     parser = ArgumentParser(description=description)
-    parser.add_argument('--2d', dest='dim2', default=False, action='store_true',
-                        help="Preset to determine the physical problem setup")
+    parser.add_argument('-nd', dest='ndim', default=3, type=int,
+                        help="Preset to determine the number of dimensions")
     parser.add_argument('-a', '--autotune', default='off',
                         choices=(configuration._accepted['autotuning']),
                         help="Operator auto-tuning mode")
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # 2D preset parameters
-    if args.dim2:
+    if args.ndim == 2:
         shape = (150, 150)
         spacing = (10.0, 10.0)
         tn = 750.0

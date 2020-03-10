@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from devito import configuration
-from examples.seismic import demo_model, setup_geometry
-from examples.seismic.tti import AnisotropicWaveSolver
+from seismic import demo_model, setup_geometry
+from seismic.tti import AnisotropicWaveSolver
 
 
 def tti_setup(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=250.0,
@@ -31,8 +31,8 @@ def run(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=250.0,
 if __name__ == "__main__":
     description = ("Example script to execute a TTI forward operator.")
     parser = ArgumentParser(description=description)
-    parser.add_argument('--2d', dest='dim2', default=False, action='store_true',
-                        help="Preset to determine the physical problem setup")
+    parser.add_argument('-nd', dest='ndim', default=3, type=int,
+                        help="Preset to determine the number of dimensions")
     parser.add_argument('--noazimuth', dest='azi', default=False, action='store_true',
                         help="Whether or not to use an azimuth angle")
     parser.add_argument('-a', '--autotune', default='off',
@@ -54,14 +54,16 @@ if __name__ == "__main__":
 
     preset = 'layers-tti-noazimuth' if args.azi else 'layers-tti'
     # 3D preset parameters
-    if args.dim2:
+    if args.ndim == 2:
         shape = (150, 150)
         spacing = (10.0, 10.0)
         tn = 750.0
-    else:
-        shape = (50, 50, 50)
+    elif args.ndim == 3:
+        shape = (150, 150, 150)
         spacing = (10.0, 10.0, 10.0)
-        tn = 250.0
+        tn = 750.0
+    else:
+        ValueError("One dimensional tti wave equation does not exist")
 
     run(shape=shape, spacing=spacing, nbl=args.nbl, tn=tn,
         space_order=args.space_order, autotune=args.autotune, dse=args.dse,

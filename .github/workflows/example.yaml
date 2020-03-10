@@ -1,0 +1,71 @@
+name: Examples
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tutorials:
+    name: Examples
+    runs-on: ${{ matrix.os }}
+
+    env:
+      DEVITO_ARCH: gcc-7
+      DEVITO_OPENMP: 1
+      DEVITO_BACKEND: "core"
+      PYTHON_VERSION: "3.7"
+
+    strategy:
+      # Prevent all build to stop if a single one fails
+      fail-fast: false
+      matrix:
+        ndim:
+          - '1'
+          - '2'
+          - '3'
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+    - name: Checkout devito
+      uses: actions/checkout@v1
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install compilers for OSX
+      if: runner.os == 'macOS'
+      run: |
+          brew install gcc@7
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -e .
+
+    - name: Seismic acoustic examples
+      run: |
+        python seismic/acoustic/acoustic_example.py --full -nd ${{ matrix.ndim }}
+        python seismic/acoustic/acoustic_example.py --constant --full -nd ${{ matrix.ndim }}
+
+    - name: Seismic advanced examples
+      if:  matrix.ndim > 1
+      run: |
+        python seismic/acoustic/acoustic_example.py --full --checkpointing -nd ${{ matrix.ndim }}
+        python seismic/tti/tti_example.py -a basic -nd ${{ matrix.ndim }}
+        python seismic/tti/tti_example.py -a basic --noazimuth -nd ${{ matrix.ndim }}
+        python seismic/elastic/elastic_example.py -nd ${{ matrix.ndim }}
+        python seismic/viscoelastic/viscoelastic_example.py -nd ${{ matrix.ndim }}
+
+    - name: Tutorials
+      if:  matrix.ndim > 1
+      run: py.test --nbval seismic/tutorials/

@@ -29,10 +29,11 @@ def plot_perturbation(model, model1, colorbar=True):
     domain_size = 1.e-3 * np.array(model.domain_size)
     extent = [model.origin[0], model.origin[0] + domain_size[0],
               model.origin[1] + domain_size[1], model.origin[1]]
-    dv = np.transpose(model.vp.data) - np.transpose(model1.vp.data)
+    dv = model.vp.data.T - model1.vp.data.T
 
-    plot = plt.imshow(dv, animated=True, cmap=cm.jet,
-                      vmin=min(dv.reshape(-1)), vmax=max(dv.reshape(-1)),
+    scale = max(dv.reshape(-1))/5
+    plot = plt.imshow(dv, animated=True, cmap=cm.Greys,
+                      vmin=-scale, vmax=scale,
                       extent=extent)
     plt.xlabel('X position (km)')
     plt.ylabel('Depth (km)')
@@ -114,11 +115,11 @@ def plot_shotrecord(rec, model, t0, tn, colorbar=True):
     tn : int
         End of time dimension to plot.
     """
-    scale = np.max(rec) / 10.
+    scale = np.max(rec) / 5.
     extent = [model.origin[0], model.origin[0] + 1e-3*model.domain_size[0],
               1e-3*tn, t0]
 
-    plot = plt.imshow(rec, vmin=-scale, vmax=scale, cmap=cm.gray, extent=extent)
+    plot = plt.imshow(rec, vmin=-scale, vmax=scale, cmap=cm.Greys, extent=extent)
     plt.xlabel('X position (km)')
     plt.ylabel('Time (s)')
 
@@ -131,7 +132,7 @@ def plot_shotrecord(rec, model, t0, tn, colorbar=True):
     plt.show()
 
 
-def plot_image(data, vmin=None, vmax=None, colorbar=True, cmap="gray"):
+def plot_image(im, colorbar=True, cmap="Greys", depth_scaling=False, diff=False):
     """
     Plot image data, such as RTM images or FWI gradients.
 
@@ -143,10 +144,22 @@ def plot_image(data, vmin=None, vmax=None, colorbar=True, cmap="gray"):
         Choice of colormap. Defaults to gray scale for images as a
         seismic convention.
     """
-    plot = plt.imshow(np.transpose(data),
-                      vmin=vmin or 0.9 * np.min(data),
-                      vmax=vmax or 1.1 * np.max(data),
-                      cmap=cmap)
+    extent = [0, 1, 1, 0]
+    if getattr(im, 'is_Function', False):
+        extent = [im.grid.origin[0].data, im.grid.extent[0],
+                  im.grid.extent[1], im.grid.origin[1].data]
+        im = im.data
+    if diff:
+        im = np.gradient(im)[-1]
+
+    if depth_scaling:
+        depth = np.diag(np.linspace(1.0, 2.0, im.shape[-1])**1.4)
+        im = np.dot(depth, im)
+
+    scale = np.max(im)
+    plot = plt.imshow(im.T, extent=extent, vmin=-scale, vmax=scale, cmap=cmap)
+    plt.xlabel('X position (km)')
+    plt.ylabel('Depth (km)')
 
     # Create aligned colorbar on the right
     if colorbar:
