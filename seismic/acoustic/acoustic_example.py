@@ -9,10 +9,10 @@ from seismic import demo_model, setup_geometry
 
 def acoustic_setup(shape=(50, 50, 50), spacing=(15.0, 15.0, 15.0),
                    tn=500., kernel='OT2', space_order=4, nbl=10,
-                   preset='layers-isotropic', **kwargs):
+                   preset='layers-isotropic', density=False, **kwargs):
     model = demo_model(preset, space_order=space_order, shape=shape, nbl=nbl,
                        dtype=kwargs.pop('dtype', np.float32), spacing=spacing,
-                       **kwargs)
+                       density=density, **kwargs)
 
     # Source and receiver geometries
     geometry = setup_geometry(model, tn)
@@ -24,12 +24,12 @@ def acoustic_setup(shape=(50, 50, 50), spacing=(15.0, 15.0, 15.0),
 
 
 def run(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=1000.0,
-        space_order=4, kernel='OT2', nbl=40, full_run=False,
+        space_order=4, kernel='OT2', nbl=40, full_run=False, density=False,
         autotune=False, preset='layers-isotropic', checkpointing=False, **kwargs):
 
     solver = acoustic_setup(shape=shape, spacing=spacing, nbl=nbl, tn=tn,
                             space_order=space_order, kernel=kernel,
-                            preset=preset, **kwargs)
+                            preset=preset, density=density, **kwargs)
 
     info("Applying Forward")
     # Whether or not we save the whole time history. We only need the full wavefield
@@ -70,6 +70,8 @@ if __name__ == "__main__":
                         help="Preset to determine the number of dimensions")
     parser.add_argument('-f', '--full', default=False, action='store_true',
                         help="Execute all operators and store forward wavefield")
+    parser.add_argument('-rho', '--density', default=False, action='store_true',
+                        help="Whether to include density")
     parser.add_argument('-a', '--autotune', default='off',
                         choices=(configuration._accepted['autotuning']),
                         help="Operator auto-tuning mode")
@@ -99,4 +101,4 @@ if __name__ == "__main__":
     run(shape=shape, spacing=spacing, nbl=args.nbl, tn=tn,
         space_order=args.space_order, preset=preset, kernel=args.kernel,
         autotune=args.autotune, dse=args.dse, dle=args.dle, full_run=args.full,
-        checkpointing=args.checkpointing)
+        checkpointing=args.checkpointing, density=args.density)

@@ -71,7 +71,7 @@ class AcousticWaveSolver(object):
                             kernel=self.kernel, space_order=self.space_order,
                             **self._kwargs)
 
-    def forward(self, src=None, rec=None, u=None, vp=None, save=None, **kwargs):
+    def forward(self, src=None, rec=None, u=None, vp=None, save=None, rho=None, **kwargs):
         """
         Forward modelling function that creates the necessary
         data objects for running a forward modelling operator.
@@ -88,6 +88,8 @@ class AcousticWaveSolver(object):
             The time-constant velocity.
         save : int or Buffer, optional
             The entire (unrolled) wavefield.
+        rho : Function or float, optional
+            The time-constant density.
 
         Returns
         -------
@@ -106,14 +108,14 @@ class AcousticWaveSolver(object):
                               time_order=2, space_order=self.space_order)
 
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(self.model.physical_params(vp=vp, rho=rho))
 
         # Execute operator and return wavefield and receiver data
-        summary = self.op_fwd(save).apply(src=src, rec=rec, u=u, vp=vp,
+        summary = self.op_fwd(save).apply(src=src, rec=rec, u=u,
                                           dt=kwargs.pop('dt', self.dt), **kwargs)
         return rec, u, summary
 
-    def adjoint(self, rec, srca=None, v=None, vp=None, **kwargs):
+    def adjoint(self, rec, srca=None, v=None, vp=None, rho=None, **kwargs):
         """
         Adjoint modelling function that creates the necessary
         data objects for running an adjoint modelling operator.
@@ -130,6 +132,8 @@ class AcousticWaveSolver(object):
             The computed wavefield.
         vp : Function or float, optional
             The time-constant velocity.
+        rho : Function or float, optional
+            The time-constant density.
 
         Returns
         -------
@@ -145,14 +149,15 @@ class AcousticWaveSolver(object):
                               time_order=2, space_order=self.space_order)
 
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(self.model.physical_params(vp=vp, rho=rho))
 
         # Execute operator and return wavefield and receiver data
-        summary = self.op_adj().apply(srca=srca, rec=rec, v=v, vp=vp,
+        summary = self.op_adj().apply(srca=srca, rec=rec, v=v,
                                       dt=kwargs.pop('dt', self.dt), **kwargs)
         return srca, v, summary
 
-    def gradient(self, rec, u, v=None, grad=None, vp=None, checkpointing=False, **kwargs):
+    def gradient(self, rec, u, v=None, grad=None, vp=None,
+                 rho=None, checkpointing=False, **kwargs):
         """
         Gradient modelling function for computing the adjoint of the
         Linearized Born modelling function, ie. the action of the
@@ -169,6 +174,8 @@ class AcousticWaveSolver(object):
             Stores the gradient field.
         vp : Function or float, optional
             The time-constant velocity.
+        rho : Function or float, optional
+            The time-constant density.
         Returns
         -------
         Gradient field and performance summary.
@@ -182,7 +189,7 @@ class AcousticWaveSolver(object):
                               time_order=2, space_order=self.space_order)
 
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(self.model.physical_params(vp=vp, rho=rho))
 
         if checkpointing:
             u = TimeFunction(name='u', grid=self.model.grid,
@@ -190,20 +197,21 @@ class AcousticWaveSolver(object):
             cp = DevitoCheckpoint([u])
             n_checkpoints = None
             wrap_fw = CheckpointOperator(self.op_fwd(save=False), src=self.geometry.src,
-                                         u=u, vp=vp, dt=dt)
+                                         u=u, dt=dt, **self.model.physical_params(vp=vp, rho=rho))
             wrap_rev = CheckpointOperator(self.op_grad(save=False), u=u, v=v,
-                                          vp=vp, rec=rec, dt=dt, grad=grad)
+                                          rec=rec, dt=dt, grad=grad,
+                                          **self.model.physical_params(vp=vp, rho=rho))
 
             # Run forward
             wrp = Revolver(cp, wrap_fw, wrap_rev, n_checkpoints, rec.data.shape[0]-2)
             wrp.apply_forward()
             summary = wrp.apply_reverse()
         else:
-            summary = self.op_grad().apply(rec=rec, grad=grad, v=v, u=u, vp=vp,
+            summary = self.op_grad().apply(rec=rec, grad=grad, v=v, u=u,
                                            dt=dt, **kwargs)
         return grad, summary
 
-    def born(self, dmin, src=None, rec=None, u=None, U=None, vp=None, **kwargs):
+    def born(self, dmin, src=None, rec=None, u=None, U=None, vp=None, rho=None, **kwargs):
         """
         Linearized Born modelling function that creates the necessary
         data objects for running an adjoint modelling operator.
@@ -220,6 +228,8 @@ class AcousticWaveSolver(object):
             The linearized wavefield.
         vp : Function or float, optional
             The time-constant velocity.
+        rho : Function or float, optional
+            The time-constant density.
         """
         # Source term is read-only, so re-use the default
         src = src or self.geometry.src
@@ -235,9 +245,9 @@ class AcousticWaveSolver(object):
                               time_order=2, space_order=self.space_order)
 
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(self.model.physical_params(vp=vp, rho=rho))
 
         # Execute operator and return wavefield and receiver data
         summary = self.op_born().apply(dm=dmin, u=u, U=U, src=src, rec=rec,
-                                       vp=vp, dt=kwargs.pop('dt', self.dt), **kwargs)
+                                       dt=kwargs.pop('dt', self.dt), **kwargs)
         return rec, u, U, summary

@@ -1,11 +1,26 @@
 import numpy as np
 
-from devito import error
+from devito import error, grad
 from devito.tools import Pickable
 
 from .source import *
 
-__all__ = ['AcquisitionGeometry', 'setup_geometry']
+__all__ = ['AcquisitionGeometry', 'setup_geometry', 'laplacian']
+
+
+def laplacian(v, irho):
+    """
+    Laplacian with density div( 1/rho grad) (u)
+    """
+    if irho is None or irho == 1:
+        Lap = v.laplace
+    else:
+        if getattr(irho, 'is_Function', False):
+            Lap = grad(irho).T * grad(v) + irho * v.laplace
+        else:
+            Lap = irho * v.laplace
+
+    return Lap
 
 
 def setup_geometry(model, tn):

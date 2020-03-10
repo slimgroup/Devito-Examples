@@ -1,0 +1,17 @@
+site_name: SLIM's Devito examples
+
+nav:
+- 'Home': index.md
+- 'Tutorials':
+  - Acoustic modeling: tutorials/01_modelling.md
+  - Acosutic RTM: tutorials/02_rtm.md
+  - Acoustic FWI: tutorials/03_fwi.md
+  - First order acoustic modeling: tutorials/04_staggered_acoustic.md
+  - Elastic modeling with constant parameters: tutorials/06_elastic.md
+  - Elastic modeling with varying parameters: tutorials/05_elastic_varying_parameters.md
+
+theme: readthedocs
+
+
+extra_javascript:
+- https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML

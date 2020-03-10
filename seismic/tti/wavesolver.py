@@ -50,7 +50,7 @@ class AnisotropicWaveSolver(object):
                                kernel=kernel, **self._kwargs)
 
     def forward(self, src=None, rec=None, u=None, v=None, vp=None,
-                epsilon=None, delta=None, theta=None, phi=None,
+                epsilon=None, delta=None, theta=None, phi=None, rho=None,
                 save=False, kernel='centered', **kwargs):
         """
         Forward modelling function that creates the necessary
@@ -67,6 +67,8 @@ class AnisotropicWaveSolver(object):
             The computed wavefield second component.
         vp : Function or float, optional
             The time-constant velocity.
+        rho : Function or float, optional
+            The time-constant density.
         epsilon : Function or float, optional
             The time-constant first Thomsen parameter.
         delta : Function or float, optional
@@ -120,7 +122,7 @@ class AnisotropicWaveSolver(object):
 
         # Pick vp and Thomsen parameters from model unless explicitly provided
         kwargs.update(self.model.physical_params(vp=vp, epsilon=epsilon, delta=delta,
-                                                 theta=theta, phi=phi))
+                                                 theta=theta, phi=phi, rho=rho))
         # Execute operator and return wavefield and receiver data
         op = self.op_fwd(kernel, save)
         summary = op.apply(src=src, rec=rec, u=u, v=v,

@@ -110,8 +110,13 @@ def demo_model(preset, **kwargs):
         for i in range(1, nlayers):
             v[..., i*int(shape[-1] / nlayers):] = vp_i[i]  # Bottom velocity
 
+        rho = 1
+        if kwargs.get('density', False):
+            rho = 0.31 * (1e3*v)**0.25
+            rho[v < 1.51] = 1.0
+
         return Model(space_order=space_order, vp=v, origin=origin, shape=shape,
-                     dtype=dtype, spacing=spacing, nbl=nbl, **kwargs)
+                     dtype=dtype, spacing=spacing, nbl=nbl, rho=rho, **kwargs)
 
     elif preset.lower() in ['layers-elastic']:
         # A n-layers model in a 2D or 3D domain with two different
@@ -203,16 +208,19 @@ def demo_model(preset, **kwargs):
         phi = None
         if len(shape) > 2 and preset.lower() not in ['layers-tti-noazimuth']:
             phi = .25*(v - 1.5)
+        if kwargs.get('vti', False):
+            theta = phi = None
+        rho = 1
+        if kwargs.get('density', False):
+            rho = 0.31 * (1e3*v)**0.25
+            rho[v < 1.51] = 1.0
 
         model = Model(space_order=space_order, vp=v, origin=origin, shape=shape,
                       dtype=dtype, spacing=spacing, nbl=nbl, epsilon=epsilon,
-                      delta=delta, theta=theta, phi=phi, **kwargs)
+                      delta=delta, theta=theta, phi=phi, rho=rho, **kwargs)
 
         if kwargs.get('smooth', True):
-            if len(shape) > 2 and preset.lower() not in ['layers-tti-noazimuth']:
-                model.smooth(('epsilon', 'delta', 'theta', 'phi'))
-            else:
-                model.smooth(('epsilon', 'delta', 'theta'))
+            model.smooth(('epsilon', 'delta', 'theta', 'phi'))
 
         return model
 

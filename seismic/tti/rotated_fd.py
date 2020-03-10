@@ -1,5 +1,5 @@
 from sympy import sqrt
-from devito import  centered, first_derivative, transpose, grad
+from devito import  centered, first_derivative, transpose
 
 def laplacian(v, irho):
     """

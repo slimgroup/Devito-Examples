@@ -1,6 +1,9 @@
-
 # Devito-Examples
 
+Documentation for the seismic modeling and inversion examples developed at Georgia Institute of Technology with contribution from the rest of the Devito team at Imperial College London (in particular F. Luporini, R. Nelson and G. Bismas).
+
+
+## Overview
 
 This repository contains a set of examples and tutorials for seismic modeling and inversion using [Devito].
 These examples use four different wave equations, namely
@@ -34,30 +37,6 @@ python seismic/acoustic/acoustic_example.py -nd 1
 
 Some of the examples require velocity models such as the marmousi-ii model. These models can be downloaded at [devito-data](https://github.com/devitocodes/data) to be used in the tutorials.
 
-## How to navigate this directory
-
-Examples and tutorials are provided in the form of single Python files and as Jupyter
-notebooks.Jupyter notebooks are files with extension `.ipynb`. To execute these, run
-`jupyter notebook`, and then click on the desired notebook in the window that
-pops up in your browser.
-
-The seismic examples and tutorials are organized as follows:
-
-* `seismic/tutorials`: A series of Jupyter notebooks of incremental complexity,
-  showing a variety of Devito features in the context of seismic inversion
-  operators. Among the discussed features are modeling, adjoint modeling, computing a gradient and a seismic image, FWI and elastic modeling on a staggered grid.
-* `seismic/acoustic`: Example implementations of isotropic acoustic forward,
-  adjoint, gradient and born operators, suitable for full-waveform inversion
-  methods (FWI).
-* `seismic/tti`: Example implementations of several anisotropic acoustic
-  forward operators (TTI).
-* `seismic/elastic`: Example implementation of an isotropic elastic forward
-  operator. `elastic`, unlike `acoustic` and `tti`, fully exploits the
-  tensorial nature of the Devito symbolic language.
-* `seismic/viscoelastic`: Example implementation of an isotropic viscoelastic
-  forward operator. Like `elastic`, `viscoelastic` exploits tensor functions
-  for a neat and compact representation of the discretized partial differential
-  equations.
 
 ## Related literature
 

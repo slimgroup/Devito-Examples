@@ -56,6 +56,7 @@ jobs:
       run: |
         python seismic/acoustic/acoustic_example.py --full -nd ${{ matrix.ndim }}
         python seismic/acoustic/acoustic_example.py --constant --full -nd ${{ matrix.ndim }}
+        python seismic/acoustic/acoustic_example.py --density -nd ${{ matrix.ndim }}
 
     - name: Seismic advanced examples
       if:  matrix.ndim > 1
@@ -63,6 +64,8 @@ jobs:
         python seismic/acoustic/acoustic_example.py --full --checkpointing -nd ${{ matrix.ndim }}
         python seismic/tti/tti_example.py -a basic -nd ${{ matrix.ndim }}
         python seismic/tti/tti_example.py -a basic --noazimuth -nd ${{ matrix.ndim }}
+        python seismic/tti/tti_example.py -a basic --density -nd ${{ matrix.ndim }}
+        python seismic/tti/tti_example.py -a basic --vti -nd ${{ matrix.ndim }}
         python seismic/elastic/elastic_example.py -nd ${{ matrix.ndim }}
         python seismic/viscoelastic/viscoelastic_example.py -nd ${{ matrix.ndim }}
 
