@@ -128,227 +128,244 @@
 <p>In this tutorial, we will introduce the gradient operator. This operator corresponds to the imaging condition introduced in the previous tutorial with some minor modifications that are defined by the objective function (also referred to in the tutorial series as the <em>functional</em>, <em>f</em>) and its gradient, <em>g</em>. We will define these two terms in the tutorial too.</p>
 <h2 id="notes-on-the-operators">Notes on the operators</h2>
 <p>As we have already described the creation of a forward modelling operator, we will only call a wrapper function here. This wrapper already contains all the necessary operators for seismic modeling, imaging and inversion. Operators introduced for the first time in this tutorial will be properly described.</p>
-<pre><code class="python">import numpy as np
-%matplotlib inline
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 
-from devito import configuration
-configuration['log-level'] = 'WARNING'
-</code></pre>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
+<span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
+</code></pre></div>
 
 <h2 id="computational-considerations">Computational considerations</h2>
 <p>As we will see, FWI is computationally extremely demanding, even more than RTM. To keep this tutorial as lightwight as possible we therefore again use a very small demonstration model. We also define here a few parameters for the final example runs that can be changed to modify the overall runtime of the tutorial.</p>
-<pre><code class="python">nshots = 9  # Number of shots to create gradient from
-nreceivers = 101  # Number of receiver locations per shot 
-fwi_iterations = 5  # Number of outer FWI iterations
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">nshots</span> <span class="o">=</span> <span class="mi">9</span>  <span class="c1"># Number of shots to create gradient from</span>
+<span class="n">nreceivers</span> <span class="o">=</span> <span class="mi">101</span>  <span class="c1"># Number of receiver locations per shot </span>
+<span class="n">fwi_iterations</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Number of outer FWI iterations</span>
+</code></pre></div>
 
 <h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
 <p>We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.</p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-from seismic import demo_model, plot_velocity, plot_perturbation
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
 
-# Define true and initial model
-shape = (101, 101)  # Number of grid point (nx, nz)
-spacing = (10., 10.)  # Grid spacing in m. The domain size is now 1km by 1km
-origin = (0., 0.)  # Need origin to define relative source and receiver locations
+<span class="c1"># Define true and initial model</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># Number of grid point (nx, nz)</span>
+<span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">)</span>  <span class="c1"># Grid spacing in m. The domain size is now 1km by 1km</span>
+<span class="n">origin</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>  <span class="c1"># Need origin to define relative source and receiver locations</span>
 
-model = demo_model('circle-isotropic', vp_circle=3.0, vp_background=2.5,
-                    origin=origin, shape=shape, spacing=spacing, nbl=40)
+<span class="n">model</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;circle-isotropic&#39;</span><span class="p">,</span> <span class="n">vp_circle</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">vp_background</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+                    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
 
-model0 = demo_model('circle-isotropic', vp_circle=2.5, vp_background=2.5,
-                     origin=origin, shape=shape, spacing=spacing, nbl=40,
-                    grid = model.grid)
+<span class="n">model0</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;circle-isotropic&#39;</span><span class="p">,</span> <span class="n">vp_circle</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">vp_background</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
+                     <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+                    <span class="n">grid</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
 
-plot_velocity(model)
-plot_velocity(model0)
-plot_perturbation(model0, model)
-</code></pre>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model0</span><span class="p">)</span>
+<span class="n">plot_perturbation</span><span class="p">(</span><span class="n">model0</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_2.png" /></p>
 <h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>In this tutorial, we will use the easiest case for inversion, namely a transmission experiment. The sources are located on one side of the model and the receivers on the other side. This allows to record most of the information necessary for inversion, as reflections usually lead to poor inversion results.</p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-# Define acquisition geometry: source
-from seismic import AcquisitionGeometry
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># Define acquisition geometry: source</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 
-t0 = 0.
-tn = 1000. 
-f0 = 0.010
-# First, position source centrally in all dimensions, then set depth
-src_coordinates = np.empty((1, 2))
-src_coordinates[0, :] = np.array(model.domain_size) * .5
-src_coordinates[0, 0] = 20.  # Depth is 20m
+<span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="n">tn</span> <span class="o">=</span> <span class="mf">1000.</span> 
+<span class="n">f0</span> <span class="o">=</span> <span class="mf">0.010</span>
+<span class="c1"># First, position source centrally in all dimensions, then set depth</span>
+<span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">20.</span>  <span class="c1"># Depth is 20m</span>
 
 
-# Define acquisition geometry: receivers
+<span class="c1"># Define acquisition geometry: receivers</span>
 
-# Initialize receivers for synthetic and imaging data
-rec_coordinates = np.empty((nreceivers, 2))
-rec_coordinates[:, 1] = np.linspace(0, model.domain_size[0], num=nreceivers)
-rec_coordinates[:, 0] = 980.
+<span class="c1"># Initialize receivers for synthetic and imaging data</span>
+<span class="n">rec_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nreceivers</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">nreceivers</span><span class="p">)</span>
+<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">980.</span>
 
-# Geometry
+<span class="c1"># Geometry</span>
 
-geometry = AcquisitionGeometry(model, rec_coordinates, src_coordinates, t0, tn, f0=f0, src_type='Ricker')
-# We can plot the time signature to see the wavelet
-geometry.src.show()
-</code></pre>
+<span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
+<span class="c1"># We can plot the time signature to see the wavelet</span>
+<span class="n">geometry</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_7_0.png" /></p>
-<pre><code class="python"># Plot acquisition geometry
-plot_velocity(model, source=geometry.src_positions,
-              receiver=geometry.rec_positions[::4, :])
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot acquisition geometry</span>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">,</span>
+              <span class="n">receiver</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">[::</span><span class="mi">4</span><span class="p">,</span> <span class="p">:])</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_8_0.png" /></p>
 <h2 id="true-and-smooth-data">True and smooth data</h2>
 <p>We can generate shot records for the true and smoothed initial velocity models, since the difference between them will again form the basis of our imaging procedure.</p>
-<pre><code class="python"># Compute synthetic data with forward operator 
-from seismic.acoustic import AcousticWaveSolver
+<div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
+<span class="kn">from</span> <span class="nn">seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 
-solver = AcousticWaveSolver(model, geometry, space_order=4)
-true_d, _, _ = solver.forward(vp=model.vp)
-</code></pre>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">true_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># Compute initial data with forward operator 
-smooth_d, _, _ = solver.forward(vp=model0.vp)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Compute initial data with forward operator </span>
+<span class="n">smooth_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-from seismic import plot_shotrecord
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
-# Plot shot record for true and smooth velocity model and the difference
-plot_shotrecord(true_d.data, model, t0, tn)
-plot_shotrecord(smooth_d.data, model, t0, tn)
-plot_shotrecord(smooth_d.data - true_d.data, model, t0, tn)
-</code></pre>
+<span class="c1"># Plot shot record for true and smooth velocity model and the difference</span>
+<span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+<span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+<span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_2.png" /></p>
 <h1 id="full-waveform-inversion">Full-Waveform Inversion</h1>
 <h2 id="formulation">Formulation</h2>
-<p>Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, $\mathbf{c}$, or equivalently the square slowness of the wave, $\mathbf{m} = \frac{1}{\mathbf{c}^2}$, from a given set of measurements of the pressure wavefield $\mathbf{u}$. This can be expressed as the following optimization problem [1, 2]:</p>
-<p>\begin{aligned}
+<p>Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, <span><span class="MathJax_Preview">\mathbf{c}</span><script type="math/tex">\mathbf{c}</script></span>, or equivalently the square slowness of the wave, <span><span class="MathJax_Preview">\mathbf{m} = \frac{1}{\mathbf{c}^2}</span><script type="math/tex">\mathbf{m} = \frac{1}{\mathbf{c}^2}</script></span>, from a given set of measurements of the pressure wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This can be expressed as the following optimization problem [1, 2]:</p>
+<div>
+<div class="MathJax_Preview">\begin{aligned}
     \mathop{\hbox{minimize}}_{\mathbf{m}} \Phi_s(\mathbf{m})&amp;=\frac{1}{2}\left\lVert\mathbf{P}_r
-    \mathbf{u} - \mathbf{d}\right\rVert_2^2 \
+    \mathbf{u} - \mathbf{d}\right\rVert_2^2 \\
     \mathbf{u} &amp;= \mathbf{A}(\mathbf{m})^{-1} \mathbf{P}_s^T \mathbf{q}_s, 
-\end{aligned}</p>
-<p>where $\mathbf{P}_r$ is the sampling operator at the receiver locations, $\mathbf{P}_s^T$ is the injection operator at the source locations, $\mathbf{A}(\mathbf{m})$ is the operator representing the discretized wave equation matrix, $\mathbf{u}$ is the discrete synthetic pressure wavefield, $\mathbf{q}_s$ is the corresponding pressure source and $\mathbf{d}$ is the measured data. It is worth noting that $\mathbf{m}$ is the unknown in this formulation and that multiple implementations of the wave equation operator $\mathbf{A}(\mathbf{m})$ are possible. </p>
-<p>We have already defined a concrete solver scheme for $\mathbf{A}(\mathbf{m})$ in the first tutorial, including appropriate implementations of the sampling operator $\mathbf{P}_r$ and source term $\mathbf{q}_s$.</p>
+\end{aligned}</div>
+<script type="math/tex; mode=display">\begin{aligned}
+    \mathop{\hbox{minimize}}_{\mathbf{m}} \Phi_s(\mathbf{m})&=\frac{1}{2}\left\lVert\mathbf{P}_r
+    \mathbf{u} - \mathbf{d}\right\rVert_2^2 \\
+    \mathbf{u} &= \mathbf{A}(\mathbf{m})^{-1} \mathbf{P}_s^T \mathbf{q}_s, 
+\end{aligned}</script>
+</div>
+<p>where <span><span class="MathJax_Preview">\mathbf{P}_r</span><script type="math/tex">\mathbf{P}_r</script></span> is the sampling operator at the receiver locations, <span><span class="MathJax_Preview">\mathbf{P}_s^T</span><script type="math/tex">\mathbf{P}_s^T</script></span> is the injection operator at the source locations, <span><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})</span><script type="math/tex">\mathbf{A}(\mathbf{m})</script></span> is the operator representing the discretized wave equation matrix, <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> is the discrete synthetic pressure wavefield, <span><span class="MathJax_Preview">\mathbf{q}_s</span><script type="math/tex">\mathbf{q}_s</script></span> is the corresponding pressure source and <span><span class="MathJax_Preview">\mathbf{d}</span><script type="math/tex">\mathbf{d}</script></span> is the measured data. It is worth noting that <span><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span> is the unknown in this formulation and that multiple implementations of the wave equation operator <span><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})</span><script type="math/tex">\mathbf{A}(\mathbf{m})</script></span> are possible. </p>
+<p>We have already defined a concrete solver scheme for <span><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})</span><script type="math/tex">\mathbf{A}(\mathbf{m})</script></span> in the first tutorial, including appropriate implementations of the sampling operator <span><span class="MathJax_Preview">\mathbf{P}_r</span><script type="math/tex">\mathbf{P}_r</script></span> and source term <span><span class="MathJax_Preview">\mathbf{q}_s</span><script type="math/tex">\mathbf{q}_s</script></span>.</p>
 <p>To solve this optimization problem using a gradient-based method, we use the
-adjoint-state method to evaluate the gradient $\nabla\Phi_s(\mathbf{m})$:</p>
-<p>\begin{align}
+adjoint-state method to evaluate the gradient <span><span class="MathJax_Preview">\nabla\Phi_s(\mathbf{m})</span><script type="math/tex">\nabla\Phi_s(\mathbf{m})</script></span>:</p>
+<div>
+<div class="MathJax_Preview">\begin{align}
  \nabla\Phi_s(\mathbf{m})=\sum_{\mathbf{t} =1}^{n_t}\mathbf{u}[\mathbf{t}] \mathbf{v}_{tt}[\mathbf{t}] =\mathbf{J}^T\delta\mathbf{d}_s,
-\end{align}</p>
-<p>where $n_t$ is the number of computational time steps, $\delta\mathbf{d}<em>s = \left(\mathbf{P}_r \mathbf{u} - \mathbf{d} \right)$ is the data residual (difference between the measured data and the modelled data), $\mathbf{J}$ is the Jacobian operator and $\mathbf{v}</em>{tt}$ is the second-order time derivative of the adjoint wavefield solving:</p>
-<p>\begin{align}
+\end{align}</div>
+<script type="math/tex; mode=display">\begin{align}
+ \nabla\Phi_s(\mathbf{m})=\sum_{\mathbf{t} =1}^{n_t}\mathbf{u}[\mathbf{t}] \mathbf{v}_{tt}[\mathbf{t}] =\mathbf{J}^T\delta\mathbf{d}_s,
+\end{align}</script>
+</div>
+<p>where <span><span class="MathJax_Preview">n_t</span><script type="math/tex">n_t</script></span> is the number of computational time steps, <span><span class="MathJax_Preview">\delta\mathbf{d}_s = \left(\mathbf{P}_r \mathbf{u} - \mathbf{d} \right)</span><script type="math/tex">\delta\mathbf{d}_s = \left(\mathbf{P}_r \mathbf{u} - \mathbf{d} \right)</script></span> is the data residual (difference between the measured data and the modelled data), <span><span class="MathJax_Preview">\mathbf{J}</span><script type="math/tex">\mathbf{J}</script></span> is the Jacobian operator and <span><span class="MathJax_Preview">\mathbf{v}_{tt}</span><script type="math/tex">\mathbf{v}_{tt}</script></span> is the second-order time derivative of the adjoint wavefield solving:</p>
+<div>
+<div class="MathJax_Preview">\begin{align}
  \mathbf{A}^T(\mathbf{m}) \mathbf{v} = \mathbf{P}_r^T \delta\mathbf{d}.
-\end{align}</p>
+\end{align}</div>
+<script type="math/tex; mode=display">\begin{align}
+ \mathbf{A}^T(\mathbf{m}) \mathbf{v} = \mathbf{P}_r^T \delta\mathbf{d}.
+\end{align}</script>
+</div>
 <p>We see that the gradient of the FWI function is the previously defined imaging condition with an extra second-order time derivative. We will therefore reuse the operators defined previously inside a Devito wrapper.</p>
 <h2 id="fwi-gradient-operator">FWI gradient operator</h2>
-<p>To compute a single gradient $\nabla\Phi_s(\mathbf{m})$ in our optimization workflow we again use <code>solver.forward</code> to compute the entire forward wavefield $\mathbf{u}$ and a similar pre-defined gradient operator to compute the adjoint wavefield <code>v</code>. The gradient operator provided by our <code>solver</code> utility also computes the correlation between the wavefields, allowing us to encode a similar procedure to the previous imaging tutorial as our gradient calculation:</p>
+<p>To compute a single gradient <span><span class="MathJax_Preview">\nabla\Phi_s(\mathbf{m})</span><script type="math/tex">\nabla\Phi_s(\mathbf{m})</script></span> in our optimization workflow we again use <code>solver.forward</code> to compute the entire forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and a similar pre-defined gradient operator to compute the adjoint wavefield <code>v</code>. The gradient operator provided by our <code>solver</code> utility also computes the correlation between the wavefields, allowing us to encode a similar procedure to the previous imaging tutorial as our gradient calculation:</p>
 <ul>
-<li>Simulate the forward wavefield with the background velocity model to get the synthetic data and save the full wavefield $\mathbf{u}$</li>
+<li>Simulate the forward wavefield with the background velocity model to get the synthetic data and save the full wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span></li>
 <li>Compute the data residual</li>
 <li>Back-propagate the data residual and compute on the fly the gradient contribution at each time step. </li>
 </ul>
 <p>This procedure is applied to multiple source positions and summed to obtain a gradient image of the subsurface. We again prepare the source locations for each shot and visualize them, before defining a single gradient computation over a number of shots as a single function.</p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-# Prepare the varying source locations sources
-source_locations = np.empty((nshots, 2), dtype=np.float32)
-source_locations[:, 0] = 30.
-source_locations[:, 1] = np.linspace(0., 1000, num=nshots)
+<span class="c1"># Prepare the varying source locations sources</span>
+<span class="n">source_locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nshots</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">source_locations</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">30.</span>
+<span class="n">source_locations</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">nshots</span><span class="p">)</span>
 
-plot_velocity(model, source=source_locations)
-</code></pre>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source_locations</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_15_0.png" /></p>
-<pre><code class="python"># Create FWI gradient kernel 
-from devito import Function, TimeFunction
-from seismic import Receiver
+<div class="highlight"><pre><span></span><code><span class="c1"># Create FWI gradient kernel </span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">TimeFunction</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
 
-import scipy
-def fwi_gradient(vp_in):    
-    # Create symbols to hold the gradient and residual
-    grad = Function(name=&quot;grad&quot;, grid=model.grid)
-    residual = Receiver(name='rec', grid=model.grid,
-                        time_range=geometry.time_axis, 
-                        coordinates=geometry.rec_positions)
-    objective = 0.
-    for i in range(nshots):
-        # Update source location
-        geometry.src_positions[0, :] = source_locations[i, :]
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="k">def</span> <span class="nf">fwi_gradient</span><span class="p">(</span><span class="n">vp_in</span><span class="p">):</span>    
+    <span class="c1"># Create symbols to hold the gradient and residual</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;rec&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                        <span class="n">time_range</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="p">,</span> 
+                        <span class="n">coordinates</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">)</span>
+    <span class="n">objective</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nshots</span><span class="p">):</span>
+        <span class="c1"># Update source location</span>
+        <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">source_locations</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
-        # Generate synthetic data from true model
-        true_d, _, _ = solver.forward(vp=model.vp)
+        <span class="c1"># Generate synthetic data from true model</span>
+        <span class="n">true_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
 
-        # Compute smooth data and full forward wavefield u0
-        smooth_d, u0, _ = solver.forward(vp=vp_in, save=True)
+        <span class="c1"># Compute smooth data and full forward wavefield u0</span>
+        <span class="n">smooth_d</span><span class="p">,</span> <span class="n">u0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">vp_in</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        # Compute gradient from data residual and update objective function 
-        residual.data[:] = smooth_d.data[:] - true_d.data[:]
+        <span class="c1"># Compute gradient from data residual and update objective function </span>
+        <span class="n">residual</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span>
 
-        objective += .5*np.linalg.norm(residual.data.flatten())**2
-        solver.gradient(rec=residual, u=u0, vp=vp_in, grad=grad)
+        <span class="n">objective</span> <span class="o">+=</span> <span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">solver</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">rec</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="n">u0</span><span class="p">,</span> <span class="n">vp</span><span class="o">=</span><span class="n">vp_in</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">)</span>
 
-    return objective, -grad.data
-</code></pre>
+    <span class="k">return</span> <span class="n">objective</span><span class="p">,</span> <span class="o">-</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span>
+</code></pre></div>
 
 <p>Having defined our FWI gradient procedure we can compute the initial iteration from our starting model. This allows us to visualize the gradient alongside the model perturbation and the effect of the gradient update on the model.</p>
-<pre><code class="python"># Compute gradient of initial model
-ff, update = fwi_gradient(model0.vp)
-assert np.isclose(ff, 57283, rtol=1e0)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Compute gradient of initial model</span>
+<span class="n">ff</span><span class="p">,</span> <span class="n">update</span> <span class="o">=</span> <span class="n">fwi_gradient</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ff</span><span class="p">,</span> <span class="mi">57283</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e0</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-from seismic import plot_image
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
 
-# Plot the FWI gradient
-plot_image(update, cmap=&quot;jet&quot;)
+<span class="c1"># Plot the FWI gradient</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
 
-# Plot the difference between the true and initial model.
-# This is not known in practice as only the initial model is provided.
-plot_image(model0.vp.data - model.vp.data, cmap=&quot;jet&quot;)
-</code></pre>
+<span class="c1"># Plot the difference between the true and initial model.</span>
+<span class="c1"># This is not known in practice as only the initial model is provided.</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_19_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_19_1.png" /></p>
 <p>We see that the gradient and the true perturbation have the same sign, therefore, with an appropriate scaling factor, we will update the model in the correct direction.</p>
-<pre><code class="python"># Define bounding box constraints on the solution.
-def apply_box_constraint(vp):
-    # Maximum possible 'realistic' velocity is 3.5 km/sec
-    # Minimum possible 'realistic' velocity is 2 km/sec
-    return np.clip(vp, 2.0, 3.5)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define bounding box constraints on the solution.</span>
+<span class="k">def</span> <span class="nf">apply_box_constraint</span><span class="p">(</span><span class="n">vp</span><span class="p">):</span>
+    <span class="c1"># Maximum possible &#39;realistic&#39; velocity is 3.5 km/sec</span>
+    <span class="c1"># Minimum possible &#39;realistic&#39; velocity is 2 km/sec</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-# Run FWI with gradient descent
-history = np.zeros((fwi_iterations, 1))
-for i in range(0, fwi_iterations):
-    # Compute the functional value and gradient for the current
-    # model estimate
-    phi, direction = fwi_gradient(model0.vp)
+<span class="c1"># Run FWI with gradient descent</span>
+<span class="n">history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">fwi_iterations</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">fwi_iterations</span><span class="p">):</span>
+    <span class="c1"># Compute the functional value and gradient for the current</span>
+    <span class="c1"># model estimate</span>
+    <span class="n">phi</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">fwi_gradient</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
 
-    # Store the history of the functional values
-    history[i] = phi
+    <span class="c1"># Store the history of the functional values</span>
+    <span class="n">history</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">phi</span>
 
-    # Artificial Step length for gradient descent
-    # In practice this would be replaced by a Linesearch (Wolfe, ...)
-    # that would guarantee functional decrease Phi(m-alpha g) &lt;= epsilon Phi(m)
-    # where epsilon is a minimum decrease constant
-    alpha = .05 / np.abs(direction).max()
+    <span class="c1"># Artificial Step length for gradient descent</span>
+    <span class="c1"># In practice this would be replaced by a Linesearch (Wolfe, ...)</span>
+    <span class="c1"># that would guarantee functional decrease Phi(m-alpha g) &lt;= epsilon Phi(m)</span>
+    <span class="c1"># where epsilon is a minimum decrease constant</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="o">.</span><span class="mi">05</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 
-    # Update the model estimate and enforce minimum/maximum values
-    model0.vp = apply_box_constraint(model0.vp.data - alpha * direction)
+    <span class="c1"># Update the model estimate and enforce minimum/maximum values</span>
+    <span class="n">model0</span><span class="o">.</span><span class="n">vp</span> <span class="o">=</span> <span class="n">apply_box_constraint</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">direction</span><span class="p">)</span>
 
-    # Log the progress made
-    print('Objective value is %f at iteration %d' % (phi, i+1))
-</code></pre>
+    <span class="c1"># Log the progress made</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Objective value is </span><span class="si">%f</span><span class="s1"> at iteration </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+</code></pre></div>
 
 <pre><code>Objective value is 57265.621845 at iteration 1
 Objective value is 35755.516858 at iteration 2
@@ -356,29 +373,29 @@ Objective value is 20997.312671 at iteration 3
 Objective value is 11545.767846 at iteration 4
 Objective value is 5784.814165 at iteration 5
 </code></pre>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-# Plot inverted velocity model
-plot_velocity(model0)
-</code></pre>
+<span class="c1"># Plot inverted velocity model</span>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model0</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_23_0.png" /></p>
-<pre><code class="python">#NBVAL_SKIP
-import matplotlib.pyplot as plt
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-# Plot objective function decrease
-plt.figure()
-plt.loglog(history)
-plt.xlabel('Iteration number')
-plt.ylabel('Misift value Phi')
-plt.title('Convergence')
-plt.show()
-</code></pre>
+<span class="c1"># Plot objective function decrease</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration number&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Misift value Phi&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Convergence&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_24_0.png" /></p>
 <h2 id="references">References</h2>
-<p>[1] <em>Virieux, J. and Operto, S.: An overview of full-waveform inversion in exploration geophysics, GEOPHYSICS, 74, WCC1–WCC26, doi:10.1190/1.3238367, http://library.seg.org/doi/abs/10.1190/1.3238367, 2009.</em></p>
-<p>[2] <em>Haber, E., Chung, M., and Herrmann, F. J.: An effective method for parameter estimation with PDE constraints with multiple right hand sides, SIAM Journal on Optimization, 22, http://dx.doi.org/10.1137/11081126X, 2012.</em></p>
+<p>[1] <em>Virieux, J. and Operto, S.: An overview of full-waveform inversion in exploration geophysics, GEOPHYSICS, 74, WCC1–WCC26, doi:10.1190/1.3238367, <a href="http://library.seg.org/doi/abs/10.1190/1.3238367">http://library.seg.org/doi/abs/10.1190/1.3238367</a>, 2009.</em></p>
+<p>[2] <em>Haber, E., Chung, M., and Herrmann, F. J.: An effective method for parameter estimation with PDE constraints with multiple right hand sides, SIAM Journal on Optimization, 22, <a href="http://dx.doi.org/10.1137/11081126X">http://dx.doi.org/10.1137/11081126X</a>, 2012.</em></p>
 <p><sup>This notebook is part of the tutorial "Optimised Symbolic Finite Difference Computation with Devito" presented at the Intel® HPC Developer Conference 2017.</sup></p>
               
             </div>

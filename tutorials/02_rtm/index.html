@@ -129,67 +129,67 @@
 <h2 id="notes-on-the-operators">Notes on the operators</h2>
 <p>As we have already described the creation of a forward modelling operator, we will use a thin wrapper function instead. This wrapper is provided by a utility class called <code>AcousticWaveSolver</code>, which provides all the necessary operators for seismic modeling, imaging and inversion. The <code>AcousticWaveSolver</code> provides a more concise API for common wave propagation operators and caches the Devito <code>Operator</code> objects to avoid unnecessary recompilation. Operators introduced for the first time in this tutorial will be properly described.</p>
 <p>As before we initialize printing and import some utilities. We also raise the Devito log level to avoid excessive logging for repeated operator invocations.</p>
-<pre><code class="python">import numpy as np
-%matplotlib inline
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 
-from devito import configuration
-configuration['log-level'] = 'WARNING'
-</code></pre>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
+<span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
+</code></pre></div>
 
 <h2 id="computational-considerations">Computational considerations</h2>
 <p>Seismic inversion algorithms are generally very computationally demanding and require a large amount of memory to store the forward wavefield. In order to keep this tutorial as lightweight as possible we are using a very simple
 velocity model that requires low temporal and spatial resolution. For a more realistic model, a second set of preset parameters for a reduced version of the 2D Marmousi data set [1] is provided below in comments. This can be run to create some more realistic subsurface images. However, this second preset is more computationally demanding and requires a slightly more powerful workstation.</p>
-<pre><code class="python"># Configure model presets
-from seismic import demo_model
+<div class="highlight"><pre><span></span><code><span class="c1"># Configure model presets</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span>
 
-# Enable model presets here:
-preset = 'layers-isotropic'  # A simple but cheap model (recommended)
-# preset = 'marmousi2d-isotropic'  # A larger more realistic model
+<span class="c1"># Enable model presets here:</span>
+<span class="n">preset</span> <span class="o">=</span> <span class="s1">&#39;layers-isotropic&#39;</span>  <span class="c1"># A simple but cheap model (recommended)</span>
+<span class="c1"># preset = &#39;marmousi2d-isotropic&#39;  # A larger more realistic model</span>
 
-# Standard preset with a simple two-layer model
-if preset == 'layers-isotropic':
-    def create_model(grid=None):
-        return demo_model('layers-isotropic', origin=(0., 0.), shape=(101, 101),
-                          spacing=(10., 10.), nbl=20, grid=grid, nlayers=4)
-    filter_sigma = (1, 1)
-    nshots = 21
-    nreceivers = 101
-    t0 = 0.
-    tn = 1000.  # Simulation last 1 second (1000 ms)
-    f0 = 0.010  # Source peak frequency is 10Hz (0.010 kHz)
+<span class="c1"># Standard preset with a simple two-layer model</span>
+<span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="s1">&#39;layers-isotropic&#39;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;layers-isotropic&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
+                          <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">),</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">nlayers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">filter_sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">nshots</span> <span class="o">=</span> <span class="mi">21</span>
+    <span class="n">nreceivers</span> <span class="o">=</span> <span class="mi">101</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">tn</span> <span class="o">=</span> <span class="mf">1000.</span>  <span class="c1"># Simulation last 1 second (1000 ms)</span>
+    <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.010</span>  <span class="c1"># Source peak frequency is 10Hz (0.010 kHz)</span>
 
 
-# A more computationally demanding preset based on the 2D Marmousi model
-if preset == 'marmousi2d-isotropic':
-    def create_model(grid=None):
-        return demo_model('marmousi2d-isotropic', data_path='../../../../data/',
-                          grid=grid, nbl=20)
-    filter_sigma = (6, 6)
-    nshots = 301  # Need good covergae in shots, one every two grid points
-    nreceivers = 601  # One recevier every grid point
-    t0 = 0.
-    tn = 3500.  # Simulation last 3.5 second (3500 ms)
-    f0 = 0.025  # Source peak frequency is 25Hz (0.025 kHz)
-</code></pre>
+<span class="c1"># A more computationally demanding preset based on the 2D Marmousi model</span>
+<span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="s1">&#39;marmousi2d-isotropic&#39;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;marmousi2d-isotropic&#39;</span><span class="p">,</span> <span class="n">data_path</span><span class="o">=</span><span class="s1">&#39;../../../../data/&#39;</span><span class="p">,</span>
+                          <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+    <span class="n">filter_sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">nshots</span> <span class="o">=</span> <span class="mi">301</span>  <span class="c1"># Need good covergae in shots, one every two grid points</span>
+    <span class="n">nreceivers</span> <span class="o">=</span> <span class="mi">601</span>  <span class="c1"># One recevier every grid point</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">tn</span> <span class="o">=</span> <span class="mf">3500.</span>  <span class="c1"># Simulation last 3.5 second (3500 ms)</span>
+    <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.025</span>  <span class="c1"># Source peak frequency is 25Hz (0.025 kHz)</span>
+</code></pre></div>
 
 <h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
 <p>First, we create the model data for the "true" model from a given demonstration preset. This model represents the subsurface topology for the purposes of this example and we will later use it to generate our synthetic data readings. We also generate a second model and apply a smoothing filter to it, which represents our initial model for the imaging algorithm. The perturbation between these two models can be thought of as the image we are trying to recover.</p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-from seismic import plot_velocity, plot_perturbation
-from scipy import ndimage
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
 
-# Create true model from a preset
-model = create_model()
+<span class="c1"># Create true model from a preset</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">()</span>
 
-# Create initial model and smooth the boundaries
-model0 = create_model(grid=model.grid)
-model0.vp = ndimage.gaussian_filter(model0.vp.data, sigma=filter_sigma, order=0)
+<span class="c1"># Create initial model and smooth the boundaries</span>
+<span class="n">model0</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
+<span class="n">model0</span><span class="o">.</span><span class="n">vp</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">filter_sigma</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-# Plot the true and initial model and the perturbation between them
-plot_velocity(model)
-plot_velocity(model0)
-plot_perturbation(model0, model)
-</code></pre>
+<span class="c1"># Plot the true and initial model and the perturbation between them</span>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model0</span><span class="p">)</span>
+<span class="n">plot_perturbation</span><span class="p">(</span><span class="n">model0</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_1.png" /></p>
@@ -197,53 +197,53 @@ plot_perturbation(model0, model)
 <h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>Next we define the positioning and the wave signal of our source, as well as the location of our receivers. To generate the wavelet for our source we require the discretized values of time that we are going to use to model a single "shot",
 which again depends on the grid spacing used in our model. For consistency this initial setup will look exactly as in the previous modelling tutorial, although we will vary the position of our source later on during the actual imaging algorithm.</p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-# Define acquisition geometry: source
-from seismic import AcquisitionGeometry
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># Define acquisition geometry: source</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 
-# First, position source centrally in all dimensions, then set depth
-src_coordinates = np.empty((1, 2))
-src_coordinates[0, :] = np.array(model.domain_size) * .5
-src_coordinates[0, -1] = 20.  # Depth is 20m
+<span class="c1"># First, position source centrally in all dimensions, then set depth</span>
+<span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">20.</span>  <span class="c1"># Depth is 20m</span>
 
 
-# Define acquisition geometry: receivers
+<span class="c1"># Define acquisition geometry: receivers</span>
 
-# Initialize receivers for synthetic and imaging data
-rec_coordinates = np.empty((nreceivers, 2))
-rec_coordinates[:, 0] = np.linspace(0, model.domain_size[0], num=nreceivers)
-rec_coordinates[:, 1] = 30.
+<span class="c1"># Initialize receivers for synthetic and imaging data</span>
+<span class="n">rec_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nreceivers</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">nreceivers</span><span class="p">)</span>
+<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">30.</span>
 
-# Geometry
+<span class="c1"># Geometry</span>
 
-geometry = AcquisitionGeometry(model, rec_coordinates, src_coordinates, t0, tn, f0=.015, src_type='Ricker')
-# We can plot the time signature to see the wavelet
-geometry.src.show()
-</code></pre>
+<span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=.</span><span class="mi">015</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
+<span class="c1"># We can plot the time signature to see the wavelet</span>
+<span class="n">geometry</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_8_0.png" /></p>
 <h1 id="true-and-smooth-data">True and smooth data</h1>
 <p>We can now generate the shot record (receiver readings) corresponding to our true and initial models. The difference between these two records will be the basis of the imaging procedure.</p>
 <p>For this purpose we will use the same forward modelling operator that was introduced in the previous tutorial, provided by the <code>AcousticWaveSolver</code> utility class. This object instantiates a set of pre-defined operators according to an initial definition of the acquisition geometry, consisting of source and receiver symbols. The solver objects caches the individual operators and provides a slightly more high-level API that allows us to invoke the modelling modelling operators from the initial tutorial in a single line. In the following cells we use this to generate shot data by only specifying the respective model symbol <code>m</code> to use, and the solver will create and return a new <code>Receiver</code> object the represents the readings at the previously defined receiver coordinates.  </p>
-<pre><code class="python"># Compute synthetic data with forward operator 
-from seismic.acoustic import AcousticWaveSolver
+<div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
+<span class="kn">from</span> <span class="nn">seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 
-solver = AcousticWaveSolver(model, geometry, space_order=4)
-true_d , _, _ = solver.forward(vp=model.vp)
-</code></pre>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">true_d</span> <span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># Compute initial data with forward operator 
-smooth_d, _, _ = solver.forward(vp=model0.vp)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Compute initial data with forward operator </span>
+<span class="n">smooth_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-# Plot shot record for true and smooth velocity model and the difference
-from seismic import plot_shotrecord
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># Plot shot record for true and smooth velocity model and the difference</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
-plot_shotrecord(true_d.data, model, t0, tn)
-plot_shotrecord(smooth_d.data, model, t0, tn)
-plot_shotrecord(smooth_d.data - true_d.data, model, t0, tn)
-</code></pre>
+<span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+<span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+<span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_1.png" /></p>
@@ -252,106 +252,120 @@ plot_shotrecord(smooth_d.data - true_d.data, model, t0, tn)
 <p>As explained in the introduction of this tutorial, this method is based on back-propagation. </p>
 <h2 id="adjoint-wave-equation">Adjoint wave equation</h2>
 <p>If we go back to the modelling part, we can rewrite the simulation as a linear system solve:</p>
-<p>\begin{equation}
+<div>
+<div class="MathJax_Preview">\begin{equation}
 \mathbf{A}(\mathbf{m}) \mathbf{u} = \mathbf{q}
-\end{equation}</p>
-<p>where $\mathbf{m}$ is the discretized square slowness, $\mathbf{q}$ is the discretized source and $\mathbf{A}(\mathbf{m})$ is the discretized wave-equation. The discretized wave-equation matricial representation is a lower triangular matrix that can be solve with forward substitution. The pointwise writing or the forward substitution leads to the time-stepping stencil.</p>
+\end{equation}</div>
+<script type="math/tex; mode=display">\begin{equation}
+\mathbf{A}(\mathbf{m}) \mathbf{u} = \mathbf{q}
+\end{equation}</script>
+</div>
+<p>where <span><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span> is the discretized square slowness, <span><span class="MathJax_Preview">\mathbf{q}</span><script type="math/tex">\mathbf{q}</script></span> is the discretized source and <span><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})</span><script type="math/tex">\mathbf{A}(\mathbf{m})</script></span> is the discretized wave-equation. The discretized wave-equation matricial representation is a lower triangular matrix that can be solve with forward substitution. The pointwise writing or the forward substitution leads to the time-stepping stencil.</p>
 <p>On a small problem one could form the matrix explicitly and transpose it to obtain the adjoint discrete wave-equation:</p>
-<p>\begin{equation}
+<div>
+<div class="MathJax_Preview">\begin{equation}
 \mathbf{A}(\mathbf{m})^T \mathbf{v} = \delta \mathbf{d}
-\end{equation}</p>
-<p>where $\mathbf{v}$ is the discrete <strong>adjoint wavefield</strong> and  $\delta \mathbf{d}$ is the data residual defined as the difference between the field/observed data and the synthetic data $\mathbf{d}_s = \mathbf{P}_r \mathbf{u}$. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. </p>
+\end{equation}</div>
+<script type="math/tex; mode=display">\begin{equation}
+\mathbf{A}(\mathbf{m})^T \mathbf{v} = \delta \mathbf{d}
+\end{equation}</script>
+</div>
+<p>where <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> is the discrete <strong>adjoint wavefield</strong> and  <span><span class="MathJax_Preview">\delta \mathbf{d}</span><script type="math/tex">\delta \mathbf{d}</script></span> is the data residual defined as the difference between the field/observed data and the synthetic data <span><span class="MathJax_Preview">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</span><script type="math/tex">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</script></span>. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. </p>
 <h2 id="imaging">Imaging</h2>
 <p>Wave-equation based imaging relies on one simple concept:</p>
 <ul>
-<li>If the background velocity model is cinematically correct, the forward wavefield $\mathbf{u}$ and the adjoint wavefield $\mathbf{v}$ meet at the reflectors position at zero time offset. </li>
+<li>If the background velocity model is cinematically correct, the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
 </ul>
 <p>The sum over time of the zero time-offset correlation of these two fields then creates an image of the subsurface. Mathematically this leads to the simple imaging condition:</p>
-<p>\begin{equation}
+<div>
+<div class="MathJax_Preview">\begin{equation}
   \text{Image} = \sum_{t=1}^{n_t} \mathbf{u}[t] \mathbf{v}[t]
-\end{equation}</p>
+\end{equation}</div>
+<script type="math/tex; mode=display">\begin{equation}
+  \text{Image} = \sum_{t=1}^{n_t} \mathbf{u}[t] \mathbf{v}[t]
+\end{equation}</script>
+</div>
 <p>In the following tutorials we will describe a more advanced imaging condition that produces shaper and more accurate results.</p>
 <h2 id="operator">Operator</h2>
-<p>We will now define the imaging operator that computes the adjoint wavefield $\mathbf{v}$ and correlates it with the forward wavefield $\mathbf{u}$. This operator essentially consists of three components:
+<p>We will now define the imaging operator that computes the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> and correlates it with the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This operator essentially consists of three components:
 * Stencil update of the adjoint wavefield <code>v</code>
 * Injection of the data residual at the adjoint source (forward receiver) location
 * Correlation of <code>u</code> and <code>v</code> to compute the image contribution at each timestep</p>
-<pre><code class="python"># Define gradient operator for imaging
-from devito import TimeFunction, Operator, Eq, solve
-from seismic import PointSource
+<div class="highlight"><pre><span></span><code><span class="c1"># Define gradient operator for imaging</span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">PointSource</span>
 
-def ImagingOperator(model, image):
-    # Define the wavefield with the size of the model and the time dimension
-    v = TimeFunction(name='v', grid=model.grid, time_order=2, space_order=4)
+<span class="k">def</span> <span class="nf">ImagingOperator</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="c1"># Define the wavefield with the size of the model and the time dimension</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
-    u = TimeFunction(name='u', grid=model.grid, time_order=2, space_order=4,
-                     save=geometry.nt)
+    <span class="n">u</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                     <span class="n">save</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">nt</span><span class="p">)</span>
 
-    # Define the wave equation, but with a negated damping term
-    eqn = model.m * v.dt2 - v.laplace + model.damp * v.dt.T
+    <span class="c1"># Define the wave equation, but with a negated damping term</span>
+    <span class="n">eqn</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">v</span><span class="o">.</span><span class="n">dt2</span> <span class="o">-</span> <span class="n">v</span><span class="o">.</span><span class="n">laplace</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">v</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">T</span>
 
-    # Use `solve` to rearrange the equation into a stencil expression
-    stencil = Eq(v.backward, solve(eqn, v.backward))
+    <span class="c1"># Use `solve` to rearrange the equation into a stencil expression</span>
+    <span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">eqn</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">backward</span><span class="p">))</span>
 
-    # Define residual injection at the location of the forward receivers
-    dt = model.critical_dt
-    residual = PointSource(name='residual', grid=model.grid,
-                           time_range=geometry.time_axis,
-                           coordinates=geometry.rec_positions)    
-    res_term = residual.inject(field=v.backward, expr=residual * dt**2 / model.m)
+    <span class="c1"># Define residual injection at the location of the forward receivers</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">PointSource</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;residual&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                           <span class="n">time_range</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="p">,</span>
+                           <span class="n">coordinates</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">)</span>    
+    <span class="n">res_term</span> <span class="o">=</span> <span class="n">residual</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">v</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">residual</span> <span class="o">*</span> <span class="n">dt</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
 
-    # Correlate u and v for the current time step and add it to the image
-    image_update = Eq(image, image - u * v)
+    <span class="c1"># Correlate u and v for the current time step and add it to the image</span>
+    <span class="n">image_update</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">image</span> <span class="o">-</span> <span class="n">u</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span>
 
-    return Operator([stencil] + res_term + [image_update],
-                    subs=model.spacing_map)
-</code></pre>
+    <span class="k">return</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil</span><span class="p">]</span> <span class="o">+</span> <span class="n">res_term</span> <span class="o">+</span> <span class="p">[</span><span class="n">image_update</span><span class="p">],</span>
+                    <span class="n">subs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)</span>
+</code></pre></div>
 
 <h2 id="implementation-of-the-imaging-loop">Implementation of the imaging loop</h2>
 <p>As just explained, the forward wave-equation is solved forward in time while the adjoint wave-equation is solved in a reversed time order. Therefore, the correlation of these two fields over time requires to store one of the two fields. The computational procedure for imaging follows:</p>
 <ul>
-<li>Simulate the forward wave-equation with the background velocity model to get the synthetic data and save the full wavefield $\mathbf{u}$</li>
+<li>Simulate the forward wave-equation with the background velocity model to get the synthetic data and save the full wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span></li>
 <li>Compute the data residual</li>
 <li>Back-propagate the data residual and compute on the fly the image contribution at each time step. </li>
 </ul>
 <p>This procedure is applied to multiple source positions (shots) and summed to obtain the full image of the subsurface. We can first visualize the varying locations of the sources that we will use. </p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-# Prepare the varying source locations
-source_locations = np.empty((nshots, 2), dtype=np.float32)
-source_locations[:, 0] = np.linspace(0., 1000, num=nshots)
-source_locations[:, 1] = 30.
+<span class="c1"># Prepare the varying source locations</span>
+<span class="n">source_locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nshots</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">source_locations</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">nshots</span><span class="p">)</span>
+<span class="n">source_locations</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">30.</span>
 
-plot_velocity(model, source=source_locations)
-</code></pre>
+<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source_locations</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_16_0.png" /></p>
-<pre><code class="python"># Run imaging loop over shots
-from devito import Function
+<div class="highlight"><pre><span></span><code><span class="c1"># Run imaging loop over shots</span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span>
 
-# Create image symbol and instantiate the previously defined imaging operator
-image = Function(name='image', grid=model.grid)
-op_imaging = ImagingOperator(model, image)
+<span class="c1"># Create image symbol and instantiate the previously defined imaging operator</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
+<span class="n">op_imaging</span> <span class="o">=</span> <span class="n">ImagingOperator</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 
-for i in range(nshots):
-    print('Imaging source %d out of %d' % (i+1, nshots))
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nshots</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Imaging source </span><span class="si">%d</span><span class="s1"> out of </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">nshots</span><span class="p">))</span>
 
-    # Update source location
-    geometry.src_positions[0, :] = source_locations[i, :]
+    <span class="c1"># Update source location</span>
+    <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">source_locations</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
-    # Generate synthetic data from true model
-    true_d, _, _ = solver.forward(vp=model.vp)
+    <span class="c1"># Generate synthetic data from true model</span>
+    <span class="n">true_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
 
-    # Compute smooth data and full forward wavefield u0
-    smooth_d, u0, _ = solver.forward(vp=model0.vp, save=True)
+    <span class="c1"># Compute smooth data and full forward wavefield u0</span>
+    <span class="n">smooth_d</span><span class="p">,</span> <span class="n">u0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    # Compute gradient from the data residual  
-    v = TimeFunction(name='v', grid=model.grid, time_order=2, space_order=4)
-    residual = smooth_d.data - true_d.data
-    op_imaging(u=u0, v=v, vp=model0.vp, dt=model0.critical_dt, 
-               residual=residual)
-
-</code></pre>
+    <span class="c1"># Compute gradient from the data residual  </span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">op_imaging</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">u0</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> 
+               <span class="n">residual</span><span class="o">=</span><span class="n">residual</span><span class="p">)</span>
+</code></pre></div>
 
 <pre><code>Imaging source 1 out of 21
 Imaging source 2 out of 21
@@ -375,17 +389,17 @@ Imaging source 19 out of 21
 Imaging source 20 out of 21
 Imaging source 21 out of 21
 </code></pre>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-from seismic import plot_image
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
 
-# Plot the inverted image
-plot_image(image, diff=True, depth_scaling=True)
-</code></pre>
+<span class="c1"># Plot the inverted image</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">diff</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">depth_scaling</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_18_0.png" /></p>
-<pre><code class="python">from devito import norm
-assert np.isclose(norm(image), 1e7, rtol=1e1)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="mf">1e7</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e1</span><span class="p">)</span>
+</code></pre></div>
 
 <p>And we have an image of the subsurface with a strong reflector at the original location.</p>
 <h2 id="references">References</h2>

@@ -108,162 +108,164 @@
               
                 <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
 <p>This is a first attempt at implemenenting the elastic wave equation as described in:</p>
-<p>[1] Jean Virieux (1986). ”P-SV wave propagation in heterogeneous media: Velocity‐stress finite‐difference method.” GEOPHYSICS, 51(4), 889-901. https://doi.org/10.1190/1.1442147</p>
+<p>[1] Jean Virieux (1986). ”P-SV wave propagation in heterogeneous media: Velocity‐stress finite‐difference method.” GEOPHYSICS, 51(4), 889-901. <a href="https://doi.org/10.1190/1.1442147">https://doi.org/10.1190/1.1442147</a></p>
 <p>The current version actually attempts to mirror the FDELMODC implementation by Jan Thorbecke:</p>
-<p>[2] https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf</p>
+<p>[2] <a href="https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf">https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf</a></p>
 <h2 id="explosive-source">Explosive source</h2>
-<p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature $g(t)$, the derivative of a Gaussian pulse, given by Eq 4:</p>
-<p>$$g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}$$</p>
-<pre><code class="python">from devito import *
-from seismic.source import WaveletSource, RickerSource, GaborSource, TimeAxis
-from seismic import plot_image
-import numpy as np
+<p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature <span><span class="MathJax_Preview">g(t)</span><script type="math/tex">g(t)</script></span>, the derivative of a Gaussian pulse, given by Eq 4:</p>
+<div>
+<div class="MathJax_Preview">g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}</div>
+<script type="math/tex; mode=display">g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}</script>
+</div>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">seismic.source</span> <span class="kn">import</span> <span class="n">WaveletSource</span><span class="p">,</span> <span class="n">RickerSource</span><span class="p">,</span> <span class="n">GaborSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-from sympy import init_printing, latex
-init_printing(use_latex='mathjax')
-</code></pre>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_printing</span><span class="p">,</span> <span class="n">latex</span>
+<span class="n">init_printing</span><span class="p">(</span><span class="n">use_latex</span><span class="o">=</span><span class="s1">&#39;mathjax&#39;</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># Initial grid: 1km x 1km, with spacing 100m
-extent = (1500., 1500.)
-shape = (201, 201)
-x = SpaceDimension(name='x', spacing=Constant(name='h_x', value=extent[0]/(shape[0]-1)))
-z = SpaceDimension(name='z', spacing=Constant(name='h_z', value=extent[1]/(shape[1]-1)))
-grid = Grid(extent=extent, shape=shape, dimensions=(x, z))
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Initial grid: 1km x 1km, with spacing 100m</span>
+<span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1500.</span><span class="p">,</span> <span class="mf">1500.</span><span class="p">)</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">201</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">SpaceDimension</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;h_x&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">SpaceDimension</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;h_z&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+</code></pre></div>
 
-<pre><code class="python">class DGaussSource(WaveletSource):
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">DGaussSource</span><span class="p">(</span><span class="n">WaveletSource</span><span class="p">):</span>
 
-    def wavelet(self, f0, t):
-        a = 0.004
-        return -2.*a*(t - 1/f0) * np.exp(-a * (t - 1/f0)**2)
+    <span class="k">def</span> <span class="nf">wavelet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">0.004</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mf">2.</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-# Timestep size from Eq. 7 with V_p=6000. and dx=100
-t0, tn = 0., 300.
-dt = (10. / np.sqrt(2.)) / 6.
-time_range = TimeAxis(start=t0, stop=tn, step=dt)
+<span class="c1"># Timestep size from Eq. 7 with V_p=6000. and dx=100</span>
+<span class="n">t0</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">300.</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="p">(</span><span class="mf">10.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">))</span> <span class="o">/</span> <span class="mf">6.</span>
+<span class="n">time_range</span> <span class="o">=</span> <span class="n">TimeAxis</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 
-src = RickerSource(name='src', grid=grid, f0=0.01, time_range=time_range)
-src.coordinates.data[:] = [750., 750.]
-</code></pre>
+<span class="n">src</span> <span class="o">=</span> <span class="n">RickerSource</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">time_range</span><span class="o">=</span><span class="n">time_range</span><span class="p">)</span>
+<span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">750.</span><span class="p">,</span> <span class="mf">750.</span><span class="p">]</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-src.show()
-</code></pre>
+<span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 
 <p><img alt="png" src="../06_elastic_files/06_elastic_4_0.png" /></p>
-<pre><code class="python"># Now we create the velocity and pressure fields
-so = 2
+<div class="highlight"><pre><span></span><code><span class="c1"># Now we create the velocity and pressure fields</span>
+<span class="n">so</span> <span class="o">=</span> <span class="mi">2</span>
 
-v = VectorTimeFunction(name='v', grid=grid, space_order=so, time_order=1)
-tau = TensorTimeFunction(name='t', grid=grid, space_order=so, time_order=1)
-</code></pre>
+<span class="n">v</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">tau</span> <span class="o">=</span> <span class="n">TensorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># Now let's try and create the staggered updates
-t = grid.stepping_dim
-time = grid.time_dim
+<div class="highlight"><pre><span></span><code><span class="c1"># Now let&#39;s try and create the staggered updates</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">stepping_dim</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">time_dim</span>
 
-# We need some initial conditions
-V_p = 2.0
-V_s = 1.0
-density = 1.8
+<span class="c1"># We need some initial conditions</span>
+<span class="n">V_p</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">V_s</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">density</span> <span class="o">=</span> <span class="mf">1.8</span>
 
-# The source injection term
-src_xx = src.inject(field=tau.forward[0,0], expr=src)
-src_zz = src.inject(field=tau.forward[1,1], expr=src)
+<span class="c1"># The source injection term</span>
+<span class="n">src_xx</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+<span class="n">src_zz</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
 
-# Thorbecke's parameter notation
-cp2 = V_p*V_p
-cs2 = V_s*V_s
-ro = 1/density
+<span class="c1"># Thorbecke&#39;s parameter notation</span>
+<span class="n">cp2</span> <span class="o">=</span> <span class="n">V_p</span><span class="o">*</span><span class="n">V_p</span>
+<span class="n">cs2</span> <span class="o">=</span> <span class="n">V_s</span><span class="o">*</span><span class="n">V_s</span>
+<span class="n">ro</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">density</span>
 
-mu = cs2*density
-l = (cp2*density - 2*mu)
+<span class="n">mu</span> <span class="o">=</span> <span class="n">cs2</span><span class="o">*</span><span class="n">density</span>
+<span class="n">l</span> <span class="o">=</span> <span class="p">(</span><span class="n">cp2</span><span class="o">*</span><span class="n">density</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">mu</span><span class="p">)</span>
 
-# fdelmodc reference implementation
-u_v = Eq(v.forward, v + dt*ro*div(tau))
-u_t = Eq(tau.forward, tau + dt * l * diag(div(v.forward)) + dt * mu * (grad(v.forward) + grad(v.forward).T))
+<span class="c1"># fdelmodc reference implementation</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">dt</span><span class="o">*</span><span class="n">ro</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
 
-op = Operator([u_v] + [u_t]  + src_xx + src_zz)
-</code></pre>
+<span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span>  <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">u_v
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">u_v</span>
+</code></pre></div>
 
-<p>$\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)}\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)}\end{matrix}\right]$</p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<p><span><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)}\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)}\end{matrix}\right]</script></span></p>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-op()
-</code></pre>
+<span class="n">op</span><span class="p">()</span>
+</code></pre></div>
 
 <pre><code>Operator `Kernel` run in 0.02 s
 </code></pre>
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-# Let's see what we got....
-plot_image(v[0].data[0], cmap=&quot;seismic&quot;)
-plot_image(v[1].data[0], cmap=&quot;seismic&quot;)
-plot_image(tau[0, 0].data[0], cmap=&quot;seismic&quot;)
-plot_image(tau[1,1].data[0], cmap=&quot;seismic&quot;)
-plot_image(tau[0,1].data[0], cmap=&quot;seismic&quot;)
-</code></pre>
+<span class="c1"># Let&#39;s see what we got....</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../06_elastic_files/06_elastic_9_0.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_9_1.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_9_2.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_9_3.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_9_4.png" /></p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-assert np.isclose(norm(v[0]), 0.6285093, atol=1e-4, rtol=0)
-</code></pre>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">0.6285093</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># Now that looks pretty! But let's do it again with a higher order...
-so = 12
-v = VectorTimeFunction(name='v', grid=grid, space_order=so, time_order=1)
-tau = TensorTimeFunction(name='t', grid=grid, space_order=so, time_order=1)
-# The source injection term
-src_xx = src.inject(field=tau.forward[0,0], expr=src)
-src_zz = src.inject(field=tau.forward[1,1], expr=src)
-# fdelmodc reference implementation
-u_v = Eq(v.forward, v + dt*ro*div(tau))
-u_t = Eq(tau.forward, tau + l * diag(div(v.forward)) + mu * (grad(v.forward) + grad(v.forward).T))
+<div class="highlight"><pre><span></span><code><span class="c1"># Now that looks pretty! But let&#39;s do it again with a higher order...</span>
+<span class="n">so</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">tau</span> <span class="o">=</span> <span class="n">TensorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;t&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># The source injection term</span>
+<span class="n">src_xx</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+<span class="n">src_zz</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+<span class="c1"># fdelmodc reference implementation</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">dt</span><span class="o">*</span><span class="n">ro</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
 
-op = Operator([u_v]+ [u_t] + src_xx + src_zz )
+<span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span><span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span> <span class="p">)</span>
+</code></pre></div>
 
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+<span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+<span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+<span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
+<span class="n">tau</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
 
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-v[0].data.fill(0.)
-v[1].data.fill(0.)
-tau[0,0].data.fill(0.)
-tau[0,1].data.fill(0.)
-tau[1,1].data.fill(0.)
-
-op()
-</code></pre>
+<span class="n">op</span><span class="p">()</span>
+</code></pre></div>
 
 <pre><code>Operator `Kernel` run in 0.02 s
 </code></pre>
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-# Let's see what we got....
-plot_image(v[0].data[0], cmap=&quot;seismic&quot;)
-plot_image(v[1].data[0], cmap=&quot;seismic&quot;)
-plot_image(tau[0, 0].data[0], cmap=&quot;seismic&quot;)
-plot_image(tau[1,1].data[0], cmap=&quot;seismic&quot;)
-plot_image(tau[0,1].data[0], cmap=&quot;seismic&quot;)
-</code></pre>
+<span class="c1"># Let&#39;s see what we got....</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+</code></pre></div>
 
 <p><img alt="png" src="../06_elastic_files/06_elastic_13_0.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_13_1.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_13_2.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_13_3.png" /></p>
 <p><img alt="png" src="../06_elastic_files/06_elastic_13_4.png" /></p>
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-assert np.isclose(norm(v[0]), 0.736816932, atol=1e-4, rtol=0)
-</code></pre>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">0.736816932</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
               
             </div>
           </div>

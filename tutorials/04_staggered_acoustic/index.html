@@ -102,132 +102,132 @@
           <div role="main">
             <div class="section">
               
-                <pre><code class="python">from devito import *
-from seismic.source import WaveletSource, TimeAxis
-from seismic import plot_image
-import numpy as np
+                <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">seismic.source</span> <span class="kn">import</span> <span class="n">WaveletSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
+<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-from sympy import init_printing, latex
-init_printing(use_latex='mathjax')
-</code></pre>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_printing</span><span class="p">,</span> <span class="n">latex</span>
+<span class="n">init_printing</span><span class="p">(</span><span class="n">use_latex</span><span class="o">=</span><span class="s1">&#39;mathjax&#39;</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># Initial grid: 1km x 1km, with spacing 100m
-extent = (2000., 2000.)
-shape = (81, 81)
-x = SpaceDimension(name='x', spacing=Constant(name='h_x', value=extent[0]/(shape[0]-1)))
-z = SpaceDimension(name='z', spacing=Constant(name='h_z', value=extent[1]/(shape[1]-1)))
-grid = Grid(extent=extent, shape=shape, dimensions=(x, z))
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Initial grid: 1km x 1km, with spacing 100m</span>
+<span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2000.</span><span class="p">,</span> <span class="mf">2000.</span><span class="p">)</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">81</span><span class="p">,</span> <span class="mi">81</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">SpaceDimension</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;h_x&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">SpaceDimension</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;h_z&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+</code></pre></div>
 
-<pre><code class="python">class DGaussSource(WaveletSource):
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">DGaussSource</span><span class="p">(</span><span class="n">WaveletSource</span><span class="p">):</span>
 
-    def wavelet(self, f0, t):
-        a = 0.004
-        return -2.*a*(t - 1./f0) * np.exp(-a * (t - 1./f0)**2)
+    <span class="k">def</span> <span class="nf">wavelet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="mf">0.004</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mf">2.</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mf">1.</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mf">1.</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-# Timestep size from Eq. 7 with V_p=6000. and dx=100
-t0, tn = 0., 200.
-dt = 1e2*(1. / np.sqrt(2.)) / 60.
-time_range = TimeAxis(start=t0, stop=tn, step=dt)
+<span class="c1"># Timestep size from Eq. 7 with V_p=6000. and dx=100</span>
+<span class="n">t0</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">200.</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">1e2</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">))</span> <span class="o">/</span> <span class="mf">60.</span>
+<span class="n">time_range</span> <span class="o">=</span> <span class="n">TimeAxis</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 
-src = DGaussSource(name='src', grid=grid, f0=0.01, time_range=time_range)
-src.coordinates.data[:] = [1000., 1000.]
-</code></pre>
+<span class="n">src</span> <span class="o">=</span> <span class="n">DGaussSource</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">time_range</span><span class="o">=</span><span class="n">time_range</span><span class="p">)</span>
+<span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1000.</span><span class="p">,</span> <span class="mf">1000.</span><span class="p">]</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-src.show()
-</code></pre>
+<span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
 
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_3_0.png" /></p>
-<pre><code class="python"># Now we create the velocity and pressure fields
-p = TimeFunction(name='p', grid=grid, staggered=NODE, space_order=2, time_order=1)
-v = VectorTimeFunction(name='v', grid=grid, space_order=2, time_order=1)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Now we create the velocity and pressure fields</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">v</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">from devito.finite_differences.operators import div, grad
-t = grid.stepping_dim
-time = grid.time_dim
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito.finite_differences.operators</span> <span class="kn">import</span> <span class="n">div</span><span class="p">,</span> <span class="n">grad</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">stepping_dim</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">time_dim</span>
 
-# We need some initial conditions
-V_p = 4.0
-density = 1.
+<span class="c1"># We need some initial conditions</span>
+<span class="n">V_p</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">density</span> <span class="o">=</span> <span class="mf">1.</span>
 
-ro = 1/density * dt
-l2m = V_p*V_p*density * dt
+<span class="n">ro</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">density</span> <span class="o">*</span> <span class="n">dt</span>
+<span class="n">l2m</span> <span class="o">=</span> <span class="n">V_p</span><span class="o">*</span><span class="n">V_p</span><span class="o">*</span><span class="n">density</span> <span class="o">*</span> <span class="n">dt</span>
 
-# The source injection term
-src_p = src.inject(field=p.forward, expr=src)
+<span class="c1"># The source injection term</span>
+<span class="n">src_p</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
 
-# 2nd order acoustic according to fdelmoc
-u_v_2 = Eq(v.forward, v + ro * grad(p))
-u_p_2 = Eq(p.forward, p + l2m * div(v.forward))
-</code></pre>
+<span class="c1"># 2nd order acoustic according to fdelmoc</span>
+<span class="n">u_v_2</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">grad</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+<span class="n">u_p_2</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">l2m</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+</code></pre></div>
 
-<pre><code class="python">u_v_2
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">u_v_2</span>
+</code></pre></div>
 
-<p>$\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 1.17851130197758 \frac{\partial}{\partial x} p{\left(t,x,z \right)}\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 1.17851130197758 \frac{\partial}{\partial z} p{\left(t,x,z \right)}\end{matrix}\right]$</p>
-<pre><code class="python">u_p_2
-</code></pre>
+<p><span><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 1.17851130197758 \frac{\partial}{\partial x} p{\left(t,x,z \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 1.17851130197758 \frac{\partial}{\partial z} p{\left(t,x,z \right)}\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 1.17851130197758 \frac{\partial}{\partial x} p{\left(t,x,z \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 1.17851130197758 \frac{\partial}{\partial z} p{\left(t,x,z \right)}\end{matrix}\right]</script></span></p>
+<div class="highlight"><pre><span></span><code><span class="n">u_p_2</span>
+</code></pre></div>
 
-<p>$\displaystyle p{\left(t + dt,x,z \right)} = p{\left(t,x,z \right)} + 18.8561808316413 \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)} + 18.8561808316413 \frac{\partial}{\partial z} \operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}$</p>
-<pre><code class="python">op_2 = Operator([u_v_2, u_p_2] + src_p)
-</code></pre>
+<p><span><span class="MathJax_Preview">\displaystyle p{\left(t + dt,x,z \right)} = p{\left(t,x,z \right)} + 18.8561808316413 \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)} + 18.8561808316413 \frac{\partial}{\partial z} \operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}</span><script type="math/tex">\displaystyle p{\left(t + dt,x,z \right)} = p{\left(t,x,z \right)} + 18.8561808316413 \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)} + 18.8561808316413 \frac{\partial}{\partial z} \operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}</script></span></p>
+<div class="highlight"><pre><span></span><code><span class="n">op_2</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v_2</span><span class="p">,</span> <span class="n">u_p_2</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_p</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-# Propagate the source
-op_2(time=src.time_range.num-1)
-</code></pre>
+<span class="c1"># Propagate the source</span>
+<span class="n">op_2</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
 
 <pre><code>Operator `Kernel` run in 0.05 s
 </code></pre>
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-# Let's see what we got....
-plot_image(v[0].data[0])
-plot_image(v[1].data[0])
-plot_image(p.data[0])
-</code></pre>
+<span class="c1"># Let&#39;s see what we got....</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</code></pre></div>
 
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_0.png" /></p>
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_1.png" /></p>
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_2.png" /></p>
-<pre><code class="python">norm_p = norm(p)
-assert np.isclose(norm_p, .35098, atol=1e-4, rtol=0)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="o">.</span><span class="mi">35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
 
-<pre><code class="python"># # 4th order acoustic according to fdelmoc
-# # Now we create the velocity and pressure fields
-p4 = TimeFunction(name='p', grid=grid, staggered=NODE, space_order=4, time_order=1)
-v4 = VectorTimeFunction(name='v', grid=grid, space_order=4, time_order=1)
-u_v_4 = Eq(v4.forward, v4 + ro * grad(p4))
-u_p_4 = Eq(p4.forward, p4 + l2m * div(v4.forward))
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># # 4th order acoustic according to fdelmoc</span>
+<span class="c1"># # Now we create the velocity and pressure fields</span>
+<span class="n">p4</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">v4</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">u_v_4</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v4</span> <span class="o">+</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">grad</span><span class="p">(</span><span class="n">p4</span><span class="p">))</span>
+<span class="n">u_p_4</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">p4</span> <span class="o">+</span> <span class="n">l2m</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+</code></pre></div>
 
-<pre><code class="python">#NBVAL_IGNORE_OUTPUT
-op_4 = Operator([u_v_4, u_p_4] + src_p)
-# Propagate the source
-op_4(time=src.time_range.num-1)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">op_4</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v_4</span><span class="p">,</span> <span class="n">u_p_4</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_p</span><span class="p">)</span>
+<span class="c1"># Propagate the source</span>
+<span class="n">op_4</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
 
 <pre><code>Operator `Kernel` run in 0.01 s
 </code></pre>
-<pre><code class="python">#NBVAL_SKIP
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-# Let's see what we got....
-plot_image(v4[0].data[-1])
-plot_image(v4[1].data[-1])
-plot_image(p4.data[-1])
-</code></pre>
+<span class="c1"># Let&#39;s see what we got....</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v4</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">v4</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div>
 
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_0.png" /></p>
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_1.png" /></p>
 <p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_2.png" /></p>
-<pre><code class="python">norm_p = norm(p)
-assert np.isclose(norm_p, .35098, atol=1e-4, rtol=0)
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="o">.</span><span class="mi">35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
               
             </div>
           </div>
