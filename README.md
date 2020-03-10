@@ -18,14 +18,15 @@ A good part of these examples can also be found in the [Devito] examples directo
 
 ## Installation
 
-To install this set of examples with it's dependencies run:
+To install this set of examples with its dependencies run in your terminal (OSX, Ubuntu):
 
 ```
 git clone https://github.com/slimgroup/Devito-Examples
 cd Devito-Examples
 pip install -e .
 ```
-This command will install all dependencies including [Devito] and wil lallow you to run the examples. To verify your installation you can run:
+
+This command will install all dependencies including [Devito] and will allow you to run the examples. To verify your installation you can run:
 
 ```
 python seismic/acoustic/acoustic_example.py -nd 1
@@ -56,7 +57,7 @@ The seismic examples and tutorials are organized as follows:
   for a neat and compact representation of the discretized partial differential
   equations.
 
-## Related litterature
+## Related literature
 
 Some of these examples are described in the following papers:
 
@@ -64,7 +65,7 @@ Some of these examples are described in the following papers:
 [TTI imaging](https://slim.gatech.edu/content/effects-wrong-adjoints-rtm-tti-media)\
 [Mathias Louboutin's thesis](https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics)
 
-More advanced geophysical application can be found in the [JUDI] repository. [JUDI] is a linear algebra DSL built on top of [Devito] for large scale inverse problems and including abstraction for source/receivers and handles large SEG-Y datasets with [SegyIO](https://github.com/slimgroup/SegyIO.jl). A complete description of [JUDI] and the related seismic inversion application can be found in [Philipp Witte's thesis](https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics).
+More advanced geophysical application can be found in the [JUDI] repository. [JUDI] is a linear algebra DSL built on top of [Devito] for large scale inverse problems and includes abstractions for source/receivers and handles large SEG-Y datasets with [SegyIO](https://github.com/slimgroup/SegyIO.jl). A complete description of [JUDI] and the related seismic inversion application can be found in [Philipp Witte's thesis](https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics).
 
 [JUDI]:https://github.com/slimgroup/JUDI.jl
 [Devito]:https://www.devitoproject.org
