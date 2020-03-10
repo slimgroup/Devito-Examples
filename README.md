@@ -2,14 +2,17 @@
 
 # Devito-Examples
 
-This repository contains a set of examples and tutorials for seismic modeling and inversion using Devito.
-These examples use four different wave equation namely:
+This repository contains a set of examples and tutorials for seismic modeling and inversion using [Devito].
+These examples use four different wave equations, namely
+
 - The acoustic isotropic wave equation in`seismic/acoustic`
 - The TTI pseudo-acoustic wave equation in `seismic/tti`
 - The elastic isotropic wave equation in `seismic/elastic`
 - The viscoelastic isotropic wave equation in `seismic/elastic`
 
-Currently, the acoustic isotropic wave equation solver also contains the propagator to the adjoint and linearized (Born) wave equation solution and the gradient of the FWI objective function (Application of the Jacobian toa data residual)
+Currently, the acoustic isotropic wave equation solver also contains the propagator associated with the adjoint and linearized (Born) wave-equation solution and the gradient of the FWI objective (application of the Jacobian to data residual)
+
+[Devito]:https://www.devitoproject.org
 
 ## How to navigate this directory
 
