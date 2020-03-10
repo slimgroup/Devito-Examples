@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from examples.seismic.model import Model, ModelElastic, ModelViscoelastic
+from seismic.model import Model, ModelElastic, ModelViscoelastic
 
 __all__ = ['demo_model']
 

@@ -212,8 +212,7 @@ class Model(GenericModel):
 
         self.delta = self._gen_phys_param(delta, 'delta', space_order)
         self.theta = self._gen_phys_param(theta, 'theta', space_order)
-        if self.grid.dim > 2:
-            self.phi = self._gen_phys_param(phi, 'phi', space_order)
+        self.phi = self._gen_phys_param(phi, 'phi', space_order)
 
     @property
     def _max_vp(self):

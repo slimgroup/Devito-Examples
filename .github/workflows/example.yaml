@@ -37,6 +37,16 @@ jobs:
     - name: Checkout devito
       uses: actions/checkout@v1
 
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install compilers for OSX
+      if: runner.os == 'macOS'
+      run: |
+          brew install gcc@7
+
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -45,17 +55,17 @@ jobs:
     - name: Seismic acoustic examples
       run: |
         python seismic/acoustic/acoustic_example.py --full -nd ${{ matrix.ndim }}
-        python seismic/acoustic/acoustic_example.py --full --checkpointing -nd ${{ matrix.ndim }}
         python seismic/acoustic/acoustic_example.py --constant --full -nd ${{ matrix.ndim }}
 
-    - name: Seismic tti examples
+    - name: Seismic advanced examples
       if:  matrix.ndim > 1
       run: |
+        python seismic/acoustic/acoustic_example.py --full --checkpointing -nd ${{ matrix.ndim }}
         python seismic/tti/tti_example.py -a basic -nd ${{ matrix.ndim }}
         python seismic/tti/tti_example.py -a basic --noazimuth -nd ${{ matrix.ndim }}
+        python seismic/elastic/elastic_example.py -nd ${{ matrix.ndim }}
+        python seismic/viscoelastic/viscoelastic_example.py -nd ${{ matrix.ndim }}
 
-    - name: Seismic elastic examples
+    - name: Tutorials
       if:  matrix.ndim > 1
-      run: |
-        py.test seismic/elastic/elastic_example.py -nd ${{ matrix.ndim }}
-        py.test seismic/viscoelastic/viscoelastic_example.py -nd ${{ matrix.ndim }}
+      run: py.test --nbval seismic/tutorials/

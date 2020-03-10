@@ -64,7 +64,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # 2D preset parameters
-    if args.ndiom == 2:
+    if args.ndim == 2:
         shape = (150, 150)
         spacing = (10.0, 10.0)
         tn = 750.0

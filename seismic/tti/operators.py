@@ -1,87 +1,15 @@
 from sympy import cos, sin, sqrt
 
 from devito import Eq, Operator, TimeFunction, NODE
-from seismic import PointSource, Receiver, rotated_fd
+from seismic import PointSource, Receiver
+from seismic.tti.rotated_fd import rotated_weighted_lap
 
 
-def second_order_stencil(model, u, v, H0, Hz):
+def second_order_stencil(model, u, v, space_order):
     """
     Creates the stencil corresponding to the second order TTI wave equation
     u.dt2 =  (epsilon * H0 + delta * Hz) - damp * u.dt
     v.dt2 =  (delta * H0 + Hz) - damp * v.dt
-    """
-    # Stencils
-    m, damp, delta, epsilon = model.m, model.damp, model.delta, model.epsilon
-    m = m * model.irho
-    epsilon = 1 + 2 * epsilon
-    delta = sqrt(1 + 2 * delta)
-    s = model.grid.stepping_dim.spacing
-
-    stencilp = 1.0 / (2.0 * m + s * damp) * \
-        (4.0 * m * u + (s * damp - 2.0 * m) *
-         u.backward + 2.0 * s ** 2 * (epsilon * H0 + delta * Hz))
-    stencilr = 1.0 / (2.0 * m + s * damp) * \
-        (4.0 * m * v + (s * damp - 2.0 * m) *
-         v.backward + 2.0 * s ** 2 * (delta * H0 + Hz))
-    first_stencil = Eq(u.forward, stencilp)
-    second_stencil = Eq(v.forward, stencilr)
-    stencils = [first_stencil, second_stencil]
-    return stencils
-
-def kernel_centered_2d(model, u, v, space_order):
-    """
-    TTI finite difference kernel. The equation solved is:
-
-    u.dt2 = (1+2 *epsilon) (Gxx(u)) + sqrt(1+ 2*delta) Gzz(v)
-    v.dt2 = sqrt(1+ 2*delta) (Gxx(u)) +  Gzz(v)
-
-    where epsilon and delta are the thomsen parameters. This function computes
-    H0 = Gxx(u) + Gyy(u)
-    Hz = Gzz(v)
-
-    Parameters
-    ----------
-    u : TimeFunction
-        First TTI field.
-    v : TimeFunction
-        Second TTI field.
-    space_order : int
-        Space discretization order.
-
-    Returns
-    -------
-    u and v component of the rotated Laplacian in 2D.
-    """
-    # Tilt and azymuth setup
-    costheta = cos(model.theta)
-    sintheta = sin(model.theta)
-
-    Gxx = Gxx_centered_2d(u, costheta, sintheta, space_order)
-    Gzz = Gzz_centered_2d(v, costheta, sintheta, space_order)
-    return second_order_stencil(model, u, v, Gxx, Gzz)
-
-
-def kernel_centered_3d(model, u, v, space_order):
-    """
-    TTI finite difference kernel. The equation solved is:
-
-    u.dt2 = (1+2 *epsilon) (Gxx(u)+Gyy(u)) + sqrt(1+ 2*delta) Gzz(v)
-    v.dt2 = sqrt(1+ 2*delta) (Gxx(u)+Gyy(u)) +  Gzz(v)
-
-    where epsilon and delta are the Thomsen parameters. This function computes
-    H0 = Gxx(u) + Gyy(u)
-    Hz = Gzz(v)
-
-    Parameters
-    ----------
-    u : TimeFunction
-        First TTI field.
-    v : TimeFunction
-        Second TTI field.
-
-    Returns
-    -------
-    u and v component of the rotated Laplacian in 2D.
     """
     # Tilt and azymuth setup
     costheta = cos(model.theta)
@@ -89,10 +17,23 @@ def kernel_centered_3d(model, u, v, space_order):
     cosphi = cos(model.phi)
     sinphi = sin(model.phi)
 
-    Gxx = Gxxyy_centered(u, costheta, sintheta, cosphi, sinphi, space_order)
-    Gzz = Gzz_centered(v, costheta, sintheta, cosphi, sinphi, space_order)
-    return second_order_stencil(model, u, v, Gxx, Gzz)
+    H0, Hz = rotated_weighted_lap(u, v, costheta, sintheta, cosphi, sinphi,
+                                  model.epsilon, model.delta, model.irho)
+    # Stencils
+    m, damp = model.m, model.damp
+    m = m * model.irho
+    s = model.grid.stepping_dim.spacing
 
+    stencilp = 1.0 / (2.0 * m + s * damp) * \
+        (4.0 * m * u + (s * damp - 2.0 * m) *
+         u.backward + 2.0 * s ** 2 * H0)
+    stencilr = 1.0 / (2.0 * m + s * damp) * \
+        (4.0 * m * v + (s * damp - 2.0 * m) *
+         v.backward + 2.0 * s ** 2 * Hz)
+    first_stencil = Eq(u.forward, stencilp)
+    second_stencil = Eq(v.forward, stencilr)
+    stencils = [first_stencil, second_stencil]
+    return stencils
 
 def particle_velocity_fields(model, space_order):
     """
@@ -262,5 +203,5 @@ def ForwardOperator(model, geometry, space_order=4,
     return Operator(stencils, subs=model.spacing_map, name='ForwardTTI', **kwargs)
 
 
-kernels = {('centered', 3): kernel_centered_3d, ('centered', 2): kernel_centered_2d,
+kernels = {('centered', 3): second_order_stencil, ('centered', 2): second_order_stencil,
            ('staggered', 3): kernel_staggered_3d, ('staggered', 2): kernel_staggered_2d}

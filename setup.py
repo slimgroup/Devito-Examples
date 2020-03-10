@@ -10,4 +10,4 @@ setup(name='Devito-Examples',
       author_email='mlouboutin3@gatech.edu',
       license='MIT',
       packages=['seismic'],
-      install_requires=['devito@https://github.com/devitocodes/devito@master', 'ipython', 'matplotlib'])
+      install_requires=['devito@ git+https://github.com/devitocodes/devito@master', 'ipython', 'matplotlib'])

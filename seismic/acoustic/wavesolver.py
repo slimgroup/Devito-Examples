@@ -4,7 +4,7 @@ from seismic import PointSource, Receiver
 from seismic.acoustic.operators import (
     ForwardOperator, AdjointOperator, GradientOperator, BornOperator
 )
-from examples.checkpointing.checkpoint import DevitoCheckpoint, CheckpointOperator
+from seismic.checkpointing.checkpoint import DevitoCheckpoint, CheckpointOperator
 from pyrevolve import Revolver
 
 
@@ -157,7 +157,6 @@ class AcousticWaveSolver(object):
         Gradient modelling function for computing the adjoint of the
         Linearized Born modelling function, ie. the action of the
         Jacobian adjoint on an input data.
-
         Parameters
         ----------
         rec : SparseTimeFunction
@@ -170,7 +169,6 @@ class AcousticWaveSolver(object):
             Stores the gradient field.
         vp : Function or float, optional
             The time-constant velocity.
-
         Returns
         -------
         Gradient field and performance summary.
