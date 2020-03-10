@@ -32,6 +32,8 @@ This command will install all dependencies including [Devito] and will allow you
 python seismic/acoustic/acoustic_example.py -nd 1
 ```
 
+Some of the examples require velocity models such as the marmousi-ii model. These models can be downloaded at [devito-data](https://github.com/devitocodes/data) to be used in the tutorials.
+
 ## How to navigate this directory
 
 Examples and tutorials are provided in the form of single Python files and as Jupyter

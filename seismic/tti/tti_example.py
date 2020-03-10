@@ -5,10 +5,12 @@ from seismic.tti import AnisotropicWaveSolver
 
 
 def tti_setup(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=250.0,
-              space_order=4, nbl=10, preset='layers-tti', **kwargs):
+              space_order=4, nbl=10, preset='layers-tti', density=False,
+              vti=False, **kwargs):
 
     # Two layer model for true velocity
-    model = demo_model(preset, shape=shape, spacing=spacing, nbl=nbl)
+    model = demo_model(preset, shape=shape, spacing=spacing, nbl=nbl,
+                       density=density, vti=vti)
 
     # Source and receiver geometries
     geometry = setup_geometry(model, tn)
@@ -19,9 +21,10 @@ def tti_setup(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=250.0,
 
 def run(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=250.0,
         autotune=False, time_order=2, space_order=4, nbl=10,
-        kernel='centered', **kwargs):
+        kernel='centered', density=False, vti=False, **kwargs):
 
-    solver = tti_setup(shape, spacing, tn, space_order, nbl, **kwargs)
+    solver = tti_setup(shape, spacing, tn, space_order, nbl,
+                       density=density, vti=vti, **kwargs)
 
     rec, u, v, summary = solver.forward(autotune=autotune, kernel=kernel)
 
@@ -35,6 +38,10 @@ if __name__ == "__main__":
                         help="Preset to determine the number of dimensions")
     parser.add_argument('--noazimuth', dest='azi', default=False, action='store_true',
                         help="Whether or not to use an azimuth angle")
+    parser.add_argument('-rho', '--density', default=False, action='store_true',
+                        help="Whether to include density")
+    parser.add_argument('-vti', '--vti', default=False, action='store_true',
+                        help="VTI modeling, no tilt or azimuth")
     parser.add_argument('-a', '--autotune', default='off',
                         choices=(configuration._accepted['autotuning']),
                         help="Operator auto-tuning mode")
@@ -67,4 +74,5 @@ if __name__ == "__main__":
 
     run(shape=shape, spacing=spacing, nbl=args.nbl, tn=tn,
         space_order=args.space_order, autotune=args.autotune, dse=args.dse,
-        dle=args.dle, kernel=args.kernel, preset=preset)
+        dle=args.dle, kernel=args.kernel, preset=preset, rho=args.density,
+        vti=args.vti)

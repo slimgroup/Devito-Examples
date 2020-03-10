@@ -284,7 +284,8 @@ class Model(GenericModel):
         """
         model_parameters = self.physical_params()
         for i in physical_parameters:
-            gaussian_smooth(model_parameters[i], sigma=sigma)
+            if i in model_parameters:
+                gaussian_smooth(model_parameters[i], sigma=sigma)
         return
 
 
