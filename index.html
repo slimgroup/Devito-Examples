@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="None">
+  
+  
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>SLIM's Devito examples</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Home";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> SLIM's Devito examples</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul class="current">
+                    <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#disclaimer">Disclaimer</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#related-literature">Related literature</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/01_modelling/">Acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/02_rtm/">Acosutic RTM</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/03_fwi/">Acoustic FWI</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/04_staggered_acoustic/">First order acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/06_elastic/">Elastic modeling with constant parameters</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">SLIM's Devito examples</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="devito-examples">Devito-Examples</h1>
+<p>Documentation for the seismic modeling and inversion examples developed at Georgia Institute of Technology with contribution from the rest of the Devito team at Imperial College London (in particular F. Luporini, R. Nelson and G. Bismas).</p>
+<h2 id="overview">Overview</h2>
+<p>This repository contains a set of examples and tutorials for seismic modeling and inversion using <a href="https://www.devitoproject.org">Devito</a>.
+These examples use four different wave equations, namely</p>
+<ul>
+<li>The acoustic isotropic wave equation in<code>seismic/acoustic</code></li>
+<li>The TTI pseudo-acoustic wave equation in <code>seismic/tti</code></li>
+<li>The elastic isotropic wave equation in <code>seismic/elastic</code></li>
+<li>The viscoelastic isotropic wave equation in <code>seismic/elastic</code></li>
+</ul>
+<p>Currently, the acoustic isotropic wave equation solver also contains the propagator associated with the adjoint and linearized (Born) wave-equation solution and the gradient of the FWI objective (application of the Jacobian to data residual)</p>
+<h2 id="disclaimer">Disclaimer</h2>
+<p>A good part of these examples can also be found in the <a href="https://www.devitoproject.org">Devito</a> examples directory as a fork of this one. These examples for seismic applications have been developed and implemented by <a href="https://slim.gatech.edu/people/mathias-louboutin">Mathias Louboutin</a> at Georgian Institute of Technology. Some extra examples are also included over there, such as tutorials on the <a href="https://www.devitoproject.org">Devito</a> compiler as these examples have been developed primarily at Imperial College London.</p>
+<h2 id="installation">Installation</h2>
+<p>To install this set of examples with its dependencies run in your terminal (OSX, Ubuntu):</p>
+<pre><code>git clone https://github.com/slimgroup/Devito-Examples
+cd Devito-Examples
+pip install -e .
+</code></pre>
+
+<p>This command will install all dependencies including <a href="https://www.devitoproject.org">Devito</a> and will allow you to run the examples. To verify your installation you can run:</p>
+<pre><code>python seismic/acoustic/acoustic_example.py -nd 1
+</code></pre>
+
+<p>Some of the examples require velocity models such as the marmousi-ii model. These models can be downloaded at <a href="https://github.com/devitocodes/data">devito-data</a> to be used in the tutorials.</p>
+<h2 id="related-literature">Related literature</h2>
+<p>Some of these examples are described in the following papers:</p>
+<p><a href="https://slim.gatech.edu/content/devito-embedded-domain-specific-language-finite-differences-and-geophysical-exploration">Devito's symbolic API</a>\
+<a href="https://slim.gatech.edu/content/effects-wrong-adjoints-rtm-tti-media">TTI imaging</a>\
+<a href="https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics">Mathias Louboutin's thesis</a></p>
+<p>More advanced geophysical application can be found in the <a href="https://github.com/slimgroup/JUDI.jl">JUDI</a> repository. <a href="https://github.com/slimgroup/JUDI.jl">JUDI</a> is a linear algebra DSL built on top of <a href="https://www.devitoproject.org">Devito</a> for large scale inverse problems and includes abstractions for source/receivers and handles large SEG-Y datasets with <a href="https://github.com/slimgroup/SegyIO.jl">SegyIO</a>. A complete description of <a href="https://github.com/slimgroup/JUDI.jl">JUDI</a> and the related seismic inversion application can be found in <a href="https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics">Philipp Witte's thesis</a>.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorials/01_modelling/" class="btn btn-neutral float-right" title="Acoustic modeling">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="tutorials/01_modelling/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.1
+Build Date UTC : 2020-03-10 20:40:14
+-->

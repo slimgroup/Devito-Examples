@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Acoustic FWI - SLIM's Devito examples</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Acoustic FWI";
+    var mkdocs_page_input_path = "tutorials/03_fwi.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acosutic RTM</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic FWI</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#inversion-requirement">Inversion requirement</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#inversion-computational-setup">Inversion computational setup</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#notes-on-the-operators">Notes on the operators</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#computational-considerations">Computational considerations</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SLIM's Devito examples</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>Acoustic FWI</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="03-full-waveform-inversion-fwi">03 - Full-Waveform Inversion (FWI)</h1>
+<p>This notebook is the third in a series of tutorial highlighting various aspects of seismic inversion based on Devito operators. In this second example we aim to highlight the core ideas behind seismic inversion, where we create an image of the subsurface from field recorded data. This tutorial follows on the modelling tutorial and will reuse the modelling and velocity model.</p>
+<h2 id="inversion-requirement">Inversion requirement</h2>
+<p>Seismic inversion relies on two known parameters:</p>
+<ul>
+<li>
+<p><strong>Field data</strong> - or also called <strong>recorded data</strong>. This is a shot record corresponding to the true velocity model. In practice this data is acquired as described in the first tutorial. In order to simplify this tutorial we will fake field data by modelling it with the true velocity model.</p>
+</li>
+<li>
+<p><strong>Initial velocity model</strong>. This is a velocity model that has been obtained by processing the field data. This model is a rough and very smooth estimate of the velocity as an initial estimate for the inversion. This is a necessary requirement for any optimization (method).</p>
+</li>
+</ul>
+<h2 id="inversion-computational-setup">Inversion computational setup</h2>
+<p>In this tutorial, we will introduce the gradient operator. This operator corresponds to the imaging condition introduced in the previous tutorial with some minor modifications that are defined by the objective function (also referred to in the tutorial series as the <em>functional</em>, <em>f</em>) and its gradient, <em>g</em>. We will define these two terms in the tutorial too.</p>
+<h2 id="notes-on-the-operators">Notes on the operators</h2>
+<p>As we have already described the creation of a forward modelling operator, we will only call a wrapper function here. This wrapper already contains all the necessary operators for seismic modeling, imaging and inversion. Operators introduced for the first time in this tutorial will be properly described.</p>
+<pre><code class="python">import numpy as np
+%matplotlib inline
+
+from devito import configuration
+configuration['log-level'] = 'WARNING'
+</code></pre>
+
+<h2 id="computational-considerations">Computational considerations</h2>
+<p>As we will see, FWI is computationally extremely demanding, even more than RTM. To keep this tutorial as lightwight as possible we therefore again use a very small demonstration model. We also define here a few parameters for the final example runs that can be changed to modify the overall runtime of the tutorial.</p>
+<pre><code class="python">nshots = 9  # Number of shots to create gradient from
+nreceivers = 101  # Number of receiver locations per shot 
+fwi_iterations = 5  # Number of outer FWI iterations
+</code></pre>
+
+<h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
+<p>We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.</p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+from seismic import demo_model, plot_velocity, plot_perturbation
+
+# Define true and initial model
+shape = (101, 101)  # Number of grid point (nx, nz)
+spacing = (10., 10.)  # Grid spacing in m. The domain size is now 1km by 1km
+origin = (0., 0.)  # Need origin to define relative source and receiver locations
+
+model = demo_model('circle-isotropic', vp_circle=3.0, vp_background=2.5,
+                    origin=origin, shape=shape, spacing=spacing, nbl=40)
+
+model0 = demo_model('circle-isotropic', vp_circle=2.5, vp_background=2.5,
+                     origin=origin, shape=shape, spacing=spacing, nbl=40,
+                    grid = model.grid)
+
+plot_velocity(model)
+plot_velocity(model0)
+plot_perturbation(model0, model)
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_5_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_5_1.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_5_2.png" /></p>
+<h2 id="acquisition-geometry">Acquisition geometry</h2>
+<p>In this tutorial, we will use the easiest case for inversion, namely a transmission experiment. The sources are located on one side of the model and the receivers on the other side. This allows to record most of the information necessary for inversion, as reflections usually lead to poor inversion results.</p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+# Define acquisition geometry: source
+from seismic import AcquisitionGeometry
+
+t0 = 0.
+tn = 1000. 
+f0 = 0.010
+# First, position source centrally in all dimensions, then set depth
+src_coordinates = np.empty((1, 2))
+src_coordinates[0, :] = np.array(model.domain_size) * .5
+src_coordinates[0, 0] = 20.  # Depth is 20m
+
+
+# Define acquisition geometry: receivers
+
+# Initialize receivers for synthetic and imaging data
+rec_coordinates = np.empty((nreceivers, 2))
+rec_coordinates[:, 1] = np.linspace(0, model.domain_size[0], num=nreceivers)
+rec_coordinates[:, 0] = 980.
+
+# Geometry
+
+geometry = AcquisitionGeometry(model, rec_coordinates, src_coordinates, t0, tn, f0=f0, src_type='Ricker')
+# We can plot the time signature to see the wavelet
+geometry.src.show()
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_7_0.png" /></p>
+<pre><code class="python"># Plot acquisition geometry
+plot_velocity(model, source=geometry.src_positions,
+              receiver=geometry.rec_positions[::4, :])
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_8_0.png" /></p>
+<h2 id="true-and-smooth-data">True and smooth data</h2>
+<p>We can generate shot records for the true and smoothed initial velocity models, since the difference between them will again form the basis of our imaging procedure.</p>
+<pre><code class="python"># Compute synthetic data with forward operator 
+from seismic.acoustic import AcousticWaveSolver
+
+solver = AcousticWaveSolver(model, geometry, space_order=4)
+true_d, _, _ = solver.forward(vp=model.vp)
+</code></pre>
+
+<pre><code class="python"># Compute initial data with forward operator 
+smooth_d, _, _ = solver.forward(vp=model0.vp)
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+from seismic import plot_shotrecord
+
+# Plot shot record for true and smooth velocity model and the difference
+plot_shotrecord(true_d.data, model, t0, tn)
+plot_shotrecord(smooth_d.data, model, t0, tn)
+plot_shotrecord(smooth_d.data - true_d.data, model, t0, tn)
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_12_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_12_1.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_12_2.png" /></p>
+<h1 id="full-waveform-inversion">Full-Waveform Inversion</h1>
+<h2 id="formulation">Formulation</h2>
+<p>Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, $\mathbf{c}$, or equivalently the square slowness of the wave, $\mathbf{m} = \frac{1}{\mathbf{c}^2}$, from a given set of measurements of the pressure wavefield $\mathbf{u}$. This can be expressed as the following optimization problem [1, 2]:</p>
+<p>\begin{aligned}
+    \mathop{\hbox{minimize}}_{\mathbf{m}} \Phi_s(\mathbf{m})&amp;=\frac{1}{2}\left\lVert\mathbf{P}_r
+    \mathbf{u} - \mathbf{d}\right\rVert_2^2 \
+    \mathbf{u} &amp;= \mathbf{A}(\mathbf{m})^{-1} \mathbf{P}_s^T \mathbf{q}_s, 
+\end{aligned}</p>
+<p>where $\mathbf{P}_r$ is the sampling operator at the receiver locations, $\mathbf{P}_s^T$ is the injection operator at the source locations, $\mathbf{A}(\mathbf{m})$ is the operator representing the discretized wave equation matrix, $\mathbf{u}$ is the discrete synthetic pressure wavefield, $\mathbf{q}_s$ is the corresponding pressure source and $\mathbf{d}$ is the measured data. It is worth noting that $\mathbf{m}$ is the unknown in this formulation and that multiple implementations of the wave equation operator $\mathbf{A}(\mathbf{m})$ are possible. </p>
+<p>We have already defined a concrete solver scheme for $\mathbf{A}(\mathbf{m})$ in the first tutorial, including appropriate implementations of the sampling operator $\mathbf{P}_r$ and source term $\mathbf{q}_s$.</p>
+<p>To solve this optimization problem using a gradient-based method, we use the
+adjoint-state method to evaluate the gradient $\nabla\Phi_s(\mathbf{m})$:</p>
+<p>\begin{align}
+ \nabla\Phi_s(\mathbf{m})=\sum_{\mathbf{t} =1}^{n_t}\mathbf{u}[\mathbf{t}] \mathbf{v}_{tt}[\mathbf{t}] =\mathbf{J}^T\delta\mathbf{d}_s,
+\end{align}</p>
+<p>where $n_t$ is the number of computational time steps, $\delta\mathbf{d}<em>s = \left(\mathbf{P}_r \mathbf{u} - \mathbf{d} \right)$ is the data residual (difference between the measured data and the modelled data), $\mathbf{J}$ is the Jacobian operator and $\mathbf{v}</em>{tt}$ is the second-order time derivative of the adjoint wavefield solving:</p>
+<p>\begin{align}
+ \mathbf{A}^T(\mathbf{m}) \mathbf{v} = \mathbf{P}_r^T \delta\mathbf{d}.
+\end{align}</p>
+<p>We see that the gradient of the FWI function is the previously defined imaging condition with an extra second-order time derivative. We will therefore reuse the operators defined previously inside a Devito wrapper.</p>
+<h2 id="fwi-gradient-operator">FWI gradient operator</h2>
+<p>To compute a single gradient $\nabla\Phi_s(\mathbf{m})$ in our optimization workflow we again use <code>solver.forward</code> to compute the entire forward wavefield $\mathbf{u}$ and a similar pre-defined gradient operator to compute the adjoint wavefield <code>v</code>. The gradient operator provided by our <code>solver</code> utility also computes the correlation between the wavefields, allowing us to encode a similar procedure to the previous imaging tutorial as our gradient calculation:</p>
+<ul>
+<li>Simulate the forward wavefield with the background velocity model to get the synthetic data and save the full wavefield $\mathbf{u}$</li>
+<li>Compute the data residual</li>
+<li>Back-propagate the data residual and compute on the fly the gradient contribution at each time step. </li>
+</ul>
+<p>This procedure is applied to multiple source positions and summed to obtain a gradient image of the subsurface. We again prepare the source locations for each shot and visualize them, before defining a single gradient computation over a number of shots as a single function.</p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+
+# Prepare the varying source locations sources
+source_locations = np.empty((nshots, 2), dtype=np.float32)
+source_locations[:, 0] = 30.
+source_locations[:, 1] = np.linspace(0., 1000, num=nshots)
+
+plot_velocity(model, source=source_locations)
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_15_0.png" /></p>
+<pre><code class="python"># Create FWI gradient kernel 
+from devito import Function, TimeFunction
+from seismic import Receiver
+
+import scipy
+def fwi_gradient(vp_in):    
+    # Create symbols to hold the gradient and residual
+    grad = Function(name=&quot;grad&quot;, grid=model.grid)
+    residual = Receiver(name='rec', grid=model.grid,
+                        time_range=geometry.time_axis, 
+                        coordinates=geometry.rec_positions)
+    objective = 0.
+    for i in range(nshots):
+        # Update source location
+        geometry.src_positions[0, :] = source_locations[i, :]
+
+        # Generate synthetic data from true model
+        true_d, _, _ = solver.forward(vp=model.vp)
+
+        # Compute smooth data and full forward wavefield u0
+        smooth_d, u0, _ = solver.forward(vp=vp_in, save=True)
+
+        # Compute gradient from data residual and update objective function 
+        residual.data[:] = smooth_d.data[:] - true_d.data[:]
+
+        objective += .5*np.linalg.norm(residual.data.flatten())**2
+        solver.gradient(rec=residual, u=u0, vp=vp_in, grad=grad)
+
+    return objective, -grad.data
+</code></pre>
+
+<p>Having defined our FWI gradient procedure we can compute the initial iteration from our starting model. This allows us to visualize the gradient alongside the model perturbation and the effect of the gradient update on the model.</p>
+<pre><code class="python"># Compute gradient of initial model
+ff, update = fwi_gradient(model0.vp)
+assert np.isclose(ff, 57283, rtol=1e0)
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+from seismic import plot_image
+
+# Plot the FWI gradient
+plot_image(update, cmap=&quot;jet&quot;)
+
+# Plot the difference between the true and initial model.
+# This is not known in practice as only the initial model is provided.
+plot_image(model0.vp.data - model.vp.data, cmap=&quot;jet&quot;)
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_19_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_19_1.png" /></p>
+<p>We see that the gradient and the true perturbation have the same sign, therefore, with an appropriate scaling factor, we will update the model in the correct direction.</p>
+<pre><code class="python"># Define bounding box constraints on the solution.
+def apply_box_constraint(vp):
+    # Maximum possible 'realistic' velocity is 3.5 km/sec
+    # Minimum possible 'realistic' velocity is 2 km/sec
+    return np.clip(vp, 2.0, 3.5)
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+
+# Run FWI with gradient descent
+history = np.zeros((fwi_iterations, 1))
+for i in range(0, fwi_iterations):
+    # Compute the functional value and gradient for the current
+    # model estimate
+    phi, direction = fwi_gradient(model0.vp)
+
+    # Store the history of the functional values
+    history[i] = phi
+
+    # Artificial Step length for gradient descent
+    # In practice this would be replaced by a Linesearch (Wolfe, ...)
+    # that would guarantee functional decrease Phi(m-alpha g) &lt;= epsilon Phi(m)
+    # where epsilon is a minimum decrease constant
+    alpha = .05 / np.abs(direction).max()
+
+    # Update the model estimate and enforce minimum/maximum values
+    model0.vp = apply_box_constraint(model0.vp.data - alpha * direction)
+
+    # Log the progress made
+    print('Objective value is %f at iteration %d' % (phi, i+1))
+</code></pre>
+
+<pre><code>Objective value is 57265.621845 at iteration 1
+Objective value is 35755.516858 at iteration 2
+Objective value is 20997.312671 at iteration 3
+Objective value is 11545.767846 at iteration 4
+Objective value is 5784.814165 at iteration 5
+</code></pre>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+
+# Plot inverted velocity model
+plot_velocity(model0)
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_23_0.png" /></p>
+<pre><code class="python">#NBVAL_SKIP
+import matplotlib.pyplot as plt
+
+# Plot objective function decrease
+plt.figure()
+plt.loglog(history)
+plt.xlabel('Iteration number')
+plt.ylabel('Misift value Phi')
+plt.title('Convergence')
+plt.show()
+</code></pre>
+
+<p><img alt="png" src="../03_fwi_files/03_fwi_24_0.png" /></p>
+<h2 id="references">References</h2>
+<p>[1] <em>Virieux, J. and Operto, S.: An overview of full-waveform inversion in exploration geophysics, GEOPHYSICS, 74, WCC1–WCC26, doi:10.1190/1.3238367, http://library.seg.org/doi/abs/10.1190/1.3238367, 2009.</em></p>
+<p>[2] <em>Haber, E., Chung, M., and Herrmann, F. J.: An effective method for parameter estimation with PDE constraints with multiple right hand sides, SIAM Journal on Optimization, 22, http://dx.doi.org/10.1137/11081126X, 2012.</em></p>
+<p><sup>This notebook is part of the tutorial "Optimised Symbolic Finite Difference Computation with Devito" presented at the Intel® HPC Developer Conference 2017.</sup></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../04_staggered_acoustic/" class="btn btn-neutral float-right" title="First order acoustic modeling">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../02_rtm/" class="btn btn-neutral" title="Acosutic RTM"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../02_rtm/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../04_staggered_acoustic/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Elastic modeling with varying parameters - SLIM's Devito examples</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Elastic modeling with varying parameters";
+    var mkdocs_page_input_path = "tutorials/05_elastic_varying_parameters.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acosutic RTM</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Elastic modeling with varying parameters</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#explosive-source">Explosive source</a>
+    </li>
+    </ul>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SLIM's Devito examples</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>Elastic modeling with varying parameters</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
+<p>This second elastic tutorial extends the previous constant parameter implementation to varying parameters (Lame parameters) and takes advantage of the Tensorial capabilities of Devito to write the elastic wave equation following its mathematical definition. The staggering is automated via the TensorFunction API.</p>
+<h2 id="explosive-source">Explosive source</h2>
+<p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature $g(t)$, the derivative of a Gaussian pulse, given by Eq 4:</p>
+<p>$$g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}$$</p>
+<pre><code class="python">from devito import *
+from seismic.source import RickerSource, Receiver, TimeAxis
+from seismic import plot_image, demo_model
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+from sympy import init_printing, latex
+init_printing(use_latex='mathjax')
+
+# Some ploting setup
+plt.rc('font', family='serif')
+plt.rc('xtick', labelsize=20) 
+plt.rc('ytick', labelsize=20)
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+# Initial grid: 3km x 3km, with spacing 10m
+nlayers = 5
+model = demo_model(preset='layers-elastic', nlayers=nlayers, shape=(301, 301), spacing=(10., 10.))
+</code></pre>
+
+<pre><code>Operator `initdamp` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+aspect_ratio = model.shape[0]/model.shape[1]
+
+plt_options_model = {'cmap': 'jet', 'extent': [model.origin[0], model.origin[0] + model.domain_size[0],
+                                               model.origin[1] + model.domain_size[1], model.origin[1]]}
+fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(15, 15))
+
+slices = [slice(model.nbl, -model.nbl), slice(model.nbl, -model.nbl)]
+
+img1 = ax[0].imshow(np.transpose(model.lam.data[slices]), vmin=1.5**2, vmax=4.0**2, **plt_options_model)
+fig.colorbar(img1, ax=ax[0])
+ax[0].set_title(r&quot;First Lam\'e parameter $\lambda$&quot;, fontsize=20)
+ax[0].set_xlabel('X (m)', fontsize=20)
+ax[0].set_ylabel('Depth (m)', fontsize=20)
+ax[0].set_aspect('auto')
+
+
+img2 = ax[1].imshow(np.transpose(model.mu.data[slices]), vmin=0, vmax=15, **plt_options_model)
+fig.colorbar(img2, ax=ax[1])
+ax[1].set_title(r&quot;Shear modulus $\mu$&quot;, fontsize=20)
+ax[1].set_xlabel('X (m)', fontsize=20)
+ax[1].set_ylabel('Depth (m)', fontsize=20)
+ax[1].set_aspect('auto')
+
+
+img3 = ax[2].imshow(1/np.transpose(model.irho.data[slices]), vmin=1.0, vmax=3.0, **plt_options_model)
+fig.colorbar(img3, ax=ax[2])
+ax[2].set_title(r&quot;Density $\rho$&quot;, fontsize=20)
+ax[2].set_xlabel('X (m)', fontsize=20)
+ax[2].set_ylabel('Depth (m)', fontsize=20)
+ax[2].set_aspect('auto')
+
+
+plt.tight_layout()
+</code></pre>
+
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_3_0.png" /></p>
+<pre><code class="python"># Timestep size from Eq. 7 with V_p=6000. and dx=100
+t0, tn = 0., 2000.
+dt = model.critical_dt
+time_range = TimeAxis(start=t0, stop=tn, step=dt)
+
+src = RickerSource(name='src', grid=model.grid, f0=0.015, time_range=time_range)
+src.coordinates.data[:] = [1500., 10.]
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+
+src.show()
+</code></pre>
+
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_5_0.png" /></p>
+<h1 id="vectorial-form">Vectorial form</h1>
+<p>While conventional litterature writes the elastic wave-equation as a set of scalar PDEs, the higher level representation comes from Hooke's law and the equation of motion and writes as:</p>
+<p>\begin{cases}
+&amp;\frac{dv}{dt} = \nabla . \tau \
+&amp;\frac{d \tau}{dt} = \lambda tr(\nabla v) \mathbf{I}  + \mu (\nabla v + (\nabla v)^T)
+\end{cases}</p>
+<p>and as $tr(\nabla v)$ is the divergence of $v$ we can reqrite it as</p>
+<p>\begin{cases}
+&amp;\frac{dv}{dt} = \nabla . \tau \
+&amp;\frac{d \tau}{dt} = \lambda \text{diag}(\nabla . v) + \mu (\nabla v + (\nabla v)^T)
+\end{cases}</p>
+<p>where $v$ is a vector valued function:</p>
+<p>$v(t, x, y) = (v_x(t, x, y), v_y(t, x, y)$</p>
+<p>and the stress $\tau$ is a symmetric tensor valued function:</p>
+<p>$\tau(t, x, y) = \begin{bmatrix}\tau_{xx}(t, x, y) &amp; \tau_{xy}(t, x, y)\\tau_{xy}t, x, y) &amp; \tau_{yy}(t, x, y)\end{bmatrix}$</p>
+<p>We show in the following how to setup the elastic wave-equation form Devito's high-level tensorial types.</p>
+<pre><code class="python"># Now we create the velocity and pressure fields
+so = 8
+
+x, z = model.grid.dimensions
+t = model.grid.stepping_dim
+time = model.grid.time_dim
+s = time.spacing
+
+v = VectorTimeFunction(name='v', grid=model.grid, space_order=so, time_order=1)
+tau = TensorTimeFunction(name='t', grid=model.grid, space_order=so, time_order=1)
+</code></pre>
+
+<pre><code class="python"># The source injection term
+src_xx = src.inject(field=tau.forward[0, 0], expr=s*src)
+src_zz = src.inject(field=tau.forward[1, 1], expr=s*src)
+
+# The receiver
+nrec = 301
+rec = Receiver(name=&quot;rec&quot;, grid=model.grid, npoint=nrec, time_range=time_range)
+rec.coordinates.data[:, 0] = np.linspace(0., model.domain_size[0], num=nrec)
+rec.coordinates.data[:, -1] = 5.
+
+rec2 = Receiver(name=&quot;rec2&quot;, grid=model.grid, npoint=nrec, time_range=time_range)
+rec2.coordinates.data[:, 0] = np.linspace(0., model.domain_size[0], num=nrec)
+rec2.coordinates.data[:, -1] = 3000.0/nlayers
+
+rec3 = Receiver(name=&quot;rec3&quot;, grid=model.grid, npoint=nrec, time_range=time_range)
+rec3.coordinates.data[:, 0] = np.linspace(0., model.domain_size[0], num=nrec)
+rec3.coordinates.data[:, -1] = 3000.0/nlayers
+
+rec_term = rec.interpolate(expr=tau[0, 0] + tau[1, 1])
+rec_term += rec2.interpolate(expr=v[1])
+rec_term += rec3.interpolate(expr=v[0])
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+from seismic import plot_velocity
+plot_velocity(model, source=src.coordinates.data,
+              receiver=rec.coordinates.data[::10, :])
+plot_velocity(model, source=src.coordinates.data,
+              receiver=rec2.coordinates.data[::10, :])
+</code></pre>
+
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_9_0.png" /></p>
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_9_1.png" /></p>
+<pre><code class="python"># Now let's try and create the staggered updates
+# Lame parameters
+l, mu, ro = model.lam, model.mu, model.irho
+
+# fdelmodc reference implementation
+u_v = Eq(v.forward, model.damp * (v + s*ro*div(tau)))
+u_t = Eq(tau.forward,  model.damp *  (tau + s * (l * diag(div(v.forward)) +
+                                                mu * (grad(v.forward) + grad(v.forward).T))))
+
+op = Operator([u_v] + [u_t] + src_xx + src_zz + rec_term)
+</code></pre>
+
+<pre><code class="python">v._time_order
+</code></pre>
+
+<p>$\displaystyle 1$</p>
+<pre><code class="python">ro._eval_at(v[0]).evaluate
+</code></pre>
+
+<p>$\displaystyle 0.5 \operatorname{irho}{\left(x,y \right)} + 0.5 \operatorname{irho}{\left(x + h_{x},y \right)}$</p>
+<p>We can now see that both the particle velocities and stress equations are vectorial and tensorial equations. Devito takes care of the discretization and staggered grids automatically for these types of object.</p>
+<pre><code class="python">u_v
+</code></pre>
+
+<p>$\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)}\\operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\left(dt \left(\frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,y \right)} + \frac{\partial}{\partial y} \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{irho}{\left(x,y \right)} + \operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},y \right)}\right) \operatorname{damp}{\left(x,y \right)}\\left(dt \left(\frac{\partial}{\partial x} \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)} + \frac{\partial}{\partial y} \operatorname{t_{yy}}{\left(t,x,y \right)}\right) \operatorname{irho}{\left(x,y \right)} + \operatorname{v_{y}}{\left(t,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)}\end{matrix}\right]$</p>
+<pre><code class="python">u_t
+</code></pre>
+
+<p>$\displaystyle \left[\begin{matrix}\operatorname{t_{xx}}{\left(t + dt,x,y \right)} &amp; \operatorname{t_{xy}}{\left(t + dt,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\\operatorname{t_{xy}}{\left(t + dt,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)} &amp; \operatorname{t_{yy}}{\left(t + dt,x,y \right)}\end{matrix}\right] = \left[\begin{matrix}\left(dt \left(\left(\frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{lam}{\left(x,y \right)} + 2 \mu{\left(x,y \right)} \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)}\right) + \operatorname{t_{xx}}{\left(t,x,y \right)}\right) \operatorname{damp}{\left(x,y \right)} &amp; \left(dt \left(\frac{\partial}{\partial y} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial x} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \mu{\left(x,y \right)} + \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)}\\left(dt \left(\frac{\partial}{\partial y} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial x} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \mu{\left(x,y \right)} + \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)} &amp; \left(dt \left(\left(\frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{lam}{\left(x,y \right)} + 2 \mu{\left(x,y \right)} \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) + \operatorname{t_{yy}}{\left(t,x,y \right)}\right) \operatorname{damp}{\left(x,y \right)}\end{matrix}\right]$</p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+# Partial ru for 1.2sec to plot the wavefield
+op(dt=model.critical_dt, time_M=int(1000/model.critical_dt))
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.14 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+scale = .5*1e-3
+
+plt_options_model = {'extent': [model.origin[0] , model.origin[0] + model.domain_size[0],
+                                model.origin[1] + model.domain_size[1], model.origin[1]]}
+
+
+fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(15, 15))
+
+ax[0, 0].imshow(np.transpose(v[0].data[0][slices]), vmin=-scale, vmax=scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[0, 0].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;, alpha=.5, **plt_options_model)
+ax[0, 0].set_aspect('auto')
+ax[0, 0].set_xlabel('X (m)', fontsize=20)
+ax[0, 0].set_ylabel('Depth (m)', fontsize=20)
+ax[0, 0].set_title(r&quot;$v_{x}$&quot;, fontsize=20)
+
+ax[0, 1].imshow(np.transpose(v[1].data[0][slices]), vmin=-scale, vmax=scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[0, 1].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;, alpha=.5, **plt_options_model)
+ax[0, 1].set_aspect('auto')
+ax[0, 1].set_title(r&quot;$v_{z}$&quot;, fontsize=20)
+ax[0, 1].set_xlabel('X (m)', fontsize=20)
+ax[0, 1].set_ylabel('Depth (m)', fontsize=20)
+
+ax[1, 0].imshow(np.transpose(tau[0,0].data[0][slices]+tau[1,1].data[0][slices]),
+             vmin=-10*scale, vmax=10*scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[1, 0].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;,
+               alpha=.5, **plt_options_model)
+ax[1, 0].set_aspect('auto')
+ax[1, 0].set_title(r&quot;$\tau_{xx} + \tau_{zz}$&quot;, fontsize=20)
+ax[1, 0].set_xlabel('X (m)', fontsize=20)
+ax[1, 0].set_ylabel('Depth (m)', fontsize=20)
+
+
+ax[1, 1].imshow(np.transpose(tau[0,1].data[0][slices]), vmin=-scale, vmax=scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[1, 1].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;, alpha=.5, **plt_options_model)
+ax[1, 1].set_aspect('auto')
+ax[1, 1].set_title(r&quot;$\tau_{xy}$&quot;, fontsize=20)
+ax[1, 1].set_xlabel('X (m)', fontsize=20)
+ax[1, 1].set_ylabel('Depth (m)', fontsize=20)
+
+
+plt.tight_layout()
+</code></pre>
+
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_17_0.png" /></p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+# Full run for the data
+op(dt=model.critical_dt, time_m=int(1000/model.critical_dt))
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.14 s
+</code></pre>
+<pre><code class="python"># Data on a standard 2ms tim axis
+rec_plot = rec.resample(num=1001)
+rec2_plot = rec2.resample(num=1001)
+rec3_plot = rec3.resample(num=1001)
+</code></pre>
+
+<pre><code class="python">scale_for_plot = np.diag(np.linspace(1.0, 2.5, 1001)**2.0)
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+# Pressure (txx + tzz) data at sea surface
+extent = [rec_plot.coordinates.data[0, 0], rec_plot.coordinates.data[-1, 0], 1e-3*tn, t0]
+aspect = rec_plot.coordinates.data[-1, 0]/(1e-3*tn)/.5
+
+plt.figure(figsize=(15, 15))
+plt.imshow(np.dot(scale_for_plot, rec_plot.data), vmin=-.01, vmax=.01, cmap=&quot;seismic&quot;,
+           interpolation='lanczos', extent=extent, aspect=aspect)
+plt.ylabel(&quot;Time (s)&quot;, fontsize=20)
+plt.xlabel(&quot;Receiver position (m)&quot;, fontsize=20)
+
+</code></pre>
+
+<pre><code>Text(0.5, 0, 'Receiver position (m)')
+</code></pre>
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_21_1.png" /></p>
+<pre><code class="python">#NBVAL_SKIP
+# OBC data of vx/vz
+plt.figure(figsize=(15, 15))
+plt.subplot(121)
+plt.imshow(rec2_plot.data, vmin=-1e-3, vmax=1e-3, cmap=&quot;seismic&quot;,
+           interpolation='lanczos', extent=extent, aspect=aspect)
+plt.ylabel(&quot;Time (s)&quot;, fontsize=20)
+plt.xlabel(&quot;Receiver position (m)&quot;, fontsize=20)
+plt.subplot(122)
+plt.imshow(rec3_plot.data, vmin=-1e-3, vmax=1e-3, cmap=&quot;seismic&quot;,
+           interpolation='lanczos', extent=extent, aspect=aspect)
+plt.ylabel(&quot;Time (s)&quot;, fontsize=20)
+plt.xlabel(&quot;Receiver position (m)&quot;, fontsize=20)
+</code></pre>
+
+<pre><code>Text(0.5, 0, 'Receiver position (m)')
+</code></pre>
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_22_1.png" /></p>
+<pre><code class="python"># Now that looks pretty! But let's do it again with a 2nd order in time
+so = 8
+v2 = VectorTimeFunction(name='v2', grid=model.grid, space_order=so, time_order=2)
+tau0 = TensorFunction(name='t0', grid=model.grid, space_order=so)
+# The source injection term
+src_xx = src.inject(field=tau0[0, 0], expr=src.dt)
+src_zz = src.inject(field=tau0[1, 1], expr=src.dt)
+
+s = model.grid.time_dim.spacing
+# fdelmodc reference implementation
+u_v = Eq(v2.forward, model.damp * (2 * v2 - model.damp * v2.backward + s**2*ro*div(tau0)))
+u_t = Eq(tau0, model.damp * (l * diag(div(v2.forward)) + mu * (grad(v2.forward) + grad(v2.forward).T)))
+
+
+# rec_term = rec.interpolate(expr=tau[0, 0] + tau[1, 1])
+rec_term = rec2.interpolate(expr=v2[0])
+rec_term += rec3.interpolate(expr=v2[1])
+op = Operator([u_v] + [u_t] + src_xx + src_zz + rec_term)
+
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+# Partial ru for 1.2sec to plot the wavefield
+op(dt=model.critical_dt, time_M=int(1000/model.critical_dt))
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.11 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+scale = 1e-4
+
+plt_options_model = {'extent': [model.origin[0] , model.origin[0] + model.domain_size[0],
+                                model.origin[1] + model.domain_size[1], model.origin[1]]}
+
+
+fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(15, 15))
+
+ax[0, 0].imshow(np.transpose(v2[0].data[0][slices]), vmin=-scale, vmax=scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[0, 0].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;, alpha=.5, **plt_options_model)
+ax[0, 0].set_aspect('auto')
+ax[0, 0].set_xlabel('X (m)', fontsize=20)
+ax[0, 0].set_ylabel('Depth (m)', fontsize=20)
+ax[0, 0].set_title(r&quot;$v_{x}$&quot;, fontsize=20)
+
+ax[0, 1].imshow(np.transpose(v2[1].data[0][slices]), vmin=-scale, vmax=scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[0, 1].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;, alpha=.5, **plt_options_model)
+ax[0, 1].set_aspect('auto')
+ax[0, 1].set_title(r&quot;$v_{z}$&quot;, fontsize=20)
+ax[0, 1].set_xlabel('X (m)', fontsize=20)
+ax[0, 1].set_ylabel('Depth (m)', fontsize=20)
+
+ax[1, 0].imshow(np.transpose(tau0[0,0].data[slices]+tau0[1,1].data[slices]),
+             vmin=-10*scale, vmax=10*scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[1, 0].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;,
+               alpha=.5, **plt_options_model)
+ax[1, 0].set_aspect('auto')
+ax[1, 0].set_title(r&quot;$\tau_{xx} + \tau_{zz}$&quot;, fontsize=20)
+ax[1, 0].set_xlabel('X (m)', fontsize=20)
+ax[1, 0].set_ylabel('Depth (m)', fontsize=20)
+
+
+ax[1, 1].imshow(np.transpose(tau0[0,1].data[slices]), vmin=-scale, vmax=scale, cmap=&quot;RdGy&quot;, **plt_options_model)
+ax[1, 1].imshow(np.transpose(model.lam.data[slices]), vmin=2.5, vmax=15.0, cmap=&quot;jet&quot;, alpha=.5, **plt_options_model)
+ax[1, 1].set_aspect('auto')
+ax[1, 1].set_title(r&quot;$\tau_{xy}$&quot;, fontsize=20)
+ax[1, 1].set_xlabel('X (m)', fontsize=20)
+ax[1, 1].set_ylabel('Depth (m)', fontsize=20)
+
+
+plt.tight_layout()
+</code></pre>
+
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_25_0.png" /></p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+op(dt=model.critical_dt, time_m=int(1000/model.critical_dt))
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.13 s
+</code></pre>
+<pre><code class="python">rec2_plot2 = rec2.resample(num=1001)
+rec3_plot2 = rec3.resample(num=1001)
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+# OBC data of vx/vz
+plt.figure(figsize=(15, 15))
+plt.subplot(121)
+plt.imshow(rec2_plot2.data, vmin=-1e-3, vmax=1e-3, cmap=&quot;seismic&quot;,
+           interpolation='lanczos', extent=extent, aspect=aspect)
+plt.ylabel(&quot;Time (s)&quot;, fontsize=20)
+plt.xlabel(&quot;Receiver position (m)&quot;, fontsize=20)
+plt.subplot(122)
+plt.imshow(rec3_plot2.data, vmin=-1e-3, vmax=1e-3, cmap=&quot;seismic&quot;,
+           interpolation='lanczos', extent=extent, aspect=aspect)
+plt.ylabel(&quot;Time (s)&quot;, fontsize=20)
+plt.xlabel(&quot;Receiver position (m)&quot;, fontsize=20)
+</code></pre>
+
+<pre><code>Text(0.5, 0, 'Receiver position (m)')
+</code></pre>
+<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_28_1.png" /></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../06_elastic/" class="btn btn-neutral" title="Elastic modeling with constant parameters"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../06_elastic/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

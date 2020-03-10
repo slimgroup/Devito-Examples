@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>First order acoustic modeling - SLIM's Devito examples</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "First order acoustic modeling";
+    var mkdocs_page_input_path = "tutorials/04_staggered_acoustic.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acosutic RTM</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">First order acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SLIM's Devito examples</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>First order acoustic modeling</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <pre><code class="python">from devito import *
+from seismic.source import WaveletSource, TimeAxis
+from seismic import plot_image
+import numpy as np
+
+from sympy import init_printing, latex
+init_printing(use_latex='mathjax')
+</code></pre>
+
+<pre><code class="python"># Initial grid: 1km x 1km, with spacing 100m
+extent = (2000., 2000.)
+shape = (81, 81)
+x = SpaceDimension(name='x', spacing=Constant(name='h_x', value=extent[0]/(shape[0]-1)))
+z = SpaceDimension(name='z', spacing=Constant(name='h_z', value=extent[1]/(shape[1]-1)))
+grid = Grid(extent=extent, shape=shape, dimensions=(x, z))
+</code></pre>
+
+<pre><code class="python">class DGaussSource(WaveletSource):
+
+    def wavelet(self, f0, t):
+        a = 0.004
+        return -2.*a*(t - 1./f0) * np.exp(-a * (t - 1./f0)**2)
+
+# Timestep size from Eq. 7 with V_p=6000. and dx=100
+t0, tn = 0., 200.
+dt = 1e2*(1. / np.sqrt(2.)) / 60.
+time_range = TimeAxis(start=t0, stop=tn, step=dt)
+
+src = DGaussSource(name='src', grid=grid, f0=0.01, time_range=time_range)
+src.coordinates.data[:] = [1000., 1000.]
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+
+src.show()
+</code></pre>
+
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_3_0.png" /></p>
+<pre><code class="python"># Now we create the velocity and pressure fields
+p = TimeFunction(name='p', grid=grid, staggered=NODE, space_order=2, time_order=1)
+v = VectorTimeFunction(name='v', grid=grid, space_order=2, time_order=1)
+</code></pre>
+
+<pre><code class="python">from devito.finite_differences.operators import div, grad
+t = grid.stepping_dim
+time = grid.time_dim
+
+# We need some initial conditions
+V_p = 4.0
+density = 1.
+
+ro = 1/density * dt
+l2m = V_p*V_p*density * dt
+
+# The source injection term
+src_p = src.inject(field=p.forward, expr=src)
+
+# 2nd order acoustic according to fdelmoc
+u_v_2 = Eq(v.forward, v + ro * grad(p))
+u_p_2 = Eq(p.forward, p + l2m * div(v.forward))
+</code></pre>
+
+<pre><code class="python">u_v_2
+</code></pre>
+
+<p>$\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 1.17851130197758 \frac{\partial}{\partial x} p{\left(t,x,z \right)}\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 1.17851130197758 \frac{\partial}{\partial z} p{\left(t,x,z \right)}\end{matrix}\right]$</p>
+<pre><code class="python">u_p_2
+</code></pre>
+
+<p>$\displaystyle p{\left(t + dt,x,z \right)} = p{\left(t,x,z \right)} + 18.8561808316413 \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)} + 18.8561808316413 \frac{\partial}{\partial z} \operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}$</p>
+<pre><code class="python">op_2 = Operator([u_v_2, u_p_2] + src_p)
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+
+# Propagate the source
+op_2(time=src.time_range.num-1)
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.05 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+
+# Let's see what we got....
+plot_image(v[0].data[0])
+plot_image(v[1].data[0])
+plot_image(p.data[0])
+</code></pre>
+
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_0.png" /></p>
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_1.png" /></p>
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_2.png" /></p>
+<pre><code class="python">norm_p = norm(p)
+assert np.isclose(norm_p, .35098, atol=1e-4, rtol=0)
+</code></pre>
+
+<pre><code class="python"># # 4th order acoustic according to fdelmoc
+# # Now we create the velocity and pressure fields
+p4 = TimeFunction(name='p', grid=grid, staggered=NODE, space_order=4, time_order=1)
+v4 = VectorTimeFunction(name='v', grid=grid, space_order=4, time_order=1)
+u_v_4 = Eq(v4.forward, v4 + ro * grad(p4))
+u_p_4 = Eq(p4.forward, p4 + l2m * div(v4.forward))
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+op_4 = Operator([u_v_4, u_p_4] + src_p)
+# Propagate the source
+op_4(time=src.time_range.num-1)
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.01 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+
+# Let's see what we got....
+plot_image(v4[0].data[-1])
+plot_image(v4[1].data[-1])
+plot_image(p4.data[-1])
+</code></pre>
+
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_0.png" /></p>
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_1.png" /></p>
+<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_2.png" /></p>
+<pre><code class="python">norm_p = norm(p)
+assert np.isclose(norm_p, .35098, atol=1e-4, rtol=0)
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../06_elastic/" class="btn btn-neutral float-right" title="Elastic modeling with constant parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../03_fwi/" class="btn btn-neutral" title="Acoustic FWI"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../03_fwi/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../06_elastic/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

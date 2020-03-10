@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Elastic modeling with constant parameters - SLIM's Devito examples</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Elastic modeling with constant parameters";
+    var mkdocs_page_input_path = "tutorials/06_elastic.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acosutic RTM</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Elastic modeling with constant parameters</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#explosive-source">Explosive source</a>
+    </li>
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SLIM's Devito examples</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>Elastic modeling with constant parameters</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
+<p>This is a first attempt at implemenenting the elastic wave equation as described in:</p>
+<p>[1] Jean Virieux (1986). ”P-SV wave propagation in heterogeneous media: Velocity‐stress finite‐difference method.” GEOPHYSICS, 51(4), 889-901. https://doi.org/10.1190/1.1442147</p>
+<p>The current version actually attempts to mirror the FDELMODC implementation by Jan Thorbecke:</p>
+<p>[2] https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf</p>
+<h2 id="explosive-source">Explosive source</h2>
+<p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature $g(t)$, the derivative of a Gaussian pulse, given by Eq 4:</p>
+<p>$$g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}$$</p>
+<pre><code class="python">from devito import *
+from seismic.source import WaveletSource, RickerSource, GaborSource, TimeAxis
+from seismic import plot_image
+import numpy as np
+
+from sympy import init_printing, latex
+init_printing(use_latex='mathjax')
+</code></pre>
+
+<pre><code class="python"># Initial grid: 1km x 1km, with spacing 100m
+extent = (1500., 1500.)
+shape = (201, 201)
+x = SpaceDimension(name='x', spacing=Constant(name='h_x', value=extent[0]/(shape[0]-1)))
+z = SpaceDimension(name='z', spacing=Constant(name='h_z', value=extent[1]/(shape[1]-1)))
+grid = Grid(extent=extent, shape=shape, dimensions=(x, z))
+</code></pre>
+
+<pre><code class="python">class DGaussSource(WaveletSource):
+
+    def wavelet(self, f0, t):
+        a = 0.004
+        return -2.*a*(t - 1/f0) * np.exp(-a * (t - 1/f0)**2)
+
+# Timestep size from Eq. 7 with V_p=6000. and dx=100
+t0, tn = 0., 300.
+dt = (10. / np.sqrt(2.)) / 6.
+time_range = TimeAxis(start=t0, stop=tn, step=dt)
+
+src = RickerSource(name='src', grid=grid, f0=0.01, time_range=time_range)
+src.coordinates.data[:] = [750., 750.]
+</code></pre>
+
+<pre><code class="python">#NBVAL_SKIP
+
+src.show()
+</code></pre>
+
+<p><img alt="png" src="../06_elastic_files/06_elastic_4_0.png" /></p>
+<pre><code class="python"># Now we create the velocity and pressure fields
+so = 2
+
+v = VectorTimeFunction(name='v', grid=grid, space_order=so, time_order=1)
+tau = TensorTimeFunction(name='t', grid=grid, space_order=so, time_order=1)
+</code></pre>
+
+<pre><code class="python"># Now let's try and create the staggered updates
+t = grid.stepping_dim
+time = grid.time_dim
+
+# We need some initial conditions
+V_p = 2.0
+V_s = 1.0
+density = 1.8
+
+# The source injection term
+src_xx = src.inject(field=tau.forward[0,0], expr=src)
+src_zz = src.inject(field=tau.forward[1,1], expr=src)
+
+# Thorbecke's parameter notation
+cp2 = V_p*V_p
+cs2 = V_s*V_s
+ro = 1/density
+
+mu = cs2*density
+l = (cp2*density - 2*mu)
+
+# fdelmodc reference implementation
+u_v = Eq(v.forward, v + dt*ro*div(tau))
+u_t = Eq(tau.forward, tau + dt * l * diag(div(v.forward)) + dt * mu * (grad(v.forward) + grad(v.forward).T))
+
+op = Operator([u_v] + [u_t]  + src_xx + src_zz)
+</code></pre>
+
+<pre><code class="python">u_v
+</code></pre>
+
+<p>$\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)}\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)}\end{matrix}\right]$</p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+
+op()
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.02 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+
+# Let's see what we got....
+plot_image(v[0].data[0], cmap=&quot;seismic&quot;)
+plot_image(v[1].data[0], cmap=&quot;seismic&quot;)
+plot_image(tau[0, 0].data[0], cmap=&quot;seismic&quot;)
+plot_image(tau[1,1].data[0], cmap=&quot;seismic&quot;)
+plot_image(tau[0,1].data[0], cmap=&quot;seismic&quot;)
+</code></pre>
+
+<p><img alt="png" src="../06_elastic_files/06_elastic_9_0.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_9_1.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_9_2.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_9_3.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_9_4.png" /></p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+
+assert np.isclose(norm(v[0]), 0.6285093, atol=1e-4, rtol=0)
+</code></pre>
+
+<pre><code class="python"># Now that looks pretty! But let's do it again with a higher order...
+so = 12
+v = VectorTimeFunction(name='v', grid=grid, space_order=so, time_order=1)
+tau = TensorTimeFunction(name='t', grid=grid, space_order=so, time_order=1)
+# The source injection term
+src_xx = src.inject(field=tau.forward[0,0], expr=src)
+src_zz = src.inject(field=tau.forward[1,1], expr=src)
+# fdelmodc reference implementation
+u_v = Eq(v.forward, v + dt*ro*div(tau))
+u_t = Eq(tau.forward, tau + l * diag(div(v.forward)) + mu * (grad(v.forward) + grad(v.forward).T))
+
+op = Operator([u_v]+ [u_t] + src_xx + src_zz )
+
+</code></pre>
+
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+v[0].data.fill(0.)
+v[1].data.fill(0.)
+tau[0,0].data.fill(0.)
+tau[0,1].data.fill(0.)
+tau[1,1].data.fill(0.)
+
+op()
+</code></pre>
+
+<pre><code>Operator `Kernel` run in 0.02 s
+</code></pre>
+<pre><code class="python">#NBVAL_SKIP
+
+# Let's see what we got....
+plot_image(v[0].data[0], cmap=&quot;seismic&quot;)
+plot_image(v[1].data[0], cmap=&quot;seismic&quot;)
+plot_image(tau[0, 0].data[0], cmap=&quot;seismic&quot;)
+plot_image(tau[1,1].data[0], cmap=&quot;seismic&quot;)
+plot_image(tau[0,1].data[0], cmap=&quot;seismic&quot;)
+</code></pre>
+
+<p><img alt="png" src="../06_elastic_files/06_elastic_13_0.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_13_1.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_13_2.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_13_3.png" /></p>
+<p><img alt="png" src="../06_elastic_files/06_elastic_13_4.png" /></p>
+<pre><code class="python">#NBVAL_IGNORE_OUTPUT
+
+assert np.isclose(norm(v[0]), 0.736816932, atol=1e-4, rtol=0)
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../05_elastic_varying_parameters/" class="btn btn-neutral float-right" title="Elastic modeling with varying parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../04_staggered_acoustic/" class="btn btn-neutral" title="First order acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../04_staggered_acoustic/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../05_elastic_varying_parameters/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
