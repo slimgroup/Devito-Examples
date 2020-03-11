@@ -48,7 +48,7 @@ def plot_perturbation(model, model1, colorbar=True):
     plt.show()
 
 
-def plot_velocity(model, source=None, receiver=None, colorbar=True):
+def plot_velocity(model, source=None, receiver=None, colorbar=True, cmap="jet"):
     """
     Plot a two-dimensional velocity field from a seismic `Model`
     object. Optionally also includes point markers for sources and receivers.
@@ -70,7 +70,7 @@ def plot_velocity(model, source=None, receiver=None, colorbar=True):
 
     slices = tuple(slice(model.nbl, -model.nbl) for _ in range(2))
     field = (getattr(model, 'vp', None) or getattr(model, 'lam')).data[slices]
-    plot = plt.imshow(np.transpose(field), animated=True, cmap=cm.jet,
+    plot = plt.imshow(np.transpose(field), animated=True, cmap=cmap,
                       vmin=np.min(field), vmax=np.max(field),
                       extent=extent)
     plt.xlabel('X position (km)')
@@ -132,7 +132,8 @@ def plot_shotrecord(rec, model, t0, tn, colorbar=True):
     plt.show()
 
 
-def plot_image(im, colorbar=True, cmap="Greys", depth_scaling=False, diff=False):
+def plot_image(im, colorbar=True, vmin=None, vmax=None,
+               cmap="Greys", depth_scaling=False, diff=False):
     """
     Plot image data, such as RTM images or FWI gradients.
 
@@ -157,7 +158,8 @@ def plot_image(im, colorbar=True, cmap="Greys", depth_scaling=False, diff=False)
         im = np.dot(depth, im)
 
     scale = np.max(im)
-    plot = plt.imshow(im.T, extent=extent, vmin=-scale, vmax=scale, cmap=cmap)
+    plot = plt.imshow(im.T, extent=extent, vmin=vmin or -scale,
+                      vmax=vmax or scale, cmap=cmap)
     plt.xlabel('X position (km)')
     plt.ylabel('Depth (km)')
 
