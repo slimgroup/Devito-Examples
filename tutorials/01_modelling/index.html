@@ -59,17 +59,41 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#the-acoustic-seismic-wave-equation">The acoustic seismic wave equation</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#finite-domains">Finite domains</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#seismic-modelling-with-devito">Seismic modelling with devito</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#define-the-physical-problem">Define the physical problem</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#acquisition-geometry">Acquisition geometry</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#finite-difference-discretization">Finite-difference discretization</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#time-discretization">Time discretization</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#spatial-discretization">Spatial discretization</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#wave-equation">Wave equation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#source-injection-and-receiver-interpolation">Source injection and receiver interpolation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#devito-operator-and-solve">Devito operator and solve</a>
+    </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acosutic RTM</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
                     </li>
                 </ul>
       </div>
@@ -139,7 +163,7 @@ The boundary conditions are Dirichlet conditions:
 \end{equation}</script>
 </p>
 <p>where <span><span class="MathJax_Preview">\delta\Omega</span><script type="math/tex">\delta\Omega</script></span> is the surface of the boundary of the model <span><span class="MathJax_Preview">\Omega</span><script type="math/tex">\Omega</script></span>.</p>
-<h1 id="finite-domains">Finite domains</h1>
+<h2 id="finite-domains">Finite domains</h2>
 <p>The last piece of the puzzle is the computational limitation. In the field, the seismic wave propagates in every direction to an "infinite" distance. However, solving the wave equation in a mathematically/discrete infinite domain is not feasible. In order to compensate, Absorbing Boundary Conditions (ABC) or Perfectly Matched Layers (PML) are required to mimic an infinite domain. These two methods allow to approximate an infinite media by damping and absorbing the waves at the limit of the domain to avoid reflections.</p>
 <p>The simplest of these methods is the absorbing damping mask. The core idea is to extend the physical domain and to add a Sponge mask in this extension that will absorb the incident waves. The acoustic wave equation with this damping mask can be rewritten as:</p>
 <div>
@@ -155,7 +179,7 @@ The boundary conditions are Dirichlet conditions:
 \end{cases}</script>
 </div>
 <p>where <span><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> is the damping mask equal to <span><span class="MathJax_Preview">0</span><script type="math/tex">0</script></span> inside the physical domain and increasing inside the sponge layer. Multiple choice of profile can be chosen for <span><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> from linear to exponential.</p>
-<h1 id="seismic-modelling-with-devito">Seismic modelling with devito</h1>
+<h2 id="seismic-modelling-with-devito">Seismic modelling with devito</h2>
 <p>We describe here a step by step setup of seismic modelling with Devito in a simple 2D case. We will create a physical model of our domain and define a single source and an according set of receivers to model for the forward model. But first, we initialize some basic utilities.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
@@ -190,11 +214,11 @@ The boundary conditions are Dirichlet conditions:
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </code></pre></div>
 
-<pre><code>Operator `initdamp` run in 0.01 s
+<pre><code>Operator `initdamp` run in 0.03 s
 Operator `padfunc` run in 0.01 s
 </code></pre>
 <p><img alt="png" src="../01_modelling_files/01_modelling_5_1.png" /></p>
-<h1 id="acquisition-geometry">Acquisition geometry</h1>
+<h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>To fully define our problem setup we also need to define the source that injects the wave to model and the set of receiver locations at which to sample the wavefield. The source time signature will be modelled using a Ricker wavelet defined as</p>
 <div>
 <div class="MathJax_Preview">\begin{equation}
@@ -251,9 +275,9 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p><img alt="png" src="../01_modelling_files/01_modelling_11_0.png" /></p>
-<h1 id="finite-difference-discretization">Finite-difference discretization</h1>
+<h2 id="finite-difference-discretization">Finite-difference discretization</h2>
 <p>Devito is a finite-difference DSL that solves the discretized wave-equation on a Cartesian grid. The finite-difference approximation is derived from Taylor expansions of the continuous field after removing the error term.</p>
-<h2 id="time-discretization">Time discretization</h2>
+<h3 id="time-discretization">Time discretization</h3>
 <p>We only consider the second order time discretization for now. From the Taylor expansion, the second order discrete approximation of the second order time derivative is:
 <script type="math/tex; mode=display">\begin{equation}
 \begin{aligned}
@@ -266,7 +290,7 @@ time-step (distance between two consecutive discrete time points) and <span><spa
   t}^2)</span><script type="math/tex">O(\mathbf{\Delta
   t}^2)</script></span> is the discretization error term. The discretized approximation of the
 second order time derivative is then given by dropping the error term. This derivative is represented in Devito by <code>u.dt2</code> where u is a <code>TimeFunction</code> object.</p>
-<h2 id="spatial-discretization">Spatial discretization</h2>
+<h3 id="spatial-discretization">Spatial discretization</h3>
 <p>We define the discrete Laplacian as the sum of the second order spatial
 derivatives in the three dimensions:
 <script type="math/tex; mode=display">\begin{equation}
@@ -280,7 +304,7 @@ derivatives in the three dimensions:
 \end{equation}</script>
 </p>
 <p>This derivative is represented in Devito by <code>u.laplace</code> where u is a <code>TimeFunction</code> object.</p>
-<h2 id="wave-equation">Wave equation</h2>
+<h3 id="wave-equation">Wave equation</h3>
 <p>With the space and time discretization defined, we can fully discretize the wave-equation with the combination of time and space discretizations and obtain the following second order in time and <span><span class="MathJax_Preview">k^{th}</span><script type="math/tex">k^{th}</script></span> order in space discrete stencil to update one grid point at position <span><span class="MathJax_Preview">\mathbf{x}, \mathbf{y},\mathbf{z}</span><script type="math/tex">\mathbf{x}, \mathbf{y},\mathbf{z}</script></span> at time <span><span class="MathJax_Preview">\mathbf{t}</span><script type="math/tex">\mathbf{t}</script></span>, i.e.
 <script type="math/tex; mode=display">\begin{equation}
 \begin{aligned}
@@ -313,7 +337,7 @@ derivatives in the three dimensions:
 <span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 </code></pre></div>
 
-<h1 id="source-injection-and-receiver-interpolation">Source injection and receiver interpolation</h1>
+<h2 id="source-injection-and-receiver-interpolation">Source injection and receiver interpolation</h2>
 <p>With a numerical scheme to solve the homogenous wave equation, we need to add the source to introduce seismic waves and to implement the measurement operator, and interpolation operator. This operation is linked to the discrete scheme and needs to be done at the proper time step. The semi-discretized in time wave equation with a source reads:</p>
 <div>
 <div class="MathJax_Preview">\begin{equation}
@@ -338,7 +362,7 @@ On the receiver side, the problem is either as it only requires to record the da
 <span class="n">rec_term</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span>
 </code></pre></div>
 
-<h1 id="devito-operator-and-solve">Devito operator and solve</h1>
+<h2 id="devito-operator-and-solve">Devito operator and solve</h2>
 <p>After constructing all the necessary expressions for updating the wavefield, injecting the source term and interpolating onto the receiver points, we can now create the Devito operator that will generate the C code at runtime. When creating the operator, Devito's two optimization engines will log which performance optimizations have been performed:
 * <strong>DSE:</strong> The Devito Symbolics Engine will attempt to reduce the number of operations required by the kernel.
 * <strong>DLE:</strong> The Devito Loop Engine will perform various loop-level optimizations to improve runtime performance.</p>

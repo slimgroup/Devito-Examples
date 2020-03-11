@@ -59,15 +59,15 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Elastic modeling with constant parameters</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#explosive-source">Explosive source</a>
-    </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
                     </li>
                 </ul>
       </div>
@@ -111,7 +111,7 @@
 <p>[1] Jean Virieux (1986). ”P-SV wave propagation in heterogeneous media: Velocity‐stress finite‐difference method.” GEOPHYSICS, 51(4), 889-901. <a href="https://doi.org/10.1190/1.1442147">https://doi.org/10.1190/1.1442147</a></p>
 <p>The current version actually attempts to mirror the FDELMODC implementation by Jan Thorbecke:</p>
 <p>[2] <a href="https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf">https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf</a></p>
-<h2 id="explosive-source">Explosive source</h2>
+<p><strong>Explosive source</strong></p>
 <p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature <span><span class="MathJax_Preview">g(t)</span><script type="math/tex">g(t)</script></span>, the derivative of a Gaussian pulse, given by Eq 4:</p>
 <div>
 <div class="MathJax_Preview">g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}</div>
@@ -273,10 +273,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../05_elastic_varying_parameters/" class="btn btn-neutral float-right" title="Elastic modeling with varying parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../07_elastic_varying_parameters/" class="btn btn-neutral float-right" title="Elastic modeling with varying parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../04_staggered_acoustic/" class="btn btn-neutral" title="First order acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../05_staggered_acoustic/" class="btn btn-neutral" title="First order acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -302,10 +302,10 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../04_staggered_acoustic/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../05_staggered_acoustic/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../05_elastic_varying_parameters/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../07_elastic_varying_parameters/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>

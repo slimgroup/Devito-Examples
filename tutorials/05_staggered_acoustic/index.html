@@ -19,7 +19,7 @@
   <script>
     // Current page data
     var mkdocs_page_name = "First order acoustic modeling";
-    var mkdocs_page_input_path = "tutorials/04_staggered_acoustic.md";
+    var mkdocs_page_input_path = "tutorials/05_staggered_acoustic.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -59,11 +59,21 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">First order acoustic modeling</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#model">Model</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#first-order-acoustic-wave-equation">First order acoustic wave equation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#high-order-fd">High order FD</a>
+    </li>
+    </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
                     </li>
                 </ul>
       </div>
@@ -102,7 +112,11 @@
           <div role="main">
             <div class="section">
               
-                <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="o">*</span>
+                <h1 id="05-acoustic-modeling-with-the-first-order-velocity-formulation">05- Acoustic modeling with the first order velocity formulation</h1>
+<p>In this tutorial, we introduce the use of staggered grid to solve the first order acoustic wave equation that couples a vectorial particle velocity and a scalar Pressure.</p>
+<h2 id="model">Model</h2>
+<p>We start, as in the previous tutorials, by setting up a Grid .</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">seismic.source</span> <span class="kn">import</span> <span class="n">WaveletSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -119,6 +133,19 @@
 <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
 </code></pre></div>
 
+<h2 id="first-order-acoustic-wave-equation">First order acoustic wave equation</h2>
+<p>The first order acoustic wave equation is defined as:</p>
+<div>
+<div class="MathJax_Preview">\begin{cases}
+ &amp; \frac{d p(t, x, y)}{dt}  = \lambda \nabla . v(t, x, y) \\
+ &amp; \frac{d v(t, x, y)}{dt} = \frac{1}{\rho} p(t, x, y)
+\end{cases}</div>
+<script type="math/tex; mode=display">\begin{cases}
+ & \frac{d p(t, x, y)}{dt}  = \lambda \nabla . v(t, x, y) \\
+ & \frac{d v(t, x, y)}{dt} = \frac{1}{\rho} p(t, x, y)
+\end{cases}</script>
+</div>
+<p>where $ p(t, x)$ is the pressure, <span><span class="MathJax_Preview">v(t, x, y) = (v_x(t, x, y), v_y(t, x, y)</span><script type="math/tex">v(t, x, y) = (v_x(t, x, y), v_y(t, x, y)</script></span> is the vector valued particle velocity and <span><span class="MathJax_Preview">\lambda, \rho</span><script type="math/tex">\lambda, \rho</script></span> are the first Lame parameter (<span><span class="MathJax_Preview">\lambda = \rho * v_p^2</span><script type="math/tex">\lambda = \rho * v_p^2</script></span> with <span><span class="MathJax_Preview">v_p</span><script type="math/tex">v_p</script></span> the sound velocity) and the density.</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">DGaussSource</span><span class="p">(</span><span class="n">WaveletSource</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">wavelet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
@@ -139,7 +166,7 @@
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_3_0.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_6_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Now we create the velocity and pressure fields</span>
 <span class="n">p</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">v</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -181,7 +208,7 @@
 <span class="n">op_2</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
 
-<pre><code>Operator `Kernel` run in 0.05 s
+<pre><code>Operator `Kernel` run in 0.07 s
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
@@ -191,13 +218,15 @@
 <span class="n">plot_image</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_0.png" /></p>
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_1.png" /></p>
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_10_2.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_13_0.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_13_1.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_13_2.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="o">.</span><span class="mi">35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 
+<h2 id="high-order-fd">High order FD</h2>
+<p>Similarly to the acoustic and scalar case, Devito handles any spatial discretization order trivially with a simple change at the <code>Function</code> definitio. We now compute the acoustic fields with a fourth order finite-difference scheme that will be less dispersive.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># # 4th order acoustic according to fdelmoc</span>
 <span class="c1"># # Now we create the velocity and pressure fields</span>
 <span class="n">p4</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -222,9 +251,9 @@
 <span class="n">plot_image</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_0.png" /></p>
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_1.png" /></p>
-<p><img alt="png" src="../04_staggered_acoustic_files/04_staggered_acoustic_14_2.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_18_0.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_18_1.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_18_2.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="o">.</span><span class="mi">35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
@@ -238,7 +267,7 @@
         <a href="../06_elastic/" class="btn btn-neutral float-right" title="Elastic modeling with constant parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../03_fwi/" class="btn btn-neutral" title="Acoustic FWI"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../04_dask/" class="btn btn-neutral" title="Parallel acoustic FWI with Dask"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -264,7 +293,7 @@
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
-        <span><a href="../03_fwi/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href="../04_dask/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
         <span style="margin-left: 15px"><a href="../06_elastic/" style="color: #fcfcfc">Next &raquo;</a></span>

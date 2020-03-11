@@ -19,7 +19,7 @@
   <script>
     // Current page data
     var mkdocs_page_name = "Elastic modeling with varying parameters";
-    var mkdocs_page_input_path = "tutorials/05_elastic_varying_parameters.md";
+    var mkdocs_page_input_path = "tutorials/07_elastic_varying_parameters.md";
     var mkdocs_page_url = null;
   </script>
   
@@ -59,13 +59,19 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                     </li>
                     <li class="toctree-l1 current"><a class="reference internal current" href="./">Elastic modeling with varying parameters</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#explosive-source">Explosive source</a>
+    <li class="toctree-l2"><a class="reference internal" href="#vectorial-form">Vectorial form</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#devito-implementation">Devito implementation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#second-order-formulation">Second order formulation</a>
     </li>
     </ul>
                     </li>
@@ -108,7 +114,7 @@
               
                 <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
 <p>This second elastic tutorial extends the previous constant parameter implementation to varying parameters (Lame parameters) and takes advantage of the Tensorial capabilities of Devito to write the elastic wave equation following its mathematical definition. The staggering is automated via the TensorFunction API.</p>
-<h2 id="explosive-source">Explosive source</h2>
+<p><strong>Explosive source</strong></p>
 <p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature <span><span class="MathJax_Preview">g(t)</span><script type="math/tex">g(t)</script></span>, the derivative of a Gaussian pulse, given by Eq 4:</p>
 <div>
 <div class="MathJax_Preview">g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}</div>
@@ -136,7 +142,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="n">preset</span><span class="o">=</span><span class="s1">&#39;layers-elastic&#39;</span><span class="p">,</span> <span class="n">nlayers</span><span class="o">=</span><span class="n">nlayers</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">301</span><span class="p">,</span> <span class="mi">301</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">))</span>
 </code></pre></div>
 
-<pre><code>Operator `initdamp` run in 0.01 s
+<pre><code>Operator `initdamp` run in 0.06 s
 Operator `padfunc` run in 0.01 s
 Operator `padfunc` run in 0.01 s
 Operator `padfunc` run in 0.01 s
@@ -177,7 +183,7 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_3_0.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_3_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Timestep size from Eq. 7 with V_p=6000. and dx=100</span>
 <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">2000.</span>
 <span class="n">dt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span>
@@ -192,8 +198,8 @@ Operator `padfunc` run in 0.01 s
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_5_0.png" /></p>
-<h1 id="vectorial-form">Vectorial form</h1>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_5_0.png" /></p>
+<h2 id="vectorial-form">Vectorial form</h2>
 <p>While conventional litterature writes the elastic wave-equation as a set of scalar PDEs, the higher level representation comes from Hooke's law and the equation of motion and writes as:</p>
 <div>
 <div class="MathJax_Preview">\begin{cases}
@@ -205,7 +211,7 @@ Operator `padfunc` run in 0.01 s
 &\frac{d \tau}{dt} = \lambda tr(\nabla v) \mathbf{I}  + \mu (\nabla v + (\nabla v)^T)
 \end{cases}</script>
 </div>
-<p>and as <span><span class="MathJax_Preview">tr(\nabla v)</span><script type="math/tex">tr(\nabla v)</script></span> is the divergence of <span><span class="MathJax_Preview">v</span><script type="math/tex">v</script></span> we can reqrite it as</p>
+<p>and as <span><span class="MathJax_Preview">tr(\nabla v)</span><script type="math/tex">tr(\nabla v)</script></span> is the divergence of <span><span class="MathJax_Preview">v</span><script type="math/tex">v</script></span> we can rewrite it as</p>
 <div>
 <div class="MathJax_Preview">\begin{cases}
 &amp;\frac{dv}{dt} = \nabla . \tau \\
@@ -264,8 +270,10 @@ Operator `padfunc` run in 0.01 s
               <span class="n">receiver</span><span class="o">=</span><span class="n">rec2</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
 
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_9_0.png" /></p>
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_9_1.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_0.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_1.png" /></p>
+<h2 id="devito-implementation">Devito implementation</h2>
+<p>We now implement the vectorial formulation directly with Devito using it's vectorial and matricial symbolic objects</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Now let&#39;s try and create the staggered updates</span>
 <span class="c1"># Lame parameters</span>
 <span class="n">l</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">ro</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">irho</span>
@@ -278,14 +286,6 @@ Operator `padfunc` run in 0.01 s
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">)</span>
 </code></pre></div>
 
-<div class="highlight"><pre><span></span><code><span class="n">v</span><span class="o">.</span><span class="n">_time_order</span>
-</code></pre></div>
-
-<p><span><span class="MathJax_Preview">\displaystyle 1</span><script type="math/tex">\displaystyle 1</script></span></p>
-<div class="highlight"><pre><span></span><code><span class="n">ro</span><span class="o">.</span><span class="n">_eval_at</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">evaluate</span>
-</code></pre></div>
-
-<p><span><span class="MathJax_Preview">\displaystyle 0.5 \operatorname{irho}{\left(x,y \right)} + 0.5 \operatorname{irho}{\left(x + h_{x},y \right)}</span><script type="math/tex">\displaystyle 0.5 \operatorname{irho}{\left(x,y \right)} + 0.5 \operatorname{irho}{\left(x + h_{x},y \right)}</script></span></p>
 <p>We can now see that both the particle velocities and stress equations are vectorial and tensorial equations. Devito takes care of the discretization and staggered grids automatically for these types of object.</p>
 <div class="highlight"><pre><span></span><code><span class="n">u_v</span>
 </code></pre></div>
@@ -300,7 +300,7 @@ Operator `padfunc` run in 0.01 s
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_M</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
 
-<pre><code>Operator `Kernel` run in 0.14 s
+<pre><code>Operator `Kernel` run in 0.23 s
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="n">scale</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="mf">1e-3</span>
@@ -346,13 +346,13 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_17_0.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_16_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Full run for the data</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_m</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
 
-<pre><code>Operator `Kernel` run in 0.14 s
+<pre><code>Operator `Kernel` run in 0.25 s
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1"># Data on a standard 2ms tim axis</span>
 <span class="n">rec_plot</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
@@ -377,7 +377,7 @@ Operator `padfunc` run in 0.01 s
 
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_21_1.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_20_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="c1"># OBC data of vx/vz</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
@@ -395,7 +395,20 @@ Operator `padfunc` run in 0.01 s
 
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_22_1.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_21_1.png" /></p>
+<h2 id="second-order-formulation">Second order formulation</h2>
+<p>The elastic wave-equation can be formulated in a second-order in time way as well as:</p>
+<div>
+<div class="MathJax_Preview">\begin{cases}
+&amp;\frac{d^2v}{dt^2} = \nabla . \tau \\
+&amp;  \tau = \lambda \text{diag}(\nabla . v) + \mu (\nabla v + (\nabla v)^T)
+\end{cases}</div>
+<script type="math/tex; mode=display">\begin{cases}
+&\frac{d^2v}{dt^2} = \nabla . \tau \\
+&  \tau = \lambda \text{diag}(\nabla . v) + \mu (\nabla v + (\nabla v)^T)
+\end{cases}</script>
+</div>
+<p>where once again <span><span class="MathJax_Preview">v</span><script type="math/tex">v</script></span> is the vector valued particle velocity, and <span><span class="MathJax_Preview">\tau</span><script type="math/tex">\tau</script></span> is now time independent. This formulation is straightforward to implement as well and only requires minor update to the declaration of the symbolic objects and PDE.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Now that looks pretty! But let&#39;s do it again with a 2nd order in time</span>
 <span class="n">so</span> <span class="o">=</span> <span class="mi">8</span>
 <span class="n">v2</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v2&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -421,7 +434,7 @@ Operator `padfunc` run in 0.01 s
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_M</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
 
-<pre><code>Operator `Kernel` run in 0.11 s
+<pre><code>Operator `Kernel` run in 0.20 s
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="n">scale</span> <span class="o">=</span> <span class="mf">1e-4</span>
@@ -467,12 +480,12 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_25_0.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_25_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_m</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
 
-<pre><code>Operator `Kernel` run in 0.13 s
+<pre><code>Operator `Kernel` run in 0.20 s
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="n">rec2_plot2</span> <span class="o">=</span> <span class="n">rec2</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
 <span class="n">rec3_plot2</span> <span class="o">=</span> <span class="n">rec3</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
@@ -495,7 +508,7 @@ Operator `padfunc` run in 0.01 s
 
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../05_elastic_varying_parameters_files/05_elastic_varying_parameters_28_1.png" /></p>
+<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_28_1.png" /></p>
               
             </div>
           </div>

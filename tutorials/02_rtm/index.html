@@ -61,19 +61,39 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#imaging-computational-setup">Imaging computational setup</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#notes-on-the-operators">Notes on the operators</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#computational-considerations">Computational considerations</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#true-and-smooth-velocity-models">True and smooth velocity models</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#acquisition-geometry">Acquisition geometry</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#true-and-smooth-data">True and smooth data</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#imaging-with-back-propagation">Imaging with back-propagation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#adjoint-wave-equation">Adjoint wave equation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#imaging">Imaging</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#operator">Operator</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#implementation-of-the-imaging-loop">Implementation of the imaging loop</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#references">References</a>
     </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
                     </li>
                 </ul>
       </div>
@@ -126,7 +146,7 @@
 </ul>
 <h2 id="imaging-computational-setup">Imaging computational setup</h2>
 <p>In this tutorial, we will introduce the back-propagation operator. This operator simulates the adjoint wave-equation, that is a wave-equation solved in a reversed time order. This time reversal led to the naming of the method we present here, called Reverse Time Migration. The notion of adjoint in exploration geophysics is fundamental as most of the wave-equation based imaging and inversion methods rely on adjoint based optimization methods.</p>
-<h2 id="notes-on-the-operators">Notes on the operators</h2>
+<p><strong>Notes on the operators</strong></p>
 <p>As we have already described the creation of a forward modelling operator, we will use a thin wrapper function instead. This wrapper is provided by a utility class called <code>AcousticWaveSolver</code>, which provides all the necessary operators for seismic modeling, imaging and inversion. The <code>AcousticWaveSolver</code> provides a more concise API for common wave propagation operators and caches the Devito <code>Operator</code> objects to avoid unnecessary recompilation. Operators introduced for the first time in this tutorial will be properly described.</p>
 <p>As before we initialize printing and import some utilities. We also raise the Devito log level to avoid excessive logging for repeated operator invocations.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -172,7 +192,7 @@ velocity model that requires low temporal and spatial resolution. For a more rea
     <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.025</span>  <span class="c1"># Source peak frequency is 25Hz (0.025 kHz)</span>
 </code></pre></div>
 
-<h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
+<h2 id="true-and-smooth-velocity-models">True and smooth velocity models</h2>
 <p>First, we create the model data for the "true" model from a given demonstration preset. This model represents the subsurface topology for the purposes of this example and we will later use it to generate our synthetic data readings. We also generate a second model and apply a smoothing filter to it, which represents our initial model for the imaging algorithm. The perturbation between these two models can be thought of as the image we are trying to recover.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
@@ -222,7 +242,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 </code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_8_0.png" /></p>
-<h1 id="true-and-smooth-data">True and smooth data</h1>
+<h2 id="true-and-smooth-data">True and smooth data</h2>
 <p>We can now generate the shot record (receiver readings) corresponding to our true and initial models. The difference between these two records will be the basis of the imaging procedure.</p>
 <p>For this purpose we will use the same forward modelling operator that was introduced in the previous tutorial, provided by the <code>AcousticWaveSolver</code> utility class. This object instantiates a set of pre-defined operators according to an initial definition of the acquisition geometry, consisting of source and receiver symbols. The solver objects caches the individual operators and provides a slightly more high-level API that allows us to invoke the modelling modelling operators from the initial tutorial in a single line. In the following cells we use this to generate shot data by only specifying the respective model symbol <code>m</code> to use, and the solver will create and return a new <code>Receiver</code> object the represents the readings at the previously defined receiver coordinates.  </p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
@@ -248,9 +268,9 @@ which again depends on the grid spacing used in our model. For consistency this 
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_1.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_2.png" /></p>
-<h1 id="imaging-with-back-propagation">Imaging with back-propagation</h1>
+<h2 id="imaging-with-back-propagation">Imaging with back-propagation</h2>
 <p>As explained in the introduction of this tutorial, this method is based on back-propagation. </p>
-<h2 id="adjoint-wave-equation">Adjoint wave equation</h2>
+<h3 id="adjoint-wave-equation">Adjoint wave equation</h3>
 <p>If we go back to the modelling part, we can rewrite the simulation as a linear system solve:</p>
 <div>
 <div class="MathJax_Preview">\begin{equation}
@@ -271,7 +291,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 \end{equation}</script>
 </div>
 <p>where <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> is the discrete <strong>adjoint wavefield</strong> and  <span><span class="MathJax_Preview">\delta \mathbf{d}</span><script type="math/tex">\delta \mathbf{d}</script></span> is the data residual defined as the difference between the field/observed data and the synthetic data <span><span class="MathJax_Preview">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</span><script type="math/tex">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</script></span>. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. </p>
-<h2 id="imaging">Imaging</h2>
+<h3 id="imaging">Imaging</h3>
 <p>Wave-equation based imaging relies on one simple concept:</p>
 <ul>
 <li>If the background velocity model is cinematically correct, the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
@@ -286,7 +306,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 \end{equation}</script>
 </div>
 <p>In the following tutorials we will describe a more advanced imaging condition that produces shaper and more accurate results.</p>
-<h2 id="operator">Operator</h2>
+<h3 id="operator">Operator</h3>
 <p>We will now define the imaging operator that computes the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> and correlates it with the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This operator essentially consists of three components:
 * Stencil update of the adjoint wavefield <code>v</code>
 * Injection of the data residual at the adjoint source (forward receiver) location

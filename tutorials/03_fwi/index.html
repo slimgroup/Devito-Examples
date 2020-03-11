@@ -67,13 +67,27 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#computational-considerations">Computational considerations</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#true-and-smooth-velocity-models">True and smooth velocity models</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#acquisition-geometry">Acquisition geometry</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#true-and-smooth-data">True and smooth data</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#full-waveform-inversion">Full-Waveform Inversion</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fwi-gradient-operator">FWI gradient operator</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#references">References</a>
+    </li>
     </ul>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_staggered_acoustic/">First order acoustic modeling</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                     </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
                     </li>
                 </ul>
       </div>
@@ -142,7 +156,7 @@
 <span class="n">fwi_iterations</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Number of outer FWI iterations</span>
 </code></pre></div>
 
-<h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
+<h2 id="true-and-smooth-velocity-models">True and smooth velocity models</h2>
 <p>We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
@@ -228,8 +242,7 @@
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_2.png" /></p>
-<h1 id="full-waveform-inversion">Full-Waveform Inversion</h1>
-<h2 id="formulation">Formulation</h2>
+<h2 id="full-waveform-inversion">Full-Waveform Inversion</h2>
 <p>Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, <span><span class="MathJax_Preview">\mathbf{c}</span><script type="math/tex">\mathbf{c}</script></span>, or equivalently the square slowness of the wave, <span><span class="MathJax_Preview">\mathbf{m} = \frac{1}{\mathbf{c}^2}</span><script type="math/tex">\mathbf{m} = \frac{1}{\mathbf{c}^2}</script></span>, from a given set of measurements of the pressure wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This can be expressed as the following optimization problem [1, 2]:</p>
 <div>
 <div class="MathJax_Preview">\begin{aligned}
@@ -368,10 +381,10 @@ adjoint-state method to evaluate the gradient <span><span class="MathJax_Preview
 </code></pre></div>
 
 <pre><code>Objective value is 57265.621845 at iteration 1
-Objective value is 35755.516858 at iteration 2
-Objective value is 20997.312671 at iteration 3
-Objective value is 11545.767846 at iteration 4
-Objective value is 5784.814165 at iteration 5
+Objective value is 35755.544324 at iteration 2
+Objective value is 20997.316985 at iteration 3
+Objective value is 11545.768588 at iteration 4
+Objective value is 5784.804134 at iteration 5
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
@@ -404,7 +417,7 @@ Objective value is 5784.814165 at iteration 5
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../04_staggered_acoustic/" class="btn btn-neutral float-right" title="First order acoustic modeling">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../04_dask/" class="btn btn-neutral float-right" title="Parallel acoustic FWI with Dask">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href="../02_rtm/" class="btn btn-neutral" title="Acosutic RTM"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -436,7 +449,7 @@ Objective value is 5784.814165 at iteration 5
         <span><a href="../02_rtm/" style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../04_staggered_acoustic/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../04_dask/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
