@@ -6,9 +6,10 @@ nav:
   - Acoustic modeling: tutorials/01_modelling.md
   - Acosutic RTM: tutorials/02_rtm.md
   - Acoustic FWI: tutorials/03_fwi.md
-  - First order acoustic modeling: tutorials/04_staggered_acoustic.md
+  - Parallel acoustic FWI with Dask: tutorials/04_dask.md
+  - First order acoustic modeling: tutorials/05_staggered_acoustic.md
   - Elastic modeling with constant parameters: tutorials/06_elastic.md
-  - Elastic modeling with varying parameters: tutorials/05_elastic_varying_parameters.md
+  - Elastic modeling with varying parameters: tutorials/07_elastic_varying_parameters.md
 
 theme: readthedocs
 

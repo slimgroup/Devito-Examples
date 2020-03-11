@@ -32,7 +32,7 @@ The boundary conditions are Dirichlet conditions:
 where $\delta\Omega$ is the surface of the boundary of the model $\Omega$.
 
 
-# Finite domains
+## Finite domains
 
 The last piece of the puzzle is the computational limitation. In the field, the seismic wave propagates in every direction to an "infinite" distance. However, solving the wave equation in a mathematically/discrete infinite domain is not feasible. In order to compensate, Absorbing Boundary Conditions (ABC) or Perfectly Matched Layers (PML) are required to mimic an infinite domain. These two methods allow to approximate an infinite media by damping and absorbing the waves at the limit of the domain to avoid reflections.
 
@@ -46,7 +46,7 @@ The simplest of these methods is the absorbing damping mask. The core idea is to
 
 where $\eta$ is the damping mask equal to $0$ inside the physical domain and increasing inside the sponge layer. Multiple choice of profile can be chosen for $\eta$ from linear to exponential.
 
-# Seismic modelling with devito
+## Seismic modelling with devito
 
 We describe here a step by step setup of seismic modelling with Devito in a simple 2D case. We will create a physical model of our domain and define a single source and an according set of receivers to model for the forward model. But first, we initialize some basic utilities.
 
@@ -89,7 +89,7 @@ model = Model(vp=v, origin=origin, shape=shape, spacing=spacing,
 plot_velocity(model)
 ```
 
-    Operator `initdamp` run in 0.01 s
+    Operator `initdamp` run in 0.03 s
     Operator `padfunc` run in 0.01 s
 
 
@@ -97,7 +97,7 @@ plot_velocity(model)
 ![png](01_modelling_files/01_modelling_5_1.png)
 
 
-# Acquisition geometry
+## Acquisition geometry
 
 To fully define our problem setup we also need to define the source that injects the wave to model and the set of receiver locations at which to sample the wavefield. The source time signature will be modelled using a Ricker wavelet defined as
 
@@ -168,11 +168,11 @@ plot_velocity(model, source=src.coordinates.data,
 ![png](01_modelling_files/01_modelling_11_0.png)
 
 
-# Finite-difference discretization
+## Finite-difference discretization
 
 Devito is a finite-difference DSL that solves the discretized wave-equation on a Cartesian grid. The finite-difference approximation is derived from Taylor expansions of the continuous field after removing the error term.
 
-## Time discretization
+### Time discretization
 
 We only consider the second order time discretization for now. From the Taylor expansion, the second order discrete approximation of the second order time derivative is:
 \begin{equation}
@@ -186,7 +186,7 @@ time-step (distance between two consecutive discrete time points) and $O(\mathbf
   t}^2)$ is the discretization error term. The discretized approximation of the
 second order time derivative is then given by dropping the error term. This derivative is represented in Devito by `u.dt2` where u is a `TimeFunction` object.
 
-## Spatial discretization 
+### Spatial discretization 
 
 We define the discrete Laplacian as the sum of the second order spatial
 derivatives in the three dimensions:
@@ -202,7 +202,7 @@ derivatives in the three dimensions:
 
 This derivative is represented in Devito by `u.laplace` where u is a `TimeFunction` object.
 
-## Wave equation
+### Wave equation
 
 With the space and time discretization defined, we can fully discretize the wave-equation with the combination of time and space discretizations and obtain the following second order in time and $k^{th}$ order in space discrete stencil to update one grid point at position $\mathbf{x}, \mathbf{y},\mathbf{z}$ at time $\mathbf{t}$, i.e.
 \begin{equation}
@@ -246,7 +246,7 @@ from devito import Eq, solve
 stencil = Eq(u.forward, solve(pde, u.forward))
 ```
 
-# Source injection and receiver interpolation
+## Source injection and receiver interpolation
 
 With a numerical scheme to solve the homogenous wave equation, we need to add the source to introduce seismic waves and to implement the measurement operator, and interpolation operator. This operation is linked to the discrete scheme and needs to be done at the proper time step. The semi-discretized in time wave equation with a source reads:
 
@@ -270,7 +270,7 @@ src_term = src.inject(field=u.forward, expr=src * dt**2 / model.m)
 rec_term = rec.interpolate(expr=u.forward)
 ```
 
-# Devito operator and solve
+## Devito operator and solve
 After constructing all the necessary expressions for updating the wavefield, injecting the source term and interpolating onto the receiver points, we can now create the Devito operator that will generate the C code at runtime. When creating the operator, Devito's two optimization engines will log which performance optimizations have been performed:
 * **DSE:** The Devito Symbolics Engine will attempt to reduce the number of operations required by the kernel.
 * **DLE:** The Devito Loop Engine will perform various loop-level optimizations to improve runtime performance.

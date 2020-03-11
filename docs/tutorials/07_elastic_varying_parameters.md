@@ -2,7 +2,7 @@
 
 This second elastic tutorial extends the previous constant parameter implementation to varying parameters (Lame parameters) and takes advantage of the Tensorial capabilities of Devito to write the elastic wave equation following its mathematical definition. The staggering is automated via the TensorFunction API.
 
-## Explosive source
+**Explosive source**
 
 We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature $g(t)$, the derivative of a Gaussian pulse, given by Eq 4:
 
@@ -34,7 +34,7 @@ nlayers = 5
 model = demo_model(preset='layers-elastic', nlayers=nlayers, shape=(301, 301), spacing=(10., 10.))
 ```
 
-    Operator `initdamp` run in 0.01 s
+    Operator `initdamp` run in 0.06 s
     Operator `padfunc` run in 0.01 s
     Operator `padfunc` run in 0.01 s
     Operator `padfunc` run in 0.01 s
@@ -79,7 +79,7 @@ plt.tight_layout()
 ```
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_3_0.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_3_0.png)
 
 
 
@@ -101,10 +101,10 @@ src.show()
 ```
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_5_0.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_5_0.png)
 
 
-# Vectorial form
+## Vectorial form
 
 While conventional litterature writes the elastic wave-equation as a set of scalar PDEs, the higher level representation comes from Hooke's law and the equation of motion and writes as:
 
@@ -113,7 +113,7 @@ While conventional litterature writes the elastic wave-equation as a set of scal
 &\frac{d \tau}{dt} = \lambda tr(\nabla v) \mathbf{I}  + \mu (\nabla v + (\nabla v)^T)
 \end{cases}
 
-and as $tr(\nabla v)$ is the divergence of $v$ we can reqrite it as
+and as $tr(\nabla v)$ is the divergence of $v$ we can rewrite it as
 
 \begin{cases}
 &\frac{dv}{dt} = \nabla . \tau \\
@@ -182,12 +182,16 @@ plot_velocity(model, source=src.coordinates.data,
 ```
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_9_0.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_0.png)
 
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_9_1.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_1.png)
 
+
+## Devito implementation
+
+We now implement the vectorial formulation directly with Devito using it's vectorial and matricial symbolic objects
 
 
 ```python
@@ -202,30 +206,6 @@ u_t = Eq(tau.forward,  model.damp *  (tau + s * (l * diag(div(v.forward)) +
 
 op = Operator([u_v] + [u_t] + src_xx + src_zz + rec_term)
 ```
-
-
-```python
-v._time_order
-```
-
-
-
-
-$\displaystyle 1$
-
-
-
-
-```python
-ro._eval_at(v[0]).evaluate
-```
-
-
-
-
-$\displaystyle 0.5 \operatorname{irho}{\left(x,y \right)} + 0.5 \operatorname{irho}{\left(x + h_{x},y \right)}$
-
-
 
 We can now see that both the particle velocities and stress equations are vectorial and tensorial equations. Devito takes care of the discretization and staggered grids automatically for these types of object.
 
@@ -260,7 +240,7 @@ $\displaystyle \left[\begin{matrix}\operatorname{t_{xx}}{\left(t + dt,x,y \right
 op(dt=model.critical_dt, time_M=int(1000/model.critical_dt))
 ```
 
-    Operator `Kernel` run in 0.14 s
+    Operator `Kernel` run in 0.23 s
 
 
 
@@ -310,7 +290,7 @@ plt.tight_layout()
 ```
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_17_0.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_16_0.png)
 
 
 
@@ -320,7 +300,7 @@ plt.tight_layout()
 op(dt=model.critical_dt, time_m=int(1000/model.critical_dt))
 ```
 
-    Operator `Kernel` run in 0.14 s
+    Operator `Kernel` run in 0.25 s
 
 
 
@@ -359,7 +339,7 @@ plt.xlabel("Receiver position (m)", fontsize=20)
 
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_21_1.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_20_1.png)
 
 
 
@@ -387,8 +367,19 @@ plt.xlabel("Receiver position (m)", fontsize=20)
 
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_22_1.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_21_1.png)
 
+
+## Second order formulation
+
+The elastic wave-equation can be formulated in a second-order in time way as well as:
+
+\begin{cases}
+&\frac{d^2v}{dt^2} = \nabla . \tau \\
+&  \tau = \lambda \text{diag}(\nabla . v) + \mu (\nabla v + (\nabla v)^T)
+\end{cases}
+
+where once again $v$ is the vector valued particle velocity, and $\tau$ is now time independent. This formulation is straightforward to implement as well and only requires minor update to the declaration of the symbolic objects and PDE.
 
 
 ```python
@@ -420,7 +411,7 @@ op = Operator([u_v] + [u_t] + src_xx + src_zz + rec_term)
 op(dt=model.critical_dt, time_M=int(1000/model.critical_dt))
 ```
 
-    Operator `Kernel` run in 0.11 s
+    Operator `Kernel` run in 0.20 s
 
 
 
@@ -470,7 +461,7 @@ plt.tight_layout()
 ```
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_25_0.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_25_0.png)
 
 
 
@@ -479,7 +470,7 @@ plt.tight_layout()
 op(dt=model.critical_dt, time_m=int(1000/model.critical_dt))
 ```
 
-    Operator `Kernel` run in 0.13 s
+    Operator `Kernel` run in 0.20 s
 
 
 
@@ -513,5 +504,5 @@ plt.xlabel("Receiver position (m)", fontsize=20)
 
 
 
-![png](05_elastic_varying_parameters_files/05_elastic_varying_parameters_28_1.png)
+![png](07_elastic_varying_parameters_files/07_elastic_varying_parameters_28_1.png)
 

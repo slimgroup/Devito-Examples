@@ -1,3 +1,14 @@
+# 05- Acoustic modeling with the first order velocity formulation
+
+
+In this tutorial, we introduce the use of staggered grid to solve the first order acoustic wave equation that couples a vectorial particle velocity and a scalar Pressure.
+
+
+## Model
+
+We start, as in the previous tutorials, by setting up a Grid .
+
+
 ```python
 from devito import *
 from seismic.source import WaveletSource, TimeAxis
@@ -17,6 +28,19 @@ x = SpaceDimension(name='x', spacing=Constant(name='h_x', value=extent[0]/(shape
 z = SpaceDimension(name='z', spacing=Constant(name='h_z', value=extent[1]/(shape[1]-1)))
 grid = Grid(extent=extent, shape=shape, dimensions=(x, z))
 ```
+
+## First order acoustic wave equation
+
+The first order acoustic wave equation is defined as:
+
+\begin{cases}
+ & \frac{d p(t, x, y)}{dt}  = \lambda \nabla . v(t, x, y) \\
+ & \frac{d v(t, x, y)}{dt} = \frac{1}{\rho} p(t, x, y)
+\end{cases}
+
+where $ p(t, x)$ is the pressure, $v(t, x, y) = (v_x(t, x, y), v_y(t, x, y)$ is the vector valued particle velocity and $\lambda, \rho$ are the first Lame parameter ($\lambda = \rho * v_p^2$ with $v_p$ the sound velocity) and the density.
+
+
 
 
 ```python
@@ -43,7 +67,7 @@ src.show()
 ```
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_3_0.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_6_0.png)
 
 
 
@@ -111,7 +135,7 @@ op_2 = Operator([u_v_2, u_p_2] + src_p)
 op_2(time=src.time_range.num-1)
 ```
 
-    Operator `Kernel` run in 0.05 s
+    Operator `Kernel` run in 0.07 s
 
 
 
@@ -125,15 +149,15 @@ plot_image(p.data[0])
 ```
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_10_0.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_13_0.png)
 
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_10_1.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_13_1.png)
 
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_10_2.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_13_2.png)
 
 
 
@@ -141,6 +165,10 @@ plot_image(p.data[0])
 norm_p = norm(p)
 assert np.isclose(norm_p, .35098, atol=1e-4, rtol=0)
 ```
+
+## High order FD
+
+Similarly to the acoustic and scalar case, Devito handles any spatial discretization order trivially with a simple change at the `Function` definitio. We now compute the acoustic fields with a fourth order finite-difference scheme that will be less dispersive.
 
 
 ```python
@@ -174,15 +202,15 @@ plot_image(p4.data[-1])
 ```
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_14_0.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_18_0.png)
 
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_14_1.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_18_1.png)
 
 
 
-![png](04_staggered_acoustic_files/04_staggered_acoustic_14_2.png)
+![png](05_staggered_acoustic_files/05_staggered_acoustic_18_2.png)
 
 
 

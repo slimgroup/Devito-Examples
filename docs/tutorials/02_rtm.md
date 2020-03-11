@@ -14,7 +14,7 @@ Seismic imaging relies on two known parameters:
 
 In this tutorial, we will introduce the back-propagation operator. This operator simulates the adjoint wave-equation, that is a wave-equation solved in a reversed time order. This time reversal led to the naming of the method we present here, called Reverse Time Migration. The notion of adjoint in exploration geophysics is fundamental as most of the wave-equation based imaging and inversion methods rely on adjoint based optimization methods.
 
-## Notes on the operators
+**Notes on the operators**
 
 As we have already described the creation of a forward modelling operator, we will use a thin wrapper function instead. This wrapper is provided by a utility class called `AcousticWaveSolver`, which provides all the necessary operators for seismic modeling, imaging and inversion. The `AcousticWaveSolver` provides a more concise API for common wave propagation operators and caches the Devito `Operator` objects to avoid unnecessary recompilation. Operators introduced for the first time in this tutorial will be properly described.
 
@@ -69,7 +69,7 @@ if preset == 'marmousi2d-isotropic':
     f0 = 0.025  # Source peak frequency is 25Hz (0.025 kHz)
 ```
 
-# True and smooth velocity models
+## True and smooth velocity models
 
 First, we create the model data for the "true" model from a given demonstration preset. This model represents the subsurface topology for the purposes of this example and we will later use it to generate our synthetic data readings. We also generate a second model and apply a smoothing filter to it, which represents our initial model for the imaging algorithm. The perturbation between these two models can be thought of as the image we are trying to recover.
 
@@ -139,7 +139,7 @@ geometry.src.show()
 ![png](02_rtm_files/02_rtm_8_0.png)
 
 
-# True and smooth data
+## True and smooth data
 
 We can now generate the shot record (receiver readings) corresponding to our true and initial models. The difference between these two records will be the basis of the imaging procedure.
 
@@ -183,11 +183,11 @@ plot_shotrecord(smooth_d.data - true_d.data, model, t0, tn)
 ![png](02_rtm_files/02_rtm_12_2.png)
 
 
-# Imaging with back-propagation
+## Imaging with back-propagation
 
 As explained in the introduction of this tutorial, this method is based on back-propagation. 
 
-## Adjoint wave equation
+### Adjoint wave equation
 
 If we go back to the modelling part, we can rewrite the simulation as a linear system solve:
 
@@ -205,7 +205,7 @@ On a small problem one could form the matrix explicitly and transpose it to obta
 
 where $\mathbf{v}$ is the discrete **adjoint wavefield** and  $\delta \mathbf{d}$ is the data residual defined as the difference between the field/observed data and the synthetic data $\mathbf{d}_s = \mathbf{P}_r \mathbf{u}$. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. 
 
-## Imaging
+### Imaging
 
 Wave-equation based imaging relies on one simple concept:
 
@@ -219,7 +219,7 @@ The sum over time of the zero time-offset correlation of these two fields then c
 
 In the following tutorials we will describe a more advanced imaging condition that produces shaper and more accurate results.
 
-## Operator
+### Operator
 
 We will now define the imaging operator that computes the adjoint wavefield $\mathbf{v}$ and correlates it with the forward wavefield $\mathbf{u}$. This operator essentially consists of three components:
 * Stencil update of the adjoint wavefield `v`

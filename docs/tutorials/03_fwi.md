@@ -38,7 +38,7 @@ nreceivers = 101  # Number of receiver locations per shot
 fwi_iterations = 5  # Number of outer FWI iterations
 ```
 
-# True and smooth velocity models
+## True and smooth velocity models
 
 We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.
 
@@ -166,10 +166,7 @@ plot_shotrecord(smooth_d.data - true_d.data, model, t0, tn)
 ![png](03_fwi_files/03_fwi_12_2.png)
 
 
-# Full-Waveform Inversion
-
-
-## Formulation
+## Full-Waveform Inversion
 
 Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, $\mathbf{c}$, or equivalently the square slowness of the wave, $\mathbf{m} = \frac{1}{\mathbf{c}^2}$, from a given set of measurements of the pressure wavefield $\mathbf{u}$. This can be expressed as the following optimization problem [1, 2]:
 
@@ -326,10 +323,10 @@ for i in range(0, fwi_iterations):
 ```
 
     Objective value is 57265.621845 at iteration 1
-    Objective value is 35755.516858 at iteration 2
-    Objective value is 20997.312671 at iteration 3
-    Objective value is 11545.767846 at iteration 4
-    Objective value is 5784.814165 at iteration 5
+    Objective value is 35755.544324 at iteration 2
+    Objective value is 20997.316985 at iteration 3
+    Objective value is 11545.768588 at iteration 4
+    Objective value is 5784.804134 at iteration 5
 
 
 

@@ -8,7 +8,7 @@ The current version actually attempts to mirror the FDELMODC implementation by J
 
 [2] https://janth.home.xs4all.nl/Software/fdelmodcManual.pdf
 
-## Explosive source
+**Explosive source**
 
 We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature $g(t)$, the derivative of a Gaussian pulse, given by Eq 4:
 
