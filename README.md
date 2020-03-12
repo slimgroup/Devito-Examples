@@ -14,7 +14,11 @@ Currently, the acoustic isotropic wave equation solver also contains the propaga
 
 ## Disclaimer
 
-A good part of these examples can also be found in the [Devito] examples directory as a fork of this one. These examples for seismic applications have been developed and implemented by [Mathias Louboutin](https://slim.gatech.edu/people/mathias-louboutin) at Georgian Institute of Technology. Some extra examples are also included over there, such as tutorials on the [Devito] compiler as these examples have been developed primarily at Imperial College London.
+The majority of these examples can also be found in the [Devito] examples directory, which is a fork of this repository. These examples for seismic applications have been developed and implemented by [Mathias Louboutin](https://slim.gatech.edu/people/mathias-louboutin) at the Georgia Institute of Technology. For additional introductory examples, including tutorials on the [Devito] compiler, we refer to the [Devito example directory] on [github] since these were developed primarily by people from the [Devito] team at Imperial College London. The contributions by [Mathias Louboutin] were made as part of actvities at the Georgia Tech's Seismic Laboratory for Imaging and modeling ([SLIM).
+
+[Devito example directory]:https://github.com/devitocodes/devito/tree/master/examples/seismic
+[github]:https://github.com
+[SLIM]:https://slim.gatech.edu
 
 ## Installation
 
