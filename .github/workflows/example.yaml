@@ -71,4 +71,4 @@ jobs:
 
     - name: Tutorials
       if:  matrix.ndim > 1
-      run: py.test --nbval seismic/tutorials/
+      run: py.test --nbval --ignore-glob=seismic/tutorials/TLE*.ipynb seismic/tutorials/
