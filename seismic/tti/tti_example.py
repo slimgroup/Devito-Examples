@@ -10,7 +10,7 @@ def tti_setup(shape=(50, 50, 50), spacing=(20.0, 20.0, 20.0), tn=250.0,
 
     # Two layer model for true velocity
     model = demo_model(preset, shape=shape, spacing=spacing, nbl=nbl,
-                       density=density, vti=vti)
+                       space_order=space_order, density=density, vti=vti)
 
     # Source and receiver geometries
     geometry = setup_geometry(model, tn)
