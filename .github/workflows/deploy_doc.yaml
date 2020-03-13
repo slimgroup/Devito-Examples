@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install mkdocs jupyter pymdown-extensions python-markdown-math mdx_gh_links
+          pip install mkdocs jupyter pymdown-extensions python-markdown-math
 
       - name: Build doc
         run: |

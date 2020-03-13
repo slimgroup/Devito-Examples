@@ -1,4 +1,8 @@
 site_name: SLIM's Devito examples
+site_author: Mathias Louboutin
+
+repo_url: https://github.com/mkdocs/mkdocs/
+edit_uri: ""
 
 nav:
 - 'Home': index.md
@@ -42,10 +46,3 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tasklist:
       custom_checkbox: true
-  - toc:
-      permalink: 
-  - admonition
-  - def_list
-  - mdx_gh_links:
-      user: Devito-Examples
-      repo: Devito-Examples
