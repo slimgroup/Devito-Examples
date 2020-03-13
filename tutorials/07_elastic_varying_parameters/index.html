@@ -82,6 +82,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                    </li>
                 </ul>
       </div>
     </div>
@@ -119,7 +121,7 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
+                <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid<a class="headerlink" href="#elastic-wave-equation-implementation-on-a-staggered-grid" title="Permanent link"></a></h1>
 <p>This second elastic tutorial extends the previous constant parameter implementation to varying parameters (Lame parameters) and takes advantage of the Tensorial capabilities of Devito to write the elastic wave equation following its mathematical definition. The staggering is automated via the TensorFunction API.</p>
 <p><strong>Explosive source</strong></p>
 <p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature <span><span class="MathJax_Preview">g(t)</span><script type="math/tex">g(t)</script></span>, the derivative of a Gaussian pulse, given by Eq 4:</p>
@@ -206,7 +208,7 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_5_0.png" /></p>
-<h2 id="vectorial-form">Vectorial form</h2>
+<h2 id="vectorial-form">Vectorial form<a class="headerlink" href="#vectorial-form" title="Permanent link"></a></h2>
 <p>While conventional litterature writes the elastic wave-equation as a set of scalar PDEs, the higher level representation comes from Hooke's law and the equation of motion and writes as:</p>
 <div>
 <div class="MathJax_Preview">\begin{cases}
@@ -279,7 +281,7 @@ Operator `padfunc` run in 0.01 s
 
 <p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_0.png" /></p>
 <p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_1.png" /></p>
-<h2 id="devito-implementation">Devito implementation</h2>
+<h2 id="devito-implementation">Devito implementation<a class="headerlink" href="#devito-implementation" title="Permanent link"></a></h2>
 <p>We now implement the vectorial formulation directly with Devito using it's vectorial and matricial symbolic objects</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Now let&#39;s try and create the staggered updates</span>
 <span class="c1"># Lame parameters</span>
@@ -403,7 +405,7 @@ Operator `padfunc` run in 0.01 s
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
 <p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_21_1.png" /></p>
-<h2 id="second-order-formulation">Second order formulation</h2>
+<h2 id="second-order-formulation">Second order formulation<a class="headerlink" href="#second-order-formulation" title="Permanent link"></a></h2>
 <p>The elastic wave-equation can be formulated in a second-order in time way as well as:</p>
 <div>
 <div class="MathJax_Preview">\begin{cases}
@@ -535,6 +537,8 @@ Operator `padfunc` run in 0.01 s
 
   <div role="contentinfo">
     <!-- Copyright etc -->
+    
+      <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
     
   </div>
 

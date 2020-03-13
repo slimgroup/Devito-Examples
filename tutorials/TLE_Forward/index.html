@@ -76,6 +76,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                    </li>
                 </ul>
       </div>
     </div>
@@ -145,8 +147,8 @@
 
 </div>
 
-<h3 id="geophysics-tutorial">Geophysics tutorial</h3>
-<h1 id="full-waveform-inversion-1-forward-modeling">Full-waveform inversion 1: forward modeling</h1>
+<h3 id="geophysics-tutorial">Geophysics tutorial<a class="headerlink" href="#geophysics-tutorial" title="Permanent link"></a></h3>
+<h1 id="full-waveform-inversion-1-forward-modeling">Full-waveform inversion 1: forward modeling<a class="headerlink" href="#full-waveform-inversion-1-forward-modeling" title="Permanent link"></a></h1>
 <p>Mathias Louboutin<sup>1</sup>*, Philipp Witte<sup>1</sup>, Michael Lange<sup>2</sup>, Navjot Kukreja<sup>2</sup>, Fabio Luporini<sup>2</sup>, Gerard Gorman<sup>2</sup>, and Felix J. Herrmann<sup>1,3</sup></p>
 <p><sup>1</sup> Seismic Laboratory for Imaging and Modeling (SLIM), The University of British Columbia </p>
 <p><sup>2</sup> Imperial College London, London, UK</p>
@@ -154,14 +156,14 @@
 <p>Corresponding author: <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#109;&#108;&#111;&#117;&#98;&#111;&#117;&#116;&#64;&#101;&#111;&#97;&#115;&#46;&#117;&#98;&#99;&#46;&#99;&#97;">&#109;&#108;&#111;&#117;&#98;&#111;&#117;&#116;&#64;&#101;&#111;&#97;&#115;&#46;&#117;&#98;&#99;&#46;&#99;&#97;</a></p>
 <p>Since its re-introduction by Pratt (1999), full-waveform inversion (FWI) has gained a lot of attention in geophysical exploration because of its ability to build high resolution velocity models more or less automatically in areas of complex geology. While there is an extensive and growing literature on the topic, publications focus mostly on technical aspects, making this topic inaccessible for a broader audience due to the lack of simple introductory resources for newcomers to geophysics. We will accomplish this by providing a hands-on walkthrough of FWI using Devito (Lange et al. 2016), a system based on domain-specific languages that automatically generates code for time-domain finite-differences.</p>
 <p>As usual, this tutorial is accompanied by all the code you need to reproduce the figures. Go to github.com/seg/tutorials-2017 and follow the links. In the Notebook, we describe how to simulate synthetic data for a specified source and receiver setup and how to save the corresponding wavefields and shot records. In part two of this series, we will address how to calculate model updates, i.e. gradients of the FWI objective function, via adjoint modeling. Finally, in part three we will demonstrate how to use this gradient as part of an optimization framework for inverting an unknown velocity model.</p>
-<h2 id="introduction">Introduction</h2>
+<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link"></a></h2>
 <p>Devito provides a concise and straightforward computational framework for discretizing wave equations, which underlie all FWI frameworks. We will show that it generates verifiable executable code at run time for wave propagators associated with forward and (in part 2) adjoint wave equations. Devito frees the user from the recurrent and time-consuming development of performant time-stepping codes and allows the user to concentrate on the geophysics of the problem rather than on low-level implementation details of wave-equation simulators. This tutorial covers the conventional adjoint-state formulation of full-waveform tomography (Tarantola 1984) that underlies most of the current methods referred to as full-waveform inversion (Virieux and Operto 2009). While other formulations have been developed to improve the convergence of FWI for poor starting models, in these tutorials we will concentrate on the standard formulation that relies on the combination of a forward/adjoint pair of propagators and a correlation-based gradient. In part one of this tutorial, we discuss how to set up wave simulations for inversion, including how to express the wave equation in Devito symbolically and how to deal with the acquisition geometry.</p>
 <div style="padding: 12px 12px 18px 12px; margin: 20px 0px 20px 0px; background: #eeeeff; border: 2px solid #8888aa; border-radius: 4px;">
 <h4>What is FWI?</h4>
 <p>FWI tries to iteratively minimize the difference between data that was acquired in a seismic survey and synthetic data that is generated from a wave simulator with an estimated (velocity) model of the subsurface. As such, each FWI framework essentially consists of a wave simulator for forward modeling the predicted data and an adjoint simulator for calculating a model update from the data misfit. This first part of this tutorial is dedicated to the forward modeling part and demonstrates how to discretize and implement the acoustic wave equation using Devito.</p>
 </div>
 
-<h2 id="wave-simulations-for-inversion">Wave simulations for inversion</h2>
+<h2 id="wave-simulations-for-inversion">Wave simulations for inversion<a class="headerlink" href="#wave-simulations-for-inversion" title="Permanent link"></a></h2>
 <p>The acoustic wave equation with the squared slowness <span><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>, defined as <span><span class="MathJax_Preview">m(x,y)=c^{-2}(x,y)</span><script type="math/tex">m(x,y)=c^{-2}(x,y)</script></span> with <span><span class="MathJax_Preview">c(x,y)</span><script type="math/tex">c(x,y)</script></span> being the unknown spatially varying wavespeed, is given by:</p>
 <div>
 <div class="MathJax_Preview">
@@ -9882,7 +9884,7 @@ m(x, y) \frac{\mathrm{d}^2 u(t, x, y)}{\mathrm{d}t^2}\ -\ \Delta u(t, x, y)\ +\ 
 
 <p><img alt="png" src="../TLE_Forward_files/TLE_Forward_7_0.png" /></p>
 <p>In the <code>Model</code> instantiation, <code>vp</code> is the velocity in <span><span class="MathJax_Preview">\text{km}/\text{s}</span><script type="math/tex">\text{km}/\text{s}</script></span>, <code>origin</code> is the origin of the physical model in meters, <code>spacing</code> is the discrete grid spacing in meters, <code>shape</code> is the number of grid points in each dimension and <code>nbpml</code> is the number of grid points in the absorbing boundary layer. Is is important to note that <code>shape</code> is the size of the physical domain only, while the total number of grid points, including the absorbing boundary layer, will be automatically derived from <code>shape</code> and <code>nbpml</code>.</p>
-<h2 id="symbolic-definition-of-the-wave-propagator">Symbolic definition of the wave propagator</h2>
+<h2 id="symbolic-definition-of-the-wave-propagator">Symbolic definition of the wave propagator<a class="headerlink" href="#symbolic-definition-of-the-wave-propagator" title="Permanent link"></a></h2>
 <p>To model seismic data by solving the acoustic wave equation, the first necessary step is to discretize this partial differential equation (PDE), which includes discrete representations of the velocity model and wavefields, as well as approximations of the spatial and temporal derivatives using finite-differences (FD). Unfortunately, implementing these finite-difference schemes in low-level code by hand is error prone, especially when we want performant and reliable code. </p>
 <p>The primary design objective of Devito is to allow users to define complex matrix-free finite-difference approximations from high-level symbolic definitions, while employing automated code generation to create highly optimized low-level C code. Using the symbolic algebra package SymPy (Meurer et al. 2017) to facilitate the automatic creation of derivative expressions, Devito generates computationally efficient wave propagators.</p>
 <p>At the core of Devito's symbolic API are symbolic types that behave like SymPy function objects, while also managing  data:</p>
@@ -9964,7 +9966,7 @@ m(x, y) \frac{\mathrm{d}^2 u(t, x, y)}{\mathrm{d}t^2}\ -\ \Delta u(t, x, y)\ +\ 
 </code></pre></div>
 
 <p><code>stencil</code> represents the finite-difference approximation derived from Equation 3, including the finite-difference approximation of the Laplacian and the damping term. Although it defines the update for a single time step only, Devito knows that we will be solving a time-dependent problem over a number of time steps because the wavefield <code>u</code> is a <code>TimeFunction</code> object.</p>
-<h2 id="setting-up-the-acquisition-geometry">Setting up the acquisition geometry</h2>
+<h2 id="setting-up-the-acquisition-geometry">Setting up the acquisition geometry<a class="headerlink" href="#setting-up-the-acquisition-geometry" title="Permanent link"></a></h2>
 <p>The expression for time stepping we derived in the previous section does not contain a seismic source function yet, so the update for the wavefield at a new time step is solely defined by the two previous wavefields. However as indicated in Equation 1, wavefields for seismic experiments are often excited by an active (impulsive) source <span><span class="MathJax_Preview">q(x,y,t;x_\text{s})</span><script type="math/tex">q(x,y,t;x_\text{s})</script></span>, which is a function of space and time (just like the wavefield <code>u</code>). To include such a source term in our modeling scheme, we simply add the the source wavefield as an additional term to Equation 3:</p>
 <div>
 <div class="MathJax_Preview">
@@ -10058,7 +10060,7 @@ m(x, y) \frac{\mathrm{d}^2 u(t, x, y)}{\mathrm{d}t^2}\ -\ \Delta u(t, x, y)\ +\ 
 </code></pre></div>
 
 <p><img alt="png" src="../TLE_Forward_files/TLE_Forward_30_0.png" /></p>
-<h2 id="forward-simulation">Forward simulation</h2>
+<h2 id="forward-simulation">Forward simulation<a class="headerlink" href="#forward-simulation" title="Permanent link"></a></h2>
 <p>We can now define our forward propagator by adding the source and receiver terms to our stencil object:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Operator</span>
@@ -11861,11 +11863,11 @@ AAEAAAAATGF2ZjU3LjI1LjEwMA==
 <span class="c1"># Image(url=&#39;../figures/animation.gif&#39;)</span>
 </code></pre></div>
 
-<h2 id="conclusions">Conclusions</h2>
+<h2 id="conclusions">Conclusions<a class="headerlink" href="#conclusions" title="Permanent link"></a></h2>
 <p>In this first part of the tutorial, we have demonstrated how to set up the discretized forward acoustic wave equations and its associated wave propagator with runtime code generation. While we limited our discussion to the constant density acoustic wave equation, Devito is capable of handling more general wave equations but this is a topic beyond this tutorial on simulating waves for inversion. In part two of our tutorial, we will show how to calculate a valid gradient of the FWI objective using the adjoint state method. In part three, we will demonstrate how to set up a complete matrix-free and scalable optimization framework for acoustic FWI.</p>
-<h2 id="acknowledgments">Acknowledgments</h2>
+<h2 id="acknowledgments">Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permanent link"></a></h2>
 <p>This research was carried out as part of the SINBAD II project with the support of the member organizations of the SINBAD Consortium. This work was financially supported in part by EPSRC grant EP/L000407/1 and the Imperial College London Intel Parallel Computing Centre.</p>
-<h2 id="references">References</h2>
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link"></a></h2>
 <p>Cerjan, C., Kosloff, D., Kosloff, R., and Reshef, M., 1985, A nonreflecting boundary condition for discrete acoustic and elastic wave equations: GEOPHYSICS, 50, 705–708. doi:10.1190/1.1441945</p>
 <p>Lange, M., Kukreja, N., Louboutin, M., Luporini, F., Zacarias, F. V., Pandolfo, V., Gorman, G., 2016, Devito: Towards a generic finite difference DSL using symbolic python: 6<sup>th</sup> workshop on python for high-performance and scientific computing. doi:10.1109/PyHPC.2016.9</p>
 <p>Meurer A, Smith CP, Paprocki M, et al., 2017, SymPy: symbolic computing in Python. PeerJ Computer Science 3:e103 <a href="https://doi.org/10.7717/peerj-cs.103">https://doi.org/10.7717/peerj-cs.103</a></p>
@@ -11874,7 +11876,7 @@ AAEAAAAATGF2ZjU3LjI1LjEwMA==
 <p>Virieux, J., and Operto, S., 2009, An overview of full-waveform inversion in exploration geophysics: GEOPHYSICS, 74, WCC1–WCC26. doi:10.1190/1.3238367</p>
 <hr />
 
-<h2 id="supplemental-material">Supplemental material</h2>
+<h2 id="supplemental-material">Supplemental material<a class="headerlink" href="#supplemental-material" title="Permanent link"></a></h2>
 <ul>
 <li><a href="http://www.opesci.org/">Devito documentation</a></li>
 <li><a href="https://github.com/opesci/Devito">Devito source code and examples</a></li>
@@ -11902,6 +11904,8 @@ AAEAAAAATGF2ZjU3LjI1LjEwMA==
 
   <div role="contentinfo">
     <!-- Copyright etc -->
+    
+      <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
     
   </div>
 

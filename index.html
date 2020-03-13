@@ -50,11 +50,11 @@
                 <ul class="current">
                     <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
     <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a>
-    </li>
     <li class="toctree-l2"><a class="reference internal" href="#disclaimer">Disclaimer</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#how-to-navigate-this-directory">How to navigate this directory</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#related-literature">Related literature</a>
     </li>
@@ -83,6 +83,8 @@
                     <li class="toctree-l1"><a class="reference internal" href="tutorials/TLE_Forward/">Forward modeling</a>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="tutorials/TLE_Adjoint/">Adjoint Modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="tutorials/TLE_fwi/">FWI and algorithms</a>
                     </li>
                 </ul>
       </div>
@@ -117,9 +119,9 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="devito-examples">Devito-Examples</h1>
-<p>Documentation for the seismic modeling and inversion examples developed at Georgia Institute of Technology with contribution from the rest of the Devito team at Imperial College London (in particular F. Luporini, R. Nelson and G. Bismas).</p>
-<h2 id="overview">Overview</h2>
+                <h1 id="devito-examples">Devito-Examples<a class="headerlink" href="#devito-examples" title="Permanent link"></a></h1>
+<p><a href="https://github.com/slimgroup/Devito-Examples/actions?query=workflow%3AExamples"><img alt="Examples" src="https://github.com/slimgroup/Devito-Examples/workflows/Examples/badge.svg" /></a>
+<a href="https://slimgroup.github.io/Devito-Examples/"><img alt="" src="https://img.shields.io/badge/docs-stable-blue.svg" /></a></p>
 <p>This repository contains a set of examples and tutorials for seismic modeling and inversion using <a href="https://www.devitoproject.org">Devito</a>.
 These examples use four different wave equations, namely</p>
 <ul>
@@ -129,9 +131,9 @@ These examples use four different wave equations, namely</p>
 <li>The viscoelastic isotropic wave equation in <code>seismic/elastic</code></li>
 </ul>
 <p>Currently, the acoustic isotropic wave equation solver also contains the propagator associated with the adjoint and linearized (Born) wave-equation solution and the gradient of the FWI objective (application of the Jacobian to data residual)</p>
-<h2 id="disclaimer">Disclaimer</h2>
-<p>A good part of these examples can also be found in the <a href="https://www.devitoproject.org">Devito</a> examples directory as a fork of this one. These examples for seismic applications have been developed and implemented by <a href="https://slim.gatech.edu/people/mathias-louboutin">Mathias Louboutin</a> at Georgian Institute of Technology. Some extra examples are also included over there, such as tutorials on the <a href="https://www.devitoproject.org">Devito</a> compiler as these examples have been developed primarily at Imperial College London.</p>
-<h2 id="installation">Installation</h2>
+<h2 id="disclaimer">Disclaimer<a class="headerlink" href="#disclaimer" title="Permanent link"></a></h2>
+<p>The majority of these examples can also be found in the <a href="https://www.devitoproject.org">Devito</a> examples directory, which is a fork of this repository. These examples for seismic applications have been developed and implemented by <a href="https://slim.gatech.edu/people/mathias-louboutin">Mathias Louboutin</a> at the Georgia Institute of Technology. For additional introductory examples, including tutorials on the <a href="https://www.devitoproject.org">Devito</a> compiler, we refer to the <a href="https://github.com/devitocodes/devito/tree/master/examples/seismic">Devito example directory</a> on <a href="https://github.com">github</a> since these were developed primarily by people from the <a href="https://www.devitoproject.org">Devito</a> team at Imperial College London. The contributions by <a href="https://slim.gatech.edu/people/mathias-louboutin">Mathias Louboutin</a> were made as part of actvities at the Georgia Tech's Seismic Laboratory for Imaging and modeling ([SLIM).</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link"></a></h2>
 <p>To install this set of examples with its dependencies run in your terminal (OSX, Ubuntu):</p>
 <div class="highlight"><pre><span></span><code>git clone https://github.com/slimgroup/Devito-Examples
 cd Devito-Examples
@@ -143,11 +145,36 @@ pip install -e .
 </code></pre></div>
 
 <p>Some of the examples require velocity models such as the marmousi-ii model. These models can be downloaded at <a href="https://github.com/devitocodes/data">devito-data</a> to be used in the tutorials.</p>
-<h2 id="related-literature">Related literature</h2>
+<h2 id="how-to-navigate-this-directory">How to navigate this directory<a class="headerlink" href="#how-to-navigate-this-directory" title="Permanent link"></a></h2>
+<p>Examples and tutorials are provided in the form of single Python files and as Jupyter
+notebooks.Jupyter notebooks are files with extension <code>.ipynb</code>. To execute these, run
+<code>jupyter notebook</code>, and then click on the desired notebook in the window that
+pops up in your browser.</p>
+<p>The seismic examples and tutorials are organized as follows:</p>
+<ul>
+<li><code>seismic/tutorials</code>: A series of Jupyter notebooks of incremental complexity,
+  showing a variety of Devito features in the context of seismic inversion
+  operators. Among the discussed features are modeling, adjoint modeling, computing a gradient and a seismic image, FWI and elastic modeling on a staggered grid.</li>
+<li><code>seismic/acoustic</code>: Example implementations of isotropic acoustic forward,
+  adjoint, gradient and born operators, suitable for full-waveform inversion
+  methods (FWI).</li>
+<li><code>seismic/tti</code>: Example implementations of several anisotropic acoustic
+  forward operators (TTI).</li>
+<li><code>seismic/elastic</code>: Example implementation of an isotropic elastic forward
+  operator. <code>elastic</code>, unlike <code>acoustic</code> and <code>tti</code>, fully exploits the
+  tensorial nature of the Devito symbolic language.</li>
+<li><code>seismic/viscoelastic</code>: Example implementation of an isotropic viscoelastic
+  forward operator. Like <code>elastic</code>, <code>viscoelastic</code> exploits tensor functions
+  for a neat and compact representation of the discretized partial differential
+  equations.</li>
+</ul>
+<h2 id="related-literature">Related literature<a class="headerlink" href="#related-literature" title="Permanent link"></a></h2>
 <p>Some of these examples are described in the following papers:</p>
-<p><a href="https://slim.gatech.edu/content/devito-embedded-domain-specific-language-finite-differences-and-geophysical-exploration">Devito's symbolic API</a>\
-<a href="https://slim.gatech.edu/content/effects-wrong-adjoints-rtm-tti-media">TTI imaging</a>\
-<a href="https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics">Mathias Louboutin's thesis</a></p>
+<ul>
+<li><a href="https://slim.gatech.edu/content/devito-embedded-domain-specific-language-finite-differences-and-geophysical-exploration">Devito's symbolic API</a> for a description of the Devito API and symbolic capabilities.</li>
+<li><a href="https://slim.gatech.edu/content/effects-wrong-adjoints-rtm-tti-media">TTI imaging</a> for small overview of imging in a TTI media (SEG abstract).</li>
+<li><a href="https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics">Mathias Louboutin's thesis</a> for <a href="https://slim.gatech.edu/people/mathias-louboutin">Mathias Louboutin</a>'s Thesis.</li>
+</ul>
 <p>More advanced geophysical application can be found in the <a href="https://github.com/slimgroup/JUDI.jl">JUDI</a> repository. <a href="https://github.com/slimgroup/JUDI.jl">JUDI</a> is a linear algebra DSL built on top of <a href="https://www.devitoproject.org">Devito</a> for large scale inverse problems and includes abstractions for source/receivers and handles large SEG-Y datasets with <a href="https://github.com/slimgroup/SegyIO.jl">SegyIO</a>. A complete description of <a href="https://github.com/slimgroup/JUDI.jl">JUDI</a> and the related seismic inversion application can be found in <a href="https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics">Philipp Witte's thesis</a>.</p>
               
             </div>
@@ -166,6 +193,8 @@ pip install -e .
 
   <div role="contentinfo">
     <!-- Copyright etc -->
+    
+      <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
     
   </div>
 
@@ -203,5 +232,5 @@ pip install -e .
 
 <!--
 MkDocs version : 1.1
-Build Date UTC : 2020-03-12 17:02:55
+Build Date UTC : 2020-03-13 12:15:02
 -->

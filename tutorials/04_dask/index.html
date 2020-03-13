@@ -92,6 +92,8 @@
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
                     </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                    </li>
                 </ul>
       </div>
     </div>
@@ -129,12 +131,12 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="04-full-waveform-inversion-with-devito-and-dask">04 - Full Waveform Inversion with Devito and Dask</h1>
-<h2 id="introduction">Introduction</h2>
+                <h1 id="04-full-waveform-inversion-with-devito-and-dask">04 - Full Waveform Inversion with Devito and Dask<a class="headerlink" href="#04-full-waveform-inversion-with-devito-and-dask" title="Permanent link"></a></h1>
+<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link"></a></h2>
 <p>In this tutorial, we will build on the <a href="https://github.com/devitocodes/devito/blob/master/examples/seismic/tutorials/03_fwi.ipynb">previous</a> FWI tutorial and implement parallel versions of both forward modeling and FWI objective functions. Furthermore, we will show how our parallel FWI function can be passed to black-box third party optimization libraries, such as SciPy's <a href="https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html">optimize</a> package, to access sophisticated optimization algorithms without having to implement them from scratch!</p>
 <p>To implement parallel versions of forward modeling and FWI, we will use <a href="https://dask.pydata.org/en/latest/#dask">Dask</a>, a Python library for distributed computing based on parallel data structures and task-based programming. As computing multiple seismic shot records or gradients for subsequent source locations is an embarassingly parallel process, we will use Dask to dynamically distribute our workload to a pool of available workers and afterwards collect the results.</p>
 <p>The first part of this tutorial closely follows <a href="https://github.com/devitocodes/devito/blob/master/examples/seismic/tutorials/03_fwi.ipynb">tutorial 3</a> and consists of reading the velocity model and setting up the acquisition geometry. Subsequently, we will implement serial versions of forward modeling and FWI objective functions and then show how we can use Dask to implement parallel versions of these functions. Finally, we will show how to write a wrapper that lets us pass our objective function to scipy's optimize package and how to run a small 2D FWI example using a limited-memory Quasi-Newton method</p>
-<h2 id="set-up-velocity-models">Set up velocity models</h2>
+<h2 id="set-up-velocity-models">Set up velocity models<a class="headerlink" href="#set-up-velocity-models" title="Permanent link"></a></h2>
 <p>As before, we start by reading the true (i.e. unknown) velocity model, as well as the starting model for FWI. For our example, we once again use the 2D Camembert model with a transmission acquisition set up, which involves having sources on one side of the model and receivers on the other side.</p>
 <p>In reality, we obvisouly cannot know what the true velocity is, but here we use the true model to generate our own data (inverse crime alert!) and to compare it to our FWI result.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span>
@@ -159,7 +161,7 @@ Operator `padfunc` run in 0.01 s
 Operator `initdamp` run in 0.01 s
 Operator `padfunc` run in 0.01 s
 </code></pre>
-<h2 id="acquisition-geometry">Acquisition geometry</h2>
+<h2 id="acquisition-geometry">Acquisition geometry<a class="headerlink" href="#acquisition-geometry" title="Permanent link"></a></h2>
 <p>For the acquisition geometry, we use the same setup as in tutorial 3 and position 5 source position on one side of the model, and an array of 101 receivers on the other side. Note that now our source coordinate array (<code>src_coordinates</code>) is a 5 x 2 array, containing the shot locations of all 5 source experiments. After defining the source/receiver coordinates, we set up individual geometry objects for both the observed data (using <code>model</code>) and the predicted data (using <code>model0</code>).</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -186,7 +188,7 @@ Operator `padfunc` run in 0.01 s
 <span class="n">geometry0</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model0</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
 </code></pre></div>
 
-<h2 id="forward-modeling">Forward modeling</h2>
+<h2 id="forward-modeling">Forward modeling<a class="headerlink" href="#forward-modeling" title="Permanent link"></a></h2>
 <p>Before diving into FWI, we will start with forward modeling and show how we can use Dask to implement a parallel wrapper around a serial modeling function to compute seismic shot records for multiple source locations in parallel.</p>
 <p>First, we implement a forward modeling function for a single shot, which takes a geometry data structure as the only mandatory input argument. This function assumes that the geometry structure only contains a <em>single</em> source location. To solve the wave equation for the current shot location and model as specified in <code>geometry</code>, we use the <code>AcousticSolver</code> from previous tutorials, which is an abstract layer built on top of (generic) Devito objects. <code>AcousticSolver</code> contains Devito implementations of forward and adjoint wave equations, as well as Jacobians as specified in tutorials 1 and 2, so we don't have to re-implement these PDEs here.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
@@ -198,7 +200,7 @@ Operator `padfunc` run in 0.01 s
     <span class="k">return</span> <span class="n">d_obs</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">dt</span><span class="p">),</span> <span class="n">u0</span>
 </code></pre></div>
 
-<h2 id="parallelization-with-dask">Parallelization with dask</h2>
+<h2 id="parallelization-with-dask">Parallelization with dask<a class="headerlink" href="#parallelization-with-dask" title="Permanent link"></a></h2>
 <p>With our modeling function for a single shot record in place, we now implement our parallel version of our modeling function, which consists of a loop over all source locations. As the <code>geometry</code> object in <code>forward_modeling_single_shot</code> expects only a single source location, we set up a new geometry structure for the i-th source location to pass to our modeling function. However, rather than simpling calling the modeling function for single shots, we tell Dask to create a <em>task</em> for each source location and to distribute them to the available parallel workers. Dask returns a remote reference  to the result on each worker called <code>future</code>. The <code>wait</code> statement tells our function to wait for all tasks to finish their computations, after which we collect the modeled shot records from the workers.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Parallel modeling function</span>
 <span class="k">def</span> <span class="nf">forward_modeling_multi_shots</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">4.0</span><span class="p">):</span>
@@ -241,7 +243,7 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p><img alt="png" src="../04_dask_files/04_dask_13_0.png" /></p>
-<h2 id="parallel-full-waveform-inversion">Parallel Full-Waveform Inversion</h2>
+<h2 id="parallel-full-waveform-inversion">Parallel Full-Waveform Inversion<a class="headerlink" href="#parallel-full-waveform-inversion" title="Permanent link"></a></h2>
 <p>Now that we know how to use Dask to implement a parallel loop around a (serial) modeling function for a single shot, we can apply the same concept to an FWI objective function, which computes the FWI function value and gradient for a given geometry and observed shot record. This function follows largely the structure in tutorial 3 and involves computing the predicted data and backpropagating the residual to compute the gradient. As we do not want to update the velocity in the area of the absorbing boundaries, we only return the gradient on the (original) physical grid.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
@@ -309,7 +311,7 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p><img alt="png" src="../04_dask_files/04_dask_21_0.png" /></p>
-<h2 id="fwi-with-scipys-l-bfgs">FWI with SciPy's L-BFGS</h2>
+<h2 id="fwi-with-scipys-l-bfgs">FWI with SciPy's L-BFGS<a class="headerlink" href="#fwi-with-scipys-l-bfgs" title="Permanent link"></a></h2>
 <p>With our parallel FWI objective function in place, we can in principle implement a wide range of gradient-based optimization algorithms for FWI, such as (stochastic) gradient descent or the nonlinear conjugate gradient method. However, many optimization algorithms, especially second order methods or algorithms for constrained optimization, are far from trivial to implement correctly from scratch. Luckily, many optimization libraries exist that we can adapt for our purposes. </p>
 <p>Here, we demonstrate how we can interface the scipy <em>optimize</em> package to run FWI with a limited-memory Quasi-Newton method. The scipy optimize package was not specifically designed for FWI, but this does not matter, as the library accepts any Python function that can be evaluated for a current model iterate <code>x</code> and returns the function value and gradient:</p>
 <div class="highlight"><pre><span></span><code>f, g = objective_function(x, args)
@@ -384,7 +386,7 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p><img alt="png" src="../04_dask_files/04_dask_34_0.png" /></p>
-<h2 id="next-steps">Next steps</h2>
+<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link"></a></h2>
 <p>In our current example, the master process keeps all shot records in memory and distributes the data to the workers in the parallel pool. This works perfectly fine for 2D and even small 3D examples, but quickly becomes infeasible for large-scale data sets. Therefore, an extension of our current code should include the following steps if we want to scale things up in the future:</p>
 <ul>
 <li>
@@ -429,6 +431,8 @@ Operator `padfunc` run in 0.01 s
 
   <div role="contentinfo">
     <!-- Copyright etc -->
+    
+      <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
     
   </div>
 
