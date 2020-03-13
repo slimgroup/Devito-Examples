@@ -8,7 +8,7 @@ nav:
 - 'Home': index.md
 - 'Tutorials':
   - Acoustic modeling: tutorials/01_modelling.md
-  - Acosutic RTM: tutorials/02_rtm.md
+  - Acoustic RTM: tutorials/02_rtm.md
   - Acoustic FWI: tutorials/03_fwi.md
   - Parallel acoustic FWI with Dask: tutorials/04_dask.md
   - First order acoustic modeling: tutorials/05_staggered_acoustic.md
