@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  
+  <meta name="author" content="Mathias Louboutin">
   
   <link rel="shortcut icon" href="../../img/favicon.ico">
   <title>Acosutic RTM - SLIM's Devito examples</title>
@@ -141,9 +141,9 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="02-reverse-time-migration">02 - Reverse Time Migration<a class="headerlink" href="#02-reverse-time-migration" title="Permanent link"></a></h1>
+                <h1 id="02-reverse-time-migration">02 - Reverse Time Migration</h1>
 <p>This notebook is the second in a series of tutorial highlighting various aspects of seismic inversion based on Devito operators. In this second example we aim to highlight the core ideas behind seismic inversion, where we create an image of the subsurface from field recorded data. This tutorial follows on the modelling tutorial and will reuse the modelling operator and velocity model.</p>
-<h2 id="imaging-requirement">Imaging requirement<a class="headerlink" href="#imaging-requirement" title="Permanent link"></a></h2>
+<h2 id="imaging-requirement">Imaging requirement</h2>
 <p>Seismic imaging relies on two known parameters:</p>
 <ul>
 <li>
@@ -153,7 +153,7 @@
 <p><strong>Background velocity model</strong>. This is a velocity model that has been obtained by processing and inverting the field data. We will look at this methods in the following tutorial as it relies on the method we are describing here. This velocity model is usually a <strong>smooth version</strong> of the true velocity model.</p>
 </li>
 </ul>
-<h2 id="imaging-computational-setup">Imaging computational setup<a class="headerlink" href="#imaging-computational-setup" title="Permanent link"></a></h2>
+<h2 id="imaging-computational-setup">Imaging computational setup</h2>
 <p>In this tutorial, we will introduce the back-propagation operator. This operator simulates the adjoint wave-equation, that is a wave-equation solved in a reversed time order. This time reversal led to the naming of the method we present here, called Reverse Time Migration. The notion of adjoint in exploration geophysics is fundamental as most of the wave-equation based imaging and inversion methods rely on adjoint based optimization methods.</p>
 <p><strong>Notes on the operators</strong></p>
 <p>As we have already described the creation of a forward modelling operator, we will use a thin wrapper function instead. This wrapper is provided by a utility class called <code>AcousticWaveSolver</code>, which provides all the necessary operators for seismic modeling, imaging and inversion. The <code>AcousticWaveSolver</code> provides a more concise API for common wave propagation operators and caches the Devito <code>Operator</code> objects to avoid unnecessary recompilation. Operators introduced for the first time in this tutorial will be properly described.</p>
@@ -165,7 +165,7 @@
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
 </code></pre></div>
 
-<h2 id="computational-considerations">Computational considerations<a class="headerlink" href="#computational-considerations" title="Permanent link"></a></h2>
+<h2 id="computational-considerations">Computational considerations</h2>
 <p>Seismic inversion algorithms are generally very computationally demanding and require a large amount of memory to store the forward wavefield. In order to keep this tutorial as lightweight as possible we are using a very simple
 velocity model that requires low temporal and spatial resolution. For a more realistic model, a second set of preset parameters for a reduced version of the 2D Marmousi data set [1] is provided below in comments. This can be run to create some more realistic subsurface images. However, this second preset is more computationally demanding and requires a slightly more powerful workstation.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Configure model presets</span>
@@ -201,7 +201,7 @@ velocity model that requires low temporal and spatial resolution. For a more rea
     <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.025</span>  <span class="c1"># Source peak frequency is 25Hz (0.025 kHz)</span>
 </code></pre></div>
 
-<h2 id="true-and-smooth-velocity-models">True and smooth velocity models<a class="headerlink" href="#true-and-smooth-velocity-models" title="Permanent link"></a></h2>
+<h2 id="true-and-smooth-velocity-models">True and smooth velocity models</h2>
 <p>First, we create the model data for the "true" model from a given demonstration preset. This model represents the subsurface topology for the purposes of this example and we will later use it to generate our synthetic data readings. We also generate a second model and apply a smoothing filter to it, which represents our initial model for the imaging algorithm. The perturbation between these two models can be thought of as the image we are trying to recover.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
@@ -223,7 +223,7 @@ velocity model that requires low temporal and spatial resolution. For a more rea
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_1.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_2.png" /></p>
-<h2 id="acquisition-geometry">Acquisition geometry<a class="headerlink" href="#acquisition-geometry" title="Permanent link"></a></h2>
+<h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>Next we define the positioning and the wave signal of our source, as well as the location of our receivers. To generate the wavelet for our source we require the discretized values of time that we are going to use to model a single "shot",
 which again depends on the grid spacing used in our model. For consistency this initial setup will look exactly as in the previous modelling tutorial, although we will vary the position of our source later on during the actual imaging algorithm.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
@@ -251,7 +251,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 </code></pre></div>
 
 <p><img alt="png" src="../02_rtm_files/02_rtm_8_0.png" /></p>
-<h2 id="true-and-smooth-data">True and smooth data<a class="headerlink" href="#true-and-smooth-data" title="Permanent link"></a></h2>
+<h2 id="true-and-smooth-data">True and smooth data</h2>
 <p>We can now generate the shot record (receiver readings) corresponding to our true and initial models. The difference between these two records will be the basis of the imaging procedure.</p>
 <p>For this purpose we will use the same forward modelling operator that was introduced in the previous tutorial, provided by the <code>AcousticWaveSolver</code> utility class. This object instantiates a set of pre-defined operators according to an initial definition of the acquisition geometry, consisting of source and receiver symbols. The solver objects caches the individual operators and provides a slightly more high-level API that allows us to invoke the modelling modelling operators from the initial tutorial in a single line. In the following cells we use this to generate shot data by only specifying the respective model symbol <code>m</code> to use, and the solver will create and return a new <code>Receiver</code> object the represents the readings at the previously defined receiver coordinates.  </p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
@@ -277,9 +277,9 @@ which again depends on the grid spacing used in our model. For consistency this 
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_1.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_2.png" /></p>
-<h2 id="imaging-with-back-propagation">Imaging with back-propagation<a class="headerlink" href="#imaging-with-back-propagation" title="Permanent link"></a></h2>
+<h2 id="imaging-with-back-propagation">Imaging with back-propagation</h2>
 <p>As explained in the introduction of this tutorial, this method is based on back-propagation. </p>
-<h3 id="adjoint-wave-equation">Adjoint wave equation<a class="headerlink" href="#adjoint-wave-equation" title="Permanent link"></a></h3>
+<h3 id="adjoint-wave-equation">Adjoint wave equation</h3>
 <p>If we go back to the modelling part, we can rewrite the simulation as a linear system solve:</p>
 <div>
 <div class="MathJax_Preview">\begin{equation}
@@ -300,7 +300,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 \end{equation}</script>
 </div>
 <p>where <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> is the discrete <strong>adjoint wavefield</strong> and  <span><span class="MathJax_Preview">\delta \mathbf{d}</span><script type="math/tex">\delta \mathbf{d}</script></span> is the data residual defined as the difference between the field/observed data and the synthetic data <span><span class="MathJax_Preview">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</span><script type="math/tex">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</script></span>. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. </p>
-<h3 id="imaging">Imaging<a class="headerlink" href="#imaging" title="Permanent link"></a></h3>
+<h3 id="imaging">Imaging</h3>
 <p>Wave-equation based imaging relies on one simple concept:</p>
 <ul>
 <li>If the background velocity model is cinematically correct, the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
@@ -315,7 +315,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 \end{equation}</script>
 </div>
 <p>In the following tutorials we will describe a more advanced imaging condition that produces shaper and more accurate results.</p>
-<h3 id="operator">Operator<a class="headerlink" href="#operator" title="Permanent link"></a></h3>
+<h3 id="operator">Operator</h3>
 <p>We will now define the imaging operator that computes the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> and correlates it with the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This operator essentially consists of three components:
 * Stencil update of the adjoint wavefield <code>v</code>
 * Injection of the data residual at the adjoint source (forward receiver) location
@@ -351,7 +351,7 @@ which again depends on the grid spacing used in our model. For consistency this 
                     <span class="n">subs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)</span>
 </code></pre></div>
 
-<h2 id="implementation-of-the-imaging-loop">Implementation of the imaging loop<a class="headerlink" href="#implementation-of-the-imaging-loop" title="Permanent link"></a></h2>
+<h2 id="implementation-of-the-imaging-loop">Implementation of the imaging loop</h2>
 <p>As just explained, the forward wave-equation is solved forward in time while the adjoint wave-equation is solved in a reversed time order. Therefore, the correlation of these two fields over time requires to store one of the two fields. The computational procedure for imaging follows:</p>
 <ul>
 <li>Simulate the forward wave-equation with the background velocity model to get the synthetic data and save the full wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span></li>
@@ -431,7 +431,7 @@ Imaging source 21 out of 21
 </code></pre></div>
 
 <p>And we have an image of the subsurface with a strong reflector at the original location.</p>
-<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link"></a></h2>
+<h2 id="references">References</h2>
 <p>[1] <em>Versteeg, R.J. &amp; Grau, G. (eds.) (1991): The Marmousi experience. Proc. EAGE workshop on Practical Aspects of Seismic Data Inversion (Copenhagen, 1990), Eur. Assoc. Explor. Geophysicists, Zeist.</em></p>
               
             </div>
@@ -469,6 +469,8 @@ Imaging source 21 out of 21
 
   <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href="../01_modelling/" style="color: #fcfcfc;">&laquo; Previous</a></span>

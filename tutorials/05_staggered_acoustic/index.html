@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  
+  <meta name="author" content="Mathias Louboutin">
   
   <link rel="shortcut icon" href="../../img/favicon.ico">
   <title>First order acoustic modeling - SLIM's Devito examples</title>
@@ -121,9 +121,9 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="05-acoustic-modeling-with-the-first-order-velocity-formulation">05- Acoustic modeling with the first order velocity formulation<a class="headerlink" href="#05-acoustic-modeling-with-the-first-order-velocity-formulation" title="Permanent link"></a></h1>
+                <h1 id="05-acoustic-modeling-with-the-first-order-velocity-formulation">05- Acoustic modeling with the first order velocity formulation</h1>
 <p>In this tutorial, we introduce the use of staggered grid to solve the first order acoustic wave equation that couples a vectorial particle velocity and a scalar Pressure.</p>
-<h2 id="model">Model<a class="headerlink" href="#model" title="Permanent link"></a></h2>
+<h2 id="model">Model</h2>
 <p>We start, as in the previous tutorials, by setting up a Grid .</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">seismic.source</span> <span class="kn">import</span> <span class="n">WaveletSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
@@ -142,7 +142,7 @@
 <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
 </code></pre></div>
 
-<h2 id="first-order-acoustic-wave-equation">First order acoustic wave equation<a class="headerlink" href="#first-order-acoustic-wave-equation" title="Permanent link"></a></h2>
+<h2 id="first-order-acoustic-wave-equation">First order acoustic wave equation</h2>
 <p>The first order acoustic wave equation is defined as:</p>
 <div>
 <div class="MathJax_Preview">\begin{cases}
@@ -234,7 +234,7 @@
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="o">.</span><span class="mi">35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 
-<h2 id="high-order-fd">High order FD<a class="headerlink" href="#high-order-fd" title="Permanent link"></a></h2>
+<h2 id="high-order-fd">High order FD</h2>
 <p>Similarly to the acoustic and scalar case, Devito handles any spatial discretization order trivially with a simple change at the <code>Function</code> definitio. We now compute the acoustic fields with a fourth order finite-difference scheme that will be less dispersive.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># # 4th order acoustic according to fdelmoc</span>
 <span class="c1"># # Now we create the velocity and pressure fields</span>
@@ -302,6 +302,8 @@
 
   <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href="../04_dask/" style="color: #fcfcfc;">&laquo; Previous</a></span>

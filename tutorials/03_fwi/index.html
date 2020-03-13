@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  
+  <meta name="author" content="Mathias Louboutin">
   
   <link rel="shortcut icon" href="../../img/favicon.ico">
   <title>Acoustic FWI - SLIM's Devito examples</title>
@@ -135,9 +135,9 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="03-full-waveform-inversion-fwi">03 - Full-Waveform Inversion (FWI)<a class="headerlink" href="#03-full-waveform-inversion-fwi" title="Permanent link"></a></h1>
+                <h1 id="03-full-waveform-inversion-fwi">03 - Full-Waveform Inversion (FWI)</h1>
 <p>This notebook is the third in a series of tutorial highlighting various aspects of seismic inversion based on Devito operators. In this second example we aim to highlight the core ideas behind seismic inversion, where we create an image of the subsurface from field recorded data. This tutorial follows on the modelling tutorial and will reuse the modelling and velocity model.</p>
-<h2 id="inversion-requirement">Inversion requirement<a class="headerlink" href="#inversion-requirement" title="Permanent link"></a></h2>
+<h2 id="inversion-requirement">Inversion requirement</h2>
 <p>Seismic inversion relies on two known parameters:</p>
 <ul>
 <li>
@@ -147,9 +147,9 @@
 <p><strong>Initial velocity model</strong>. This is a velocity model that has been obtained by processing the field data. This model is a rough and very smooth estimate of the velocity as an initial estimate for the inversion. This is a necessary requirement for any optimization (method).</p>
 </li>
 </ul>
-<h2 id="inversion-computational-setup">Inversion computational setup<a class="headerlink" href="#inversion-computational-setup" title="Permanent link"></a></h2>
+<h2 id="inversion-computational-setup">Inversion computational setup</h2>
 <p>In this tutorial, we will introduce the gradient operator. This operator corresponds to the imaging condition introduced in the previous tutorial with some minor modifications that are defined by the objective function (also referred to in the tutorial series as the <em>functional</em>, <em>f</em>) and its gradient, <em>g</em>. We will define these two terms in the tutorial too.</p>
-<h2 id="notes-on-the-operators">Notes on the operators<a class="headerlink" href="#notes-on-the-operators" title="Permanent link"></a></h2>
+<h2 id="notes-on-the-operators">Notes on the operators</h2>
 <p>As we have already described the creation of a forward modelling operator, we will only call a wrapper function here. This wrapper already contains all the necessary operators for seismic modeling, imaging and inversion. Operators introduced for the first time in this tutorial will be properly described.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
@@ -158,14 +158,14 @@
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
 </code></pre></div>
 
-<h2 id="computational-considerations">Computational considerations<a class="headerlink" href="#computational-considerations" title="Permanent link"></a></h2>
+<h2 id="computational-considerations">Computational considerations</h2>
 <p>As we will see, FWI is computationally extremely demanding, even more than RTM. To keep this tutorial as lightwight as possible we therefore again use a very small demonstration model. We also define here a few parameters for the final example runs that can be changed to modify the overall runtime of the tutorial.</p>
 <div class="highlight"><pre><span></span><code><span class="n">nshots</span> <span class="o">=</span> <span class="mi">9</span>  <span class="c1"># Number of shots to create gradient from</span>
 <span class="n">nreceivers</span> <span class="o">=</span> <span class="mi">101</span>  <span class="c1"># Number of receiver locations per shot </span>
 <span class="n">fwi_iterations</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Number of outer FWI iterations</span>
 </code></pre></div>
 
-<h2 id="true-and-smooth-velocity-models">True and smooth velocity models<a class="headerlink" href="#true-and-smooth-velocity-models" title="Permanent link"></a></h2>
+<h2 id="true-and-smooth-velocity-models">True and smooth velocity models</h2>
 <p>We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
@@ -190,7 +190,7 @@
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_2.png" /></p>
-<h2 id="acquisition-geometry">Acquisition geometry<a class="headerlink" href="#acquisition-geometry" title="Permanent link"></a></h2>
+<h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>In this tutorial, we will use the easiest case for inversion, namely a transmission experiment. The sources are located on one side of the model and the receivers on the other side. This allows to record most of the information necessary for inversion, as reflections usually lead to poor inversion results.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Define acquisition geometry: source</span>
@@ -226,7 +226,7 @@
 </code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_8_0.png" /></p>
-<h2 id="true-and-smooth-data">True and smooth data<a class="headerlink" href="#true-and-smooth-data" title="Permanent link"></a></h2>
+<h2 id="true-and-smooth-data">True and smooth data</h2>
 <p>We can generate shot records for the true and smoothed initial velocity models, since the difference between them will again form the basis of our imaging procedure.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
 <span class="kn">from</span> <span class="nn">seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
@@ -251,7 +251,7 @@
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_12_2.png" /></p>
-<h2 id="full-waveform-inversion">Full-Waveform Inversion<a class="headerlink" href="#full-waveform-inversion" title="Permanent link"></a></h2>
+<h2 id="full-waveform-inversion">Full-Waveform Inversion</h2>
 <p>Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, <span><span class="MathJax_Preview">\mathbf{c}</span><script type="math/tex">\mathbf{c}</script></span>, or equivalently the square slowness of the wave, <span><span class="MathJax_Preview">\mathbf{m} = \frac{1}{\mathbf{c}^2}</span><script type="math/tex">\mathbf{m} = \frac{1}{\mathbf{c}^2}</script></span>, from a given set of measurements of the pressure wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This can be expressed as the following optimization problem [1, 2]:</p>
 <div>
 <div class="MathJax_Preview">\begin{aligned}
@@ -287,7 +287,7 @@ adjoint-state method to evaluate the gradient <span><span class="MathJax_Preview
 \end{align}</script>
 </div>
 <p>We see that the gradient of the FWI function is the previously defined imaging condition with an extra second-order time derivative. We will therefore reuse the operators defined previously inside a Devito wrapper.</p>
-<h2 id="fwi-gradient-operator">FWI gradient operator<a class="headerlink" href="#fwi-gradient-operator" title="Permanent link"></a></h2>
+<h2 id="fwi-gradient-operator">FWI gradient operator</h2>
 <p>To compute a single gradient <span><span class="MathJax_Preview">\nabla\Phi_s(\mathbf{m})</span><script type="math/tex">\nabla\Phi_s(\mathbf{m})</script></span> in our optimization workflow we again use <code>solver.forward</code> to compute the entire forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and a similar pre-defined gradient operator to compute the adjoint wavefield <code>v</code>. The gradient operator provided by our <code>solver</code> utility also computes the correlation between the wavefields, allowing us to encode a similar procedure to the previous imaging tutorial as our gradient calculation:</p>
 <ul>
 <li>Simulate the forward wavefield with the background velocity model to get the synthetic data and save the full wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span></li>
@@ -415,7 +415,7 @@ Objective value is 5784.804134 at iteration 5
 </code></pre></div>
 
 <p><img alt="png" src="../03_fwi_files/03_fwi_24_0.png" /></p>
-<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link"></a></h2>
+<h2 id="references">References</h2>
 <p>[1] <em>Virieux, J. and Operto, S.: An overview of full-waveform inversion in exploration geophysics, GEOPHYSICS, 74, WCC1–WCC26, doi:10.1190/1.3238367, <a href="http://library.seg.org/doi/abs/10.1190/1.3238367">http://library.seg.org/doi/abs/10.1190/1.3238367</a>, 2009.</em></p>
 <p>[2] <em>Haber, E., Chung, M., and Herrmann, F. J.: An effective method for parameter estimation with PDE constraints with multiple right hand sides, SIAM Journal on Optimization, 22, <a href="http://dx.doi.org/10.1137/11081126X">http://dx.doi.org/10.1137/11081126X</a>, 2012.</em></p>
 <p><sup>This notebook is part of the tutorial "Optimised Symbolic Finite Difference Computation with Devito" presented at the Intel® HPC Developer Conference 2017.</sup></p>
@@ -455,6 +455,8 @@ Objective value is 5784.804134 at iteration 5
 
   <div class="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
         <span><a href="../02_rtm/" style="color: #fcfcfc;">&laquo; Previous</a></span>
