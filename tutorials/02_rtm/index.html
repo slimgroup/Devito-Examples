@@ -9,7 +9,7 @@
   <meta name="author" content="Mathias Louboutin">
   
   <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Acosutic RTM - SLIM's Devito examples</title>
+  <title>Acoustic RTM - SLIM's Devito examples</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
 
   <link rel="stylesheet" href="../../css/theme.css" />
@@ -18,7 +18,7 @@
   
   <script>
     // Current page data
-    var mkdocs_page_name = "Acosutic RTM";
+    var mkdocs_page_name = "Acoustic RTM";
     var mkdocs_page_input_path = "tutorials/02_rtm.md";
     var mkdocs_page_url = null;
   </script>
@@ -55,7 +55,7 @@
                 <ul class="current">
                     <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
                     </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Acosutic RTM</a>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic RTM</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#imaging-requirement">Imaging requirement</a>
     </li>
@@ -130,7 +130,7 @@
         
       
     
-    <li>Acosutic RTM</li>
+    <li>Acoustic RTM</li>
     <li class="wy-breadcrumbs-aside">
       
     </li>
@@ -303,7 +303,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 <h3 id="imaging">Imaging</h3>
 <p>Wave-equation based imaging relies on one simple concept:</p>
 <ul>
-<li>If the background velocity model is cinematically correct, the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
+<li>If the background velocity model is kinematically correct, the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
 </ul>
 <p>The sum over time of the zero time-offset correlation of these two fields then creates an image of the subsurface. Mathematically this leads to the simple imaging condition:</p>
 <div>
@@ -317,9 +317,9 @@ which again depends on the grid spacing used in our model. For consistency this 
 <p>In the following tutorials we will describe a more advanced imaging condition that produces shaper and more accurate results.</p>
 <h3 id="operator">Operator</h3>
 <p>We will now define the imaging operator that computes the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> and correlates it with the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This operator essentially consists of three components:
-* Stencil update of the adjoint wavefield <code>v</code>
-* Injection of the data residual at the adjoint source (forward receiver) location
-* Correlation of <code>u</code> and <code>v</code> to compute the image contribution at each timestep</p>
+- Stencil update of the adjoint wavefield <code>v</code>
+- Injection of the data residual at the adjoint source (forward receiver) location
+- Correlation of <code>u</code> and <code>v</code> to compute the image contribution at each timestep</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define gradient operator for imaging</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
 <span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">PointSource</span>
