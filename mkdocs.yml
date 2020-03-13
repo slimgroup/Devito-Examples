@@ -13,9 +13,14 @@ nav:
 - 'The Leading Edge tutorials':
   - Forward modeling: tutorials/TLE_Forward.md
   - Adjoint Modeling: tutorials/TLE_Adjoint.md
+  - FWI and algorithms: tutorials/TLE_fwi.md
 
 theme: readthedocs
 
+copyright: Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.
+
+plugins:
+    - search
 
 extra_javascript:
   - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
@@ -37,4 +42,10 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tasklist:
       custom_checkbox: true
-  - pymdownx.tilde
+  - toc:
+      permalink: 
+  - admonition
+  - def_list
+  - mdx_gh_links:
+      user: Devito-Examples
+      repo: Devito-Examples

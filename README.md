@@ -1,6 +1,8 @@
 
 # Devito-Examples
 
+[![Examples](https://github.com/slimgroup/Devito-Examples/workflows/Examples/badge.svg)](https://github.com/slimgroup/Devito-Examples/actions?query=workflow%3AExamples)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://slimgroup.github.io/Devito-Examples/)
 
 This repository contains a set of examples and tutorials for seismic modeling and inversion using [Devito].
 These examples use four different wave equations, namely
@@ -68,9 +70,9 @@ The seismic examples and tutorials are organized as follows:
 
 Some of these examples are described in the following papers:
 
-[Devito's symbolic API](https://slim.gatech.edu/content/devito-embedded-domain-specific-language-finite-differences-and-geophysical-exploration)\
-[TTI imaging](https://slim.gatech.edu/content/effects-wrong-adjoints-rtm-tti-media)\
-[Mathias Louboutin's thesis](https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics)
+- [Devito's symbolic API](https://slim.gatech.edu/content/devito-embedded-domain-specific-language-finite-differences-and-geophysical-exploration) for a description of the Devito API and symbolic capabilities.
+- [TTI imaging](https://slim.gatech.edu/content/effects-wrong-adjoints-rtm-tti-media) for small overview of imging in a TTI media (SEG abstract).
+- [Mathias Louboutin's thesis](https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics) for [Mathias Louboutin]'s Thesis.
 
 More advanced geophysical application can be found in the [JUDI] repository. [JUDI] is a linear algebra DSL built on top of [Devito] for large scale inverse problems and includes abstractions for source/receivers and handles large SEG-Y datasets with [SegyIO](https://github.com/slimgroup/SegyIO.jl). A complete description of [JUDI] and the related seismic inversion application can be found in [Philipp Witte's thesis](https://slim.gatech.edu/content/modeling-inversion-exploration-geophysics).
 

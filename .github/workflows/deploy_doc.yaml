@@ -20,10 +20,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install mkdocs jupyter pymdown-extensions python-markdown-math
+          pip install mkdocs jupyter pymdown-extensions python-markdown-math mdx_gh_links
 
       - name: Build doc
-        run: for f in *.ipynb;do jupyter nbconvert --to markdown --output-dir='../../docs/tutorials' $f; done
+        run: |
+          for f in *.ipynb;do jupyter nbconvert --to markdown --output-dir='../../docs/tutorials' $f; done
+          cp ../../README.md ../../docs/index.md
         working-directory: seismic/tutorials/
 
       - run: mkdocs build
