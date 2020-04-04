@@ -8,6 +8,7 @@ nav:
 - 'Home': index.md
 - 'Tutorials':
   - Acoustic modeling: tutorials/01_modelling.md
+  - Convergence analysis for the acoustic wave-equation: tutorials/accuracy.md
   - Acoustic RTM: tutorials/02_rtm.md
   - Acoustic FWI: tutorials/03_fwi.md
   - Parallel acoustic FWI with Dask: tutorials/04_dask.md

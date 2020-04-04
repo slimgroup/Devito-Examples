@@ -25,6 +25,7 @@ jobs:
       - name: Build doc
         run: |
           for f in *.ipynb;do jupyter nbconvert --to markdown --output-dir='../../docs/tutorials' $f; done
+          jupyter nbconvert --to markdown --output-dir='../../docs/tutorials' ../acoustic/accuracy.ipynb
           cp ../../README.md ../../docs/index.md
         working-directory: seismic/tutorials/
 
