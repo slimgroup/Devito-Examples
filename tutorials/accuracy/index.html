@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <meta name="author" content="Mathias Louboutin">
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Convergence analysis for the acoustic wave-equation - SLIM's Devito examples</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
+
+  <link rel="stylesheet" href="../../css/theme.css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Convergence analysis for the acoustic wave-equation";
+    var mkdocs_page_input_path = "tutorials/accuracy.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">Tutorials</span></p>
+                <ul class="current">
+                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Convergence analysis for the acoustic wave-equation</a>
+    <ul class="current">
+    </ul>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                    </li>
+                </ul>
+                <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
+                <ul>
+                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
+                    </li>
+                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                    </li>
+                </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SLIM's Devito examples</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>Convergence analysis for the acoustic wave-equation</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">hankel2</span>
+<span class="kn">from</span> <span class="nn">examples.seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">RickerSource</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">TimeAxis</span><span class="p">,</span> <span class="n">AcquisitionGeometry</span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">set_log_level</span>
+<span class="kn">from</span> <span class="nn">benchmarks.user.tools.plotter</span> <span class="kn">import</span> <span class="n">LinePlotter</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Switch to error logging so that info is printed but runtime is hidden</span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
+<span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ERROR&#39;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Model with fixed time step value</span>
+<span class="k">class</span> <span class="nc">ModelBench</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Physical model used for accuracy benchmarking.</span>
+<span class="sd">    The critical dt is made small enough to ignore</span>
+<span class="sd">    time discretization errors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">critical_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Critical computational time step value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">.</span><span class="mi">1</span>
+</code></pre></div>
+
+<h1 id="verification">Verification</h1>
+<p>We compute the error between the numerical and reference solutions for varying spatial discretization order and grid spacing. We also compare the time to solution to the error for these parameters.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Discretization order</span>
+<span class="n">orders</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">norder</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Number of time steps</span>
+<span class="n">nt</span> <span class="o">=</span> <span class="mi">1501</span>
+<span class="c1"># Time axis</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
+<span class="n">tn</span> <span class="o">=</span> <span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="n">nt</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">nt</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;t0, tn, dt, nt; </span><span class="si">%.4f</span><span class="s2"> </span><span class="si">%.4f</span><span class="s2"> </span><span class="si">%.4f</span><span class="s2"> </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">nt</span><span class="p">))</span>
+<span class="c1"># Source peak frequency in KHz</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="o">.</span><span class="mi">09</span>
+</code></pre></div>
+
+<pre><code>t0, tn, dt, nt; 0.0000 150.0000 0.1000 1501
+</code></pre>
+<div class="highlight"><pre><span></span><code><span class="c1"># Domain sizes and gird spacing</span>
+<span class="n">shapes</span> <span class="o">=</span> <span class="p">((</span><span class="mi">201</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">161</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">))</span>
+<span class="n">dx</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]</span>
+<span class="n">nshapes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Fine grid model</span>
+<span class="n">c0</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ModelBench</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">c0</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">),</span> 
+                   <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">801</span><span class="p">,</span> <span class="mi">801</span><span class="p">),</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Source and receiver geometries</span>
+<span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">200.</span>
+
+<span class="c1"># Single receiver offset 100 m from source</span>
+<span class="n">rec_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">260.</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The computational Grid has (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) grid points &quot;</span>
+       <span class="s2">&quot;and a physical extent of (</span><span class="si">%s</span><span class="s2">m, </span><span class="si">%s</span><span class="s2">m)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">extent</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Source is at the center with coordinates (</span><span class="si">%s</span><span class="s2">m, </span><span class="si">%s</span><span class="s2">m)&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Receiver (single receiver) is located at (</span><span class="si">%s</span><span class="s2">m, </span><span class="si">%s</span><span class="s2">m) &quot;</span> <span class="o">%</span>  <span class="nb">tuple</span><span class="p">(</span><span class="n">rec_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+<span class="c1"># Note: gets time sampling from model.critical_dt</span>
+<span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> 
+                               <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">t0w</span><span class="o">=</span><span class="mf">1.5</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span>
+</code></pre></div>
+
+<h1 id="reference-solution-for-numerical-convergence">Reference solution for numerical convergence</h1>
+<div class="highlight"><pre><span></span><code><span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;OT2&#39;</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">ref_rec</span><span class="p">,</span> <span class="n">ref_u</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+</code></pre></div>
+
+<h1 id="analytical-solution-for-comparison-with-the-reference-numerical-solution">Analytical solution for comparison with the reference numerical solution</h1>
+<p>The analytical solution of the 2D acoustic wave-equation with a source pulse is defined as:</p>
+<div>
+<div class="MathJax_Preview">
+u_s(r, t) = \frac{1}{2\pi} \int_{-\infty}^{\infty} \{ -i \pi H_0^{(2)}\left(k r \right) q(\omega) e^{i\omega t} d\omega\}
+</div>
+<script type="math/tex; mode=display">
+u_s(r, t) = \frac{1}{2\pi} \int_{-\infty}^{\infty} \{ -i \pi H_0^{(2)}\left(k r \right) q(\omega) e^{i\omega t} d\omega\}
+</script>
+</div>
+<div>
+<div class="MathJax_Preview">
+r = \sqrt{(x - x_{src})^2+(y - y_{src})^2}
+</div>
+<script type="math/tex; mode=display">
+r = \sqrt{(x - x_{src})^2+(y - y_{src})^2}
+</script>
+</div>
+<p>where <span><span class="MathJax_Preview">H_0^{(2)}</span><script type="math/tex">H_0^{(2)}</script></span> is the Hankel function of the second kind, <span><span class="MathJax_Preview">F(\omega)</span><script type="math/tex">F(\omega)</script></span> is the Fourier spectrum of the source time function at angular frequencies <span><span class="MathJax_Preview">\omega</span><script type="math/tex">\omega</script></span> and <span><span class="MathJax_Preview">k = \frac{\omega}{v}</span><script type="math/tex">k = \frac{\omega}{v}</script></span> is the wavenumber.</p>
+<p>We look at the analytical and numerical solution at a single grid point. We ensure that this grid point is on-the-grid for all discretizations analyised in the further verification.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Source and receiver coordinates</span>
+<span class="n">sx</span><span class="p">,</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+<span class="n">rx</span><span class="p">,</span> <span class="n">rz</span> <span class="o">=</span> <span class="n">rec_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+
+<span class="c1"># Define a Ricker wavelet shifted to zero lag for the Fourier transform</span>
+<span class="k">def</span> <span class="nf">ricker</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">t0</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">t0</span><span class="p">,</span> <span class="n">T</span><span class="o">-</span><span class="n">t0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">T</span><span class="o">/</span><span class="n">dt</span><span class="p">))</span>
+    <span class="n">tt</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">f</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">tt</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">tt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span>
+
+<span class="k">def</span> <span class="nf">analytical</span><span class="p">(</span><span class="n">nt</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dt&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">)</span>
+    <span class="c1"># Fourier constants</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nt</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">fnyq</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">faxis</span> <span class="o">=</span> <span class="n">df</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nf</span><span class="p">)</span>
+
+    <span class="n">wavelet</span> <span class="o">=</span> <span class="n">ricker</span><span class="p">(</span><span class="n">f0</span><span class="p">,</span> <span class="n">time</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dt</span><span class="p">,</span> <span class="mf">1.5</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span>
+
+    <span class="c1"># Take the Fourier transform of the source time-function</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">wavelet</span><span class="p">)</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nf</span><span class="p">]</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="c1"># Compute the Hankel function and multiply by the source spectrum</span>
+    <span class="n">U_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nf</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nf</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">faxis</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">/</span> <span class="n">c0</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">rx</span> <span class="o">-</span> <span class="n">sx</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">((</span><span class="n">rz</span> <span class="o">-</span> <span class="n">sz</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">U_a</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">hankel2</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span> <span class="o">*</span> <span class="n">R</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
+
+    <span class="c1"># Do inverse fft on 0:dt:T and you have analytical solution</span>
+    <span class="n">U_t</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">U_a</span><span class="p">[:],</span> <span class="n">nt</span><span class="p">))</span>
+
+    <span class="c1"># The analytic solution needs be scaled by dx^2 to convert to pressure</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">U_t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="n">time1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3000.</span><span class="p">,</span> <span class="mi">30001</span><span class="p">)</span>
+<span class="n">U_t</span> <span class="o">=</span> <span class="n">analytical</span><span class="p">(</span><span class="mi">30001</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">time1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">U_t</span> <span class="o">=</span> <span class="n">U_t</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1501</span><span class="p">]</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Numerical data min,max,abs; </span><span class="si">%+12.6e</span><span class="s2"> </span><span class="si">%+12.6e</span><span class="s2"> </span><span class="si">%+12.6e</span><span class="s2">&quot;</span> <span class="o">%</span> 
+      <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analytic  data min,max,abs; </span><span class="si">%+12.6e</span><span class="s2"> </span><span class="si">%+12.6e</span><span class="s2"> </span><span class="si">%+12.6e</span><span class="s2">&quot;</span> <span class="o">%</span> 
+      <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">U_t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">U_t</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">U_t</span><span class="p">)))))</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1"># Plot wavefield and source/rec position</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">amax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ref_u</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">,:,:]))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ref_u</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">,:,:],</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">amax</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=+</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">amax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sx</span><span class="o">+</span><span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">sz</span><span class="o">+</span><span class="mi">40</span><span class="p">,</span> <span class="s1">&#39;r*&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;source&#39;</span><span class="p">)</span>   <span class="c1"># plot position of the source in model, add nbl for correct position</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">rx</span><span class="o">+</span><span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">rz</span><span class="o">+</span><span class="mi">40</span><span class="p">,</span> <span class="s1">&#39;k^&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;receiver&#39;</span><span class="p">)</span>  <span class="c1"># plot position of the receiver in model, add nbl for correct position</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x position (m)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;z position (m)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;wavefieldperf.pdf&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plot trace</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;numerical&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">U_t</span><span class="p">[:],</span> <span class="s1">&#39;--r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;analytical&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">150</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mf">1.15</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">U_t</span><span class="p">[:]),</span> <span class="mf">1.15</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">U_t</span><span class="p">[:])])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;time (ms)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;amplitude&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">U_t</span><span class="p">[:]),</span> <span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;difference x100&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">150</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="mf">1.15</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">U_t</span><span class="p">[:]),</span> <span class="mf">1.15</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">U_t</span><span class="p">[:])])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;time (ms)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;amplitude x100&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;ref.pdf&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">error_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">error_time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">U_t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nt</span><span class="p">)</span>
+<span class="n">errors_plot</span> <span class="o">=</span> <span class="p">[(</span><span class="n">time</span><span class="p">,</span> <span class="n">U_t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">error_time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</code></pre></div>
+
+<h1 id="convergence-in-time">Convergence in time</h1>
+<p>We first show the convergence of the time discretization for a fix high-order spatial discretization (20<sup>th</sup> order).</p>
+<p>After we show that the time discretization converges in <span><span class="MathJax_Preview">O(dt^2)</span><script type="math/tex">O(dt^2)</script></span> and therefore only contains the error in time, we will take the numerical solution for <code>dt=.1ms</code> as a reference for the spatial discretization analysis.</p>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1000</span><span class="p">,</span> <span class="mf">0.0800</span><span class="p">,</span> <span class="mf">0.0750</span><span class="p">,</span> <span class="mf">0.0625</span><span class="p">,</span> <span class="mf">0.0500</span><span class="p">]</span>
+<span class="n">nnt</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mf">150.0</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="c1"># Time axis</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">tn</span> <span class="o">=</span> <span class="mf">150.0</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">nnt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># Source geometry</span>
+    <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">200.</span>
+
+    <span class="c1"># Single receiver offset 100 m from source</span>
+    <span class="n">rec_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">260.</span>
+
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> 
+                                   <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">t0w</span><span class="o">=</span><span class="mf">1.5</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span>
+
+    <span class="c1"># Note: incorrect data size will be generated here due to AcquisitionGeometry bug ... </span>
+    <span class="c1"># temporarily fixed below by resizing the output from the solver</span>
+    <span class="n">geometry</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">dt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;geometry.time_axes; &quot;</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="p">)</span>
+
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">ref_rec1</span><span class="p">,</span> <span class="n">ref_u1</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">ref_rec1_data</span> <span class="o">=</span> <span class="n">ref_rec1</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nnt</span><span class="p">[</span><span class="n">i</span><span class="p">],:]</span>
+
+    <span class="n">time1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3000.</span><span class="p">,</span> <span class="mi">20</span><span class="o">*</span><span class="p">(</span><span class="n">nnt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">U_t1</span> <span class="o">=</span> <span class="n">analytical</span><span class="p">(</span><span class="mi">20</span><span class="o">*</span><span class="p">(</span><span class="n">nnt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">time1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">U_t1</span> <span class="o">=</span> <span class="n">U_t1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nnt</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+    <span class="n">error_time</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">U_t1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec1_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nnt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">ratio_d</span> <span class="o">=</span> <span class="n">dt</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">dt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="n">ratio_e</span> <span class="o">=</span> <span class="n">error_time</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">error_time</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;error for dt=</span><span class="si">%.4f</span><span class="s2"> is </span><span class="si">%12.6e</span><span class="s2"> -- ratio dt^2,ratio err; </span><span class="si">%12.6f</span><span class="s2"> </span><span class="si">%12.6f</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> 
+          <span class="p">(</span><span class="n">dt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">error_time</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ratio_d</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">ratio_e</span><span class="p">))</span>
+    <span class="n">errors_plot</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="o">.</span><span class="n">time_values</span><span class="p">,</span> <span class="n">U_t1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec1_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">theory</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">]</span>
+<span class="n">theory</span> <span class="o">=</span> <span class="p">[</span><span class="n">error_time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">th</span><span class="o">/</span><span class="n">theory</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">theory</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">],</span> <span class="n">error_time</span><span class="p">,</span> <span class="s1">&#39;-ob&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Numerical&#39;</span><span class="p">),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">],</span> <span class="n">theory</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Theory (2nd order)&#39;</span><span class="p">),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">],</span> <span class="n">theory</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;dt = </span><span class="si">%s</span><span class="s1"> ms&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">]):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                         <span class="n">textcoords</span><span class="o">=</span><span class="s1">&#39;offset points&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                         <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Time-step $dt$ (ms)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;$|| u_</span><span class="si">{num}</span><span class="s2"> - u_</span><span class="si">{ana}</span><span class="s2">||_2$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">((</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;TimeConvergence.pdf&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;landscape&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;--y&#39;</span><span class="p">,</span> <span class="s1">&#39;--b&#39;</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">,</span> <span class="s1">&#39;--g&#39;</span><span class="p">,</span> <span class="s1">&#39;--c&#39;</span><span class="p">)</span>
+
+<span class="n">start_t</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mi">50</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span>
+<span class="n">end_t</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="mi">100</span><span class="o">/</span><span class="n">dt</span><span class="p">)</span>
+
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dti</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
+    <span class="n">timei</span><span class="p">,</span> <span class="n">erri</span> <span class="o">=</span> <span class="n">errors_plot</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">start_t</span><span class="p">(</span><span class="n">dti</span><span class="p">),</span> <span class="n">end_t</span><span class="p">(</span><span class="n">dti</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timei</span><span class="p">[</span><span class="n">s</span><span class="p">:</span><span class="n">e</span><span class="p">],</span> <span class="n">U_t</span><span class="p">[</span><span class="n">s</span><span class="p">:</span><span class="n">e</span><span class="p">],</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;analytical&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">timei</span><span class="p">[</span><span class="n">s</span><span class="p">:</span><span class="n">e</span><span class="p">],</span> <span class="mi">100</span><span class="o">*</span><span class="n">erri</span><span class="p">[</span><span class="n">s</span><span class="p">:</span><span class="n">e</span><span class="p">],</span> <span class="n">stylel</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;100 x error dt=</span><span class="si">%s</span><span class="s2">ms&quot;</span><span class="o">%</span><span class="n">dti</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">50</span><span class="p">,</span><span class="mi">100</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Time (ms)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">error_time</span><span class="p">),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence rate in time is: </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.9</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=.</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+
+<h1 id="convergence-in-space">Convergence in space</h1>
+<p>We have a correct reference solution we can use for space discretization analysis</p>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">errorl2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">norder</span><span class="p">,</span> <span class="n">nshapes</span><span class="p">))</span>
+<span class="n">timing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">norder</span><span class="p">,</span> <span class="n">nshapes</span><span class="p">))</span>
+
+<span class="n">set_log_level</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">)</span>
+<span class="n">ind_o</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="k">for</span> <span class="n">spc</span> <span class="ow">in</span> <span class="n">orders</span><span class="p">:</span>
+    <span class="n">ind_o</span> <span class="o">+=</span><span class="mi">1</span>
+    <span class="n">ind_spc</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">nn</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+        <span class="n">ind_spc</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">150.</span><span class="p">,</span> <span class="n">nt</span><span class="p">)</span>
+
+        <span class="n">model_space</span> <span class="o">=</span> <span class="n">ModelBench</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">c0</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">h</span><span class="p">),</span> 
+                           <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="n">nn</span><span class="p">),</span> <span class="n">space_order</span><span class="o">=</span><span class="n">spc</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="c1"># Source geometry</span>
+        <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">200.</span>
+
+        <span class="c1"># Single receiver offset 100 m from source</span>
+        <span class="n">rec_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">260.</span>
+
+        <span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model_space</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> 
+                                       <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">t0w</span><span class="o">=</span><span class="mf">1.5</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span>
+
+        <span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model_space</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">spc</span><span class="p">)</span>
+        <span class="n">loc_rec</span><span class="p">,</span> <span class="n">loc_u</span><span class="p">,</span> <span class="n">summary</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
+
+        <span class="c1"># Note: we need to correct for fixed spacing pressure corrections in both analytic  </span>
+        <span class="c1"># (run at the old model spacing) and numerical (run at the new model spacing) solutions</span>
+        <span class="n">c_ana</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">model</span><span class="o">.</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">c_num</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">model_space</span><span class="o">.</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="c1"># Compare to reference solution</span>
+        <span class="c1"># Note: we need to normalize by the factor of grid spacing squared </span>
+        <span class="n">errorl2</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">loc_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">c_num</span> <span class="o">-</span> <span class="n">U_t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">c_ana</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">U_t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">timing</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;starting space order </span><span class="si">%s</span><span class="s2"> with (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) grid points the error is </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2"> seconds runtime&quot;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">errorl2</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">],</span> <span class="n">timing</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">]))</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">timing</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">stylel</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;order </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">timing</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="p">[(</span><span class="s1">&#39;dx = </span><span class="si">%s</span><span class="s1"> m&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sc</span><span class="p">))</span> <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">]):</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                             <span class="n">textcoords</span><span class="o">=</span><span class="s1">&#39;offset points&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;$|| u_</span><span class="si">{num}</span><span class="s2"> - u_</span><span class="si">{ref}</span><span class="s2">||_</span><span class="si">{inf}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Runtime (sec)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower left&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;TimeAccuracy.pdf&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;landscape&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
+<span class="n">style2</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;--k&#39;</span><span class="p">,</span> <span class="s1">&#39;--b&#39;</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">,</span> <span class="s1">&#39;--g&#39;</span><span class="p">,</span> <span class="s1">&#39;--c&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+    <span class="n">theory</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="o">**</span><span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">]</span>
+    <span class="n">theory</span> <span class="o">=</span> <span class="p">[</span><span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">th</span><span class="o">/</span><span class="n">theory</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">theory</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">([</span><span class="n">sc</span> <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">],</span> <span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">stylel</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Numerical order </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+               <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">([</span><span class="n">sc</span> <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">],</span> <span class="n">theory</span><span class="p">,</span> <span class="n">style2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Theory order </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+               <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Grid spacing $dx$ (m)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;$||u_</span><span class="si">{num}</span><span class="s2"> - u_</span><span class="si">{ref}</span><span class="s2">||_</span><span class="si">{inf}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+<span class="c1"># plt.xlim((2.0, 4.0))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;Convergence.pdf&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
+            <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;landscape&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="n">sc</span> <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+        <span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="n">sc</span> <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">][</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence rate for order </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pf</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">,</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../02_rtm/" class="btn btn-neutral float-right" title="Acoustic RTM">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../01_modelling/" class="btn btn-neutral" title="Acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+      <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
+    
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../01_modelling/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../02_rtm/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
