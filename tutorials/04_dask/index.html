@@ -65,13 +65,13 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#gpu-aware-dask">GPU Aware Dask</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#set-up-velocity-models">Set up velocity models</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#acquisition-geometry">Acquisition geometry</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#forward-modeling">Forward modeling</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#parallelization-with-dask">Parallelization with dask</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#parallel-full-waveform-inversion">Parallel Full-Waveform Inversion</a>
     </li>
@@ -137,11 +137,17 @@
 <h2 id="introduction">Introduction</h2>
 <p>In this tutorial, we will build on the <a href="https://github.com/devitocodes/devito/blob/master/examples/seismic/tutorials/03_fwi.ipynb">previous</a> FWI tutorial and implement parallel versions of both forward modeling and FWI objective functions. Furthermore, we will show how our parallel FWI function can be passed to black-box third party optimization libraries, such as SciPy's <a href="https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html">optimize</a> package, to access sophisticated optimization algorithms without having to implement them from scratch!</p>
 <p>To implement parallel versions of forward modeling and FWI, we will use <a href="https://dask.pydata.org/en/latest/#dask">Dask</a>, a Python library for distributed computing based on parallel data structures and task-based programming. As computing multiple seismic shot records or gradients for subsequent source locations is an embarassingly parallel process, we will use Dask to dynamically distribute our workload to a pool of available workers and afterwards collect the results.</p>
-<p>The first part of this tutorial closely follows <a href="https://github.com/devitocodes/devito/blob/master/examples/seismic/tutorials/03_fwi.ipynb">tutorial 3</a> and consists of reading the velocity model and setting up the acquisition geometry. Subsequently, we will implement serial versions of forward modeling and FWI objective functions and then show how we can use Dask to implement parallel versions of these functions. Finally, we will show how to write a wrapper that lets us pass our objective function to scipy's optimize package and how to run a small 2D FWI example using a limited-memory Quasi-Newton method</p>
+<p>The first part of this tutorial closely follows <a href="https://github.com/devitocodes/devito/blob/master/examples/seismic/tutorials/03_fwi.ipynb">tutorial 3</a> and consists of reading the velocity model and setting up the acquisition geometry. Subsequently, we will implement serial versions of forward modeling and FWI objective functions and then show how we can use Dask to implement parallel versions of these functions. Finally, we will show how to write a wrapper that lets us pass our objective function to scipy's optimize package and how to run a small 2D FWI example using a limited-memory Quasi-Newton method.</p>
+<h2 id="gpu-aware-dask">GPU Aware Dask</h2>
+<p>The default method to start a Dask Cluster is LocalCluster(...).  This method enables CPU worker threads, but it shares one GPU for all workers.  To enable Dask to use multi-GPU, or a GPU per Dask worker, the method to start a Dask Cluster needs to be changed to LocalCUDACluster.  This Dask modification is pulled from the Rapids.ai open source project.</p>
+<p>Reference: <a href="https://github.com/rapidsai/dask-cuda">https://github.com/rapidsai/dask-cuda</a></p>
+<div class="highlight"><pre><span></span><code><span class="n">USE_GPU_AWARE_DASK</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre></div>
+
 <h2 id="set-up-velocity-models">Set up velocity models</h2>
 <p>As before, we start by reading the true (i.e. unknown) velocity model, as well as the starting model for FWI. For our example, we once again use the 2D Camembert model with a transmission acquisition set up, which involves having sources on one side of the model and receivers on the other side.</p>
 <p>In reality, we obvisouly cannot know what the true velocity is, but here we use the true model to generate our own data (inverse crime alert!) and to compare it to our FWI result.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">demo_model</span>
 
 <span class="c1"># Set up velocity model</span>
 <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>      <span class="c1"># Number of grid points (nx, nz).</span>
@@ -151,21 +157,21 @@
 
 <span class="c1"># True model</span>
 <span class="n">model1</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;circle-isotropic&#39;</span><span class="p">,</span> <span class="n">vp_circle</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">vp_background</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
-    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="n">nbl</span><span class="p">)</span>
 
 <span class="c1"># Initial model</span>
 <span class="n">model0</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;circle-isotropic&#39;</span><span class="p">,</span> <span class="n">vp_circle</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">vp_background</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
-    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">model1</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
+    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="n">nbl</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">model1</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
 </code></pre></div>
 
-<pre><code>Operator `initdamp` run in 0.03 s
+<pre><code>Operator `initdamp` run in 0.01 s
 Operator `padfunc` run in 0.01 s
 Operator `initdamp` run in 0.01 s
 Operator `padfunc` run in 0.01 s
 </code></pre>
 <h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>For the acquisition geometry, we use the same setup as in tutorial 3 and position 5 source position on one side of the model, and an array of 101 receivers on the other side. Note that now our source coordinate array (<code>src_coordinates</code>) is a 5 x 2 array, containing the shot locations of all 5 source experiments. After defining the source/receiver coordinates, we set up individual geometry objects for both the observed data (using <code>model</code>) and the predicted data (using <code>model0</code>).</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="c1"># Set up acquisiton geometry</span>
@@ -176,15 +182,14 @@ Operator `padfunc` run in 0.01 s
 <span class="c1"># Set up source geometry, but define 5 sources instead of just one.</span>
 <span class="n">nsources</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nsources</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="n">src_coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model1</span><span class="o">.</span><span class="n">domain_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">nsources</span><span class="p">)</span>
+<span class="n">src_coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">model1</span><span class="o">.</span><span class="n">domain_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">nsources</span><span class="p">)</span>
 <span class="n">src_coordinates</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">20.</span>  <span class="c1"># Source depth is 20m</span>
 
 <span class="c1"># Initialize receivers for synthetic and imaging data</span>
 <span class="n">nreceivers</span> <span class="o">=</span> <span class="mi">101</span>
 <span class="n">rec_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nreceivers</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">spacing</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">model1</span><span class="o">.</span><span class="n">domain_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">spacing</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">nreceivers</span><span class="p">)</span>
+<span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model1</span><span class="o">.</span><span class="n">domain_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num</span><span class="o">=</span><span class="n">nreceivers</span><span class="p">)</span>
 <span class="n">rec_coordinates</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">980.</span>    <span class="c1"># Receiver depth</span>
-
 <span class="c1"># Set up geometry objects for observed and predicted data</span>
 <span class="n">geometry1</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model1</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
 <span class="n">geometry0</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model0</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
@@ -193,7 +198,7 @@ Operator `padfunc` run in 0.01 s
 <h2 id="forward-modeling">Forward modeling</h2>
 <p>Before diving into FWI, we will start with forward modeling and show how we can use Dask to implement a parallel wrapper around a serial modeling function to compute seismic shot records for multiple source locations in parallel.</p>
 <p>First, we implement a forward modeling function for a single shot, which takes a geometry data structure as the only mandatory input argument. This function assumes that the geometry structure only contains a <em>single</em> source location. To solve the wave equation for the current shot location and model as specified in <code>geometry</code>, we use the <code>AcousticSolver</code> from previous tutorials, which is an abstract layer built on top of (generic) Devito objects. <code>AcousticSolver</code> contains Devito implementations of forward and adjoint wave equations, as well as Jacobians as specified in tutorials 1 and 2, so we don't have to re-implement these PDEs here.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">examples.seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 
 <span class="c1"># Serial modeling function</span>
 <span class="k">def</span> <span class="nf">forward_modeling_single_shot</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">4.0</span><span class="p">):</span>
@@ -202,7 +207,6 @@ Operator `padfunc` run in 0.01 s
     <span class="k">return</span> <span class="n">d_obs</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">dt</span><span class="p">),</span> <span class="n">u0</span>
 </code></pre></div>
 
-<h2 id="parallelization-with-dask">Parallelization with dask</h2>
 <p>With our modeling function for a single shot record in place, we now implement our parallel version of our modeling function, which consists of a loop over all source locations. As the <code>geometry</code> object in <code>forward_modeling_single_shot</code> expects only a single source location, we set up a new geometry structure for the i-th source location to pass to our modeling function. However, rather than simpling calling the modeling function for single shots, we tell Dask to create a <em>task</em> for each source location and to distribute them to the available parallel workers. Dask returns a remote reference  to the result on each worker called <code>future</code>. The <code>wait</code> statement tells our function to wait for all tasks to finish their computations, after which we collect the modeled shot records from the workers.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Parallel modeling function</span>
 <span class="k">def</span> <span class="nf">forward_modeling_multi_shots</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">4.0</span><span class="p">):</span>
@@ -211,7 +215,7 @@ Operator `padfunc` run in 0.01 s
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">nsrc</span><span class="p">):</span>
 
         <span class="c1"># Geometry for current shot</span>
-        <span class="n">geometry_i</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> 
+        <span class="n">geometry_i</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span> 
             <span class="n">geometry</span><span class="o">.</span><span class="n">t0</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">f0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_type</span><span class="p">)</span>
 
         <span class="c1"># Call serial modeling function for each index</span>
@@ -227,10 +231,16 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p>We can use this parallel modeling function to generate our own observed data set, which we will subsequently use for our FWI example. In reality, we would instead read our observed data from a SEG-Y file. To compute the data in parallel, we launch a pool of workers on our local machine and then call the parallel modeling function:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">LocalCluster</span><span class="p">,</span> <span class="n">wait</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Client</span><span class="p">,</span> <span class="n">wait</span>
 
 <span class="c1"># Start Dask cluster</span>
-<span class="n">cluster</span> <span class="o">=</span> <span class="n">LocalCluster</span><span class="p">(</span><span class="n">n_workers</span><span class="o">=</span><span class="n">nsources</span><span class="p">,</span> <span class="n">death_timeout</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">USE_GPU_AWARE_DASK</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">dask_cuda</span> <span class="kn">import</span> <span class="n">LocalCUDACluster</span>
+    <span class="n">cluster</span> <span class="o">=</span> <span class="n">LocalCUDACluster</span><span class="p">(</span><span class="n">threads_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">death_timeout</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span> 
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">LocalCluster</span>
+    <span class="n">cluster</span> <span class="o">=</span> <span class="n">LocalCluster</span><span class="p">(</span><span class="n">n_workers</span><span class="o">=</span><span class="n">nsources</span><span class="p">,</span> <span class="n">death_timeout</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
 
 <span class="c1"># Compute observed data in parallel (inverse crime). In real life we would read the SEG-Y data here.</span>
@@ -238,17 +248,17 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p>The variable <code>d_obs</code> is a list of the 5 shots records and we can plot one of the shot records as follows:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
 <span class="c1"># Plot shot no. 3 of 5</span>
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">d_obs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model1</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_dask_files/04_dask_13_0.png" /></p>
+<p><img alt="png" src="../04_dask_files/04_dask_20_0.png" /></p>
 <h2 id="parallel-full-waveform-inversion">Parallel Full-Waveform Inversion</h2>
 <p>Now that we know how to use Dask to implement a parallel loop around a (serial) modeling function for a single shot, we can apply the same concept to an FWI objective function, which computes the FWI function value and gradient for a given geometry and observed shot record. This function follows largely the structure in tutorial 3 and involves computing the predicted data and backpropagating the residual to compute the gradient. As we do not want to update the velocity in the area of the absorbing boundaries, we only return the gradient on the (original) physical grid.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
 
 <span class="c1"># Serial FWI objective function</span>
 <span class="k">def</span> <span class="nf">fwi_objective_single_shot</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">d_obs</span><span class="p">):</span>
@@ -283,7 +293,7 @@ Operator `padfunc` run in 0.01 s
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">nsrc</span><span class="p">):</span>
 
         <span class="c1"># Geometry for current shot</span>
-        <span class="n">geometry_i</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> 
+        <span class="n">geometry_i</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span> 
             <span class="n">geometry</span><span class="o">.</span><span class="n">t0</span><span class="p">,</span> <span class="n">geometry</span><span class="o">.</span><span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">f0</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_type</span><span class="p">)</span>
 
         <span class="c1"># Call serial FWI objective function for each shot location</span>
@@ -306,13 +316,13 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 
 <p>The physical units of the gradient are <span><span class="MathJax_Preview">s^2/km^2</span><script type="math/tex">s^2/km^2</script></span>, which means our gradient is an update of the squared slowness, rather than of the velocity.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
 
 <span class="c1"># Plot g</span>
-<span class="n">plot_image</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">model1</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;cividis&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">model1</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">6e3</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">6e3</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;cividis&quot;</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_dask_files/04_dask_21_0.png" /></p>
+<p><img alt="png" src="../04_dask_files/04_dask_29_0.png" /></p>
 <h2 id="fwi-with-scipys-l-bfgs">FWI with SciPy's L-BFGS</h2>
 <p>With our parallel FWI objective function in place, we can in principle implement a wide range of gradient-based optimization algorithms for FWI, such as (stochastic) gradient descent or the nonlinear conjugate gradient method. However, many optimization algorithms, especially second order methods or algorithms for constrained optimization, are far from trivial to implement correctly from scratch. Luckily, many optimization libraries exist that we can adapt for our purposes. </p>
 <p>Here, we demonstrate how we can interface the scipy <em>optimize</em> package to run FWI with a limited-memory Quasi-Newton method. The scipy optimize package was not specifically designed for FWI, but this does not matter, as the library accepts any Python function that can be evaluated for a current model iterate <code>x</code> and returns the function value and gradient:</p>
@@ -327,8 +337,7 @@ Operator `padfunc` run in 0.01 s
     <span class="n">v_curr</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
     <span class="c1"># Overwrite current velocity in geometry (don&#39;t update boundary region)</span>
-    <span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nbl</span><span class="p">:</span><span class="o">-</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nbl</span><span class="p">,</span> 
-        <span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nbl</span><span class="p">:</span><span class="o">-</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nbl</span><span class="p">]</span> <span class="o">=</span> <span class="n">v_curr</span>
+    <span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="s1">&#39;vp&#39;</span><span class="p">,</span> <span class="n">v_curr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
 
     <span class="c1"># Evaluate objective function </span>
     <span class="n">fval</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">fwi_objective_multi_shots</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">d_obs</span><span class="p">)</span>
@@ -365,20 +374,28 @@ Operator `padfunc` run in 0.01 s
     <span class="n">callback</span><span class="o">=</span><span class="n">fwi_callback</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;ftol&#39;</span><span class="p">:</span><span class="n">ftol</span><span class="p">,</span> <span class="s1">&#39;maxiter&#39;</span><span class="p">:</span><span class="n">maxiter</span><span class="p">,</span> <span class="s1">&#39;disp&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </code></pre></div>
 
+<pre><code>Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+Operator `padfunc` run in 0.01 s
+</code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1"># Check termination criteria</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;fun&#39;</span><span class="p">],</span> <span class="n">ftol</span><span class="p">)</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;nit&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">maxiter</span>
 </code></pre></div>
 
 <p>After either the maximum iteration number is reached or we find the minimum of the objective function within some tolerance level <code>ftol</code>, the optimizer returns a dictionary with the results and some additional information. We convert the result back to the velocity in <span><span class="MathJax_Preview">km/s</span><script type="math/tex">km/s</script></span> and compare it to the true model:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Plot FWI result</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_velocity</span>
 <span class="n">vp</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">model1</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-<span class="n">plot_velocity</span><span class="p">(</span><span class="n">model1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;cividis&quot;</span><span class="p">)</span>
-<span class="n">plot_image</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;cividis&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">model1</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">model1</span><span class="o">.</span><span class="n">nbl</span><span class="p">:</span><span class="o">-</span><span class="n">model1</span><span class="o">.</span><span class="n">nbl</span><span class="p">,</span> <span class="n">model1</span><span class="o">.</span><span class="n">nbl</span><span class="p">:</span><span class="o">-</span><span class="n">model1</span><span class="o">.</span><span class="n">nbl</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;cividis&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.4</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">2.8</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;cividis&quot;</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_dask_files/04_dask_32_0.png" /></p>
-<p><img alt="png" src="../04_dask_files/04_dask_32_1.png" /></p>
+<p><img alt="png" src="../04_dask_files/04_dask_41_0.png" /></p>
+<p><img alt="png" src="../04_dask_files/04_dask_41_1.png" /></p>
 <p>Looking at the model error as a function of the iteration number, we find that the error decays monotonically, as we would expect.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
@@ -387,7 +404,7 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../04_dask_files/04_dask_34_0.png" /></p>
+<p><img alt="png" src="../04_dask_files/04_dask_43_0.png" /></p>
 <h2 id="next-steps">Next steps</h2>
 <p>In our current example, the master process keeps all shot records in memory and distributes the data to the workers in the parallel pool. This works perfectly fine for 2D and even small 3D examples, but quickly becomes infeasible for large-scale data sets. Therefore, an extension of our current code should include the following steps if we want to scale things up in the future:</p>
 <ul>

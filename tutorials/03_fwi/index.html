@@ -69,18 +69,6 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#computational-considerations">Computational considerations</a>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#true-and-smooth-velocity-models">True and smooth velocity models</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#acquisition-geometry">Acquisition geometry</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#true-and-smooth-data">True and smooth data</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#full-waveform-inversion">Full-Waveform Inversion</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#fwi-gradient-operator">FWI gradient operator</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#references">References</a>
-    </li>
     </ul>
                     </li>
                     <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
@@ -167,10 +155,10 @@
 <span class="n">fwi_iterations</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Number of outer FWI iterations</span>
 </code></pre></div>
 
-<h2 id="true-and-smooth-velocity-models">True and smooth velocity models</h2>
+<h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
 <p>We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
 
 <span class="c1"># Define true and initial model</span>
 <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># Number of grid point (nx, nz)</span>
@@ -182,7 +170,7 @@
 
 <span class="n">model0</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;circle-isotropic&#39;</span><span class="p">,</span> <span class="n">vp_circle</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">vp_background</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span>
                      <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
-                    <span class="n">grid</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
+                     <span class="n">grid</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
 
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model0</span><span class="p">)</span>
@@ -192,11 +180,15 @@
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_0.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_5_2.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">grid</span> <span class="o">==</span> <span class="n">model0</span><span class="o">.</span><span class="n">grid</span>
+<span class="k">assert</span> <span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">grid</span> <span class="o">==</span> <span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">grid</span>
+</code></pre></div>
+
 <h2 id="acquisition-geometry">Acquisition geometry</h2>
 <p>In this tutorial, we will use the easiest case for inversion, namely a transmission experiment. The sources are located on one side of the model and the receivers on the other side. This allows to record most of the information necessary for inversion, as reflections usually lead to poor inversion results.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Define acquisition geometry: source</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 
 <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
 <span class="n">tn</span> <span class="o">=</span> <span class="mf">1000.</span> 
@@ -221,17 +213,17 @@
 <span class="n">geometry</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_7_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_8_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Plot acquisition geometry</span>
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">,</span>
               <span class="n">receiver</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">[::</span><span class="mi">4</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_8_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_9_0.png" /></p>
 <h2 id="true-and-smooth-data">True and smooth data</h2>
 <p>We can generate shot records for the true and smoothed initial velocity models, since the difference between them will again form the basis of our imaging procedure.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
-<span class="kn">from</span> <span class="nn">seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
+<span class="kn">from</span> <span class="nn">examples.seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 
 <span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">true_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
@@ -242,7 +234,7 @@
 </code></pre></div>
 
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
 <span class="c1"># Plot shot record for true and smooth velocity model and the difference</span>
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
@@ -250,10 +242,11 @@
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_12_0.png" /></p>
-<p><img alt="png" src="../03_fwi_files/03_fwi_12_1.png" /></p>
-<p><img alt="png" src="../03_fwi_files/03_fwi_12_2.png" /></p>
-<h2 id="full-waveform-inversion">Full-Waveform Inversion</h2>
+<p><img alt="png" src="../03_fwi_files/03_fwi_13_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_13_1.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_13_2.png" /></p>
+<h1 id="full-waveform-inversion">Full-Waveform Inversion</h1>
+<h2 id="formulation">Formulation</h2>
 <p>Full-waveform inversion (FWI) aims to invert an accurate model of the discrete wave velocity, <span><span class="MathJax_Preview">\mathbf{c}</span><script type="math/tex">\mathbf{c}</script></span>, or equivalently the square slowness of the wave, <span><span class="MathJax_Preview">\mathbf{m} = \frac{1}{\mathbf{c}^2}</span><script type="math/tex">\mathbf{m} = \frac{1}{\mathbf{c}^2}</script></span>, from a given set of measurements of the pressure wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This can be expressed as the following optimization problem [1, 2]:</p>
 <div>
 <div class="MathJax_Preview">\begin{aligned}
@@ -307,36 +300,64 @@ adjoint-state method to evaluate the gradient <span><span class="MathJax_Preview
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source_locations</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_15_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_16_0.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Operator</span>
+
+<span class="c1"># Computes the residual between observed and synthetic data into the residual</span>
+<span class="k">def</span> <span class="nf">compute_residual</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">dobs</span><span class="p">,</span> <span class="n">dsyn</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">residual</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">distributor</span><span class="o">.</span><span class="n">is_parallel</span><span class="p">:</span>
+        <span class="c1"># If we run with MPI, we have to compute the residual via an operator</span>
+        <span class="c1"># First make sure we can take the difference and that receivers are at the </span>
+        <span class="c1"># same position</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">dobs</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[:],</span> <span class="n">dsyn</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">residual</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[:],</span> <span class="n">dsyn</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="c1"># Create a difference operator</span>
+        <span class="n">diff_eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">dsyn</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">dsyn</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="n">residual</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span> <span class="o">-</span>
+                               <span class="n">dobs</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">dobs</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="n">residual</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]}))</span>
+        <span class="n">Operator</span><span class="p">(</span><span class="n">diff_eq</span><span class="p">)()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># A simple data difference is enough in serial</span>
+        <span class="n">residual</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">dsyn</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">-</span> <span class="n">dobs</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span>
+
+    <span class="k">return</span> <span class="n">residual</span>
+</code></pre></div>
+
 <div class="highlight"><pre><span></span><code><span class="c1"># Create FWI gradient kernel </span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">TimeFunction</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
 
 <span class="kn">import</span> <span class="nn">scipy</span>
 <span class="k">def</span> <span class="nf">fwi_gradient</span><span class="p">(</span><span class="n">vp_in</span><span class="p">):</span>    
-    <span class="c1"># Create symbols to hold the gradient and residual</span>
+    <span class="c1"># Create symbols to hold the gradient</span>
     <span class="n">grad</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
-    <span class="n">residual</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;rec&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+    <span class="c1"># Create placeholders for the data residual and data</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;residual&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
                         <span class="n">time_range</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="p">,</span> 
                         <span class="n">coordinates</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">)</span>
+    <span class="n">d_obs</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;d_obs&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                     <span class="n">time_range</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="p">,</span> 
+                     <span class="n">coordinates</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">)</span>
+    <span class="n">d_syn</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;d_syn&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                     <span class="n">time_range</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="p">,</span> 
+                     <span class="n">coordinates</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">)</span>
     <span class="n">objective</span> <span class="o">=</span> <span class="mf">0.</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nshots</span><span class="p">):</span>
         <span class="c1"># Update source location</span>
         <span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">source_locations</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
 
         <span class="c1"># Generate synthetic data from true model</span>
-        <span class="n">true_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="n">d_obs</span><span class="p">)</span>
 
         <span class="c1"># Compute smooth data and full forward wavefield u0</span>
-        <span class="n">smooth_d</span><span class="p">,</span> <span class="n">u0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">vp_in</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">u0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">vp_in</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rec</span><span class="o">=</span><span class="n">d_syn</span><span class="p">)</span>
 
         <span class="c1"># Compute gradient from data residual and update objective function </span>
-        <span class="n">residual</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span>
+        <span class="n">compute_residual</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">d_obs</span><span class="p">,</span> <span class="n">d_syn</span><span class="p">)</span>
 
-        <span class="n">objective</span> <span class="o">+=</span> <span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">objective</span> <span class="o">+=</span> <span class="o">.</span><span class="mi">5</span><span class="o">*</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
         <span class="n">solver</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">rec</span><span class="o">=</span><span class="n">residual</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="n">u0</span><span class="p">,</span> <span class="n">vp</span><span class="o">=</span><span class="n">vp_in</span><span class="p">,</span> <span class="n">grad</span><span class="o">=</span><span class="n">grad</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">objective</span><span class="p">,</span> <span class="o">-</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">return</span> <span class="n">objective</span><span class="p">,</span> <span class="n">grad</span>
 </code></pre></div>
 
 <p>Having defined our FWI gradient procedure we can compute the initial iteration from our starting model. This allows us to visualize the gradient alongside the model perturbation and the effect of the gradient update on the model.</p>
@@ -346,27 +367,44 @@ adjoint-state method to evaluate the gradient <span><span class="MathJax_Preview
 </code></pre></div>
 
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">mmax</span>
+<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
 
 <span class="c1"># Plot the FWI gradient</span>
-<span class="n">plot_image</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="o">-</span><span class="n">update</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
 
 <span class="c1"># Plot the difference between the true and initial model.</span>
 <span class="c1"># This is not known in practice as only the initial model is provided.</span>
-<span class="n">plot_image</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1e-1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
+
+<span class="c1"># Show what the update does to the model</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span> <span class="o">/</span> <span class="n">mmax</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
+<span class="n">plot_image</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="n">alpha</span><span class="o">*</span><span class="n">update</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_19_0.png" /></p>
-<p><img alt="png" src="../03_fwi_files/03_fwi_19_1.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_21_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_21_1.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_21_2.png" /></p>
 <p>We see that the gradient and the true perturbation have the same sign, therefore, with an appropriate scaling factor, we will update the model in the correct direction.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Define bounding box constraints on the solution.</span>
-<span class="k">def</span> <span class="nf">apply_box_constraint</span><span class="p">(</span><span class="n">vp</span><span class="p">):</span>
-    <span class="c1"># Maximum possible &#39;realistic&#39; velocity is 3.5 km/sec</span>
-    <span class="c1"># Minimum possible &#39;realistic&#39; velocity is 2 km/sec</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
+<span class="c1"># Define bounding box constraints on the solution.</span>
+<span class="k">def</span> <span class="nf">update_with_box</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply gradient update in-place to vp with box constraint</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">    ------</span>
+<span class="sd">    For more advanced algorithm, one will need to gather the non-distributed</span>
+<span class="sd">    velocity array to apply constrains and such.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">vp</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">dm</span>
+    <span class="n">update_eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">Max</span><span class="p">(</span><span class="n">Min</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">vmax</span><span class="p">),</span> <span class="n">vmin</span><span class="p">))</span>
+    <span class="n">Operator</span><span class="p">(</span><span class="n">update_eq</span><span class="p">)()</span>
 </code></pre></div>
 
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
+
+<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">mmax</span>
 
 <span class="c1"># Run FWI with gradient descent</span>
 <span class="n">history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">fwi_iterations</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -382,20 +420,20 @@ adjoint-state method to evaluate the gradient <span><span class="MathJax_Preview
     <span class="c1"># In practice this would be replaced by a Linesearch (Wolfe, ...)</span>
     <span class="c1"># that would guarantee functional decrease Phi(m-alpha g) &lt;= epsilon Phi(m)</span>
     <span class="c1"># where epsilon is a minimum decrease constant</span>
-    <span class="n">alpha</span> <span class="o">=</span> <span class="o">.</span><span class="mi">05</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="o">.</span><span class="mi">05</span> <span class="o">/</span> <span class="n">mmax</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
 
     <span class="c1"># Update the model estimate and enforce minimum/maximum values</span>
-    <span class="n">model0</span><span class="o">.</span><span class="n">vp</span> <span class="o">=</span> <span class="n">apply_box_constraint</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">direction</span><span class="p">)</span>
+    <span class="n">update_with_box</span><span class="p">(</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span> <span class="p">,</span> <span class="n">alpha</span> <span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
 
     <span class="c1"># Log the progress made</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Objective value is </span><span class="si">%f</span><span class="s1"> at iteration </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
 </code></pre></div>
 
-<pre><code>Objective value is 57265.621845 at iteration 1
-Objective value is 35755.544324 at iteration 2
-Objective value is 20997.316985 at iteration 3
-Objective value is 11545.768588 at iteration 4
-Objective value is 5784.804134 at iteration 5
+<pre><code>Objective value is 57285.103209 at iteration 1
+Objective value is 35766.902505 at iteration 2
+Objective value is 21002.932951 at iteration 3
+Objective value is 11548.234192 at iteration 4
+Objective value is 5786.186187 at iteration 5
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
@@ -403,7 +441,7 @@ Objective value is 5784.804134 at iteration 5
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model0</span><span class="p">)</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_23_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_25_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
@@ -416,7 +454,7 @@ Objective value is 5784.804134 at iteration 5
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 
-<p><img alt="png" src="../03_fwi_files/03_fwi_24_0.png" /></p>
+<p><img alt="png" src="../03_fwi_files/03_fwi_26_0.png" /></p>
 <h2 id="references">References</h2>
 <p>[1] <em>Virieux, J. and Operto, S.: An overview of full-waveform inversion in exploration geophysics, GEOPHYSICS, 74, WCC1–WCC26, doi:10.1190/1.3238367, <a href="http://library.seg.org/doi/abs/10.1190/1.3238367">http://library.seg.org/doi/abs/10.1190/1.3238367</a>, 2009.</em></p>
 <p>[2] <em>Haber, E., Chung, M., and Herrmann, F. J.: An effective method for parameter estimation with PDE constraints with multiple right hand sides, SIAM Journal on Optimization, 22, <a href="http://dx.doi.org/10.1137/11081126X">http://dx.doi.org/10.1137/11081126X</a>, 2012.</em></p>
