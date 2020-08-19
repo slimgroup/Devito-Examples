@@ -2,7 +2,7 @@ import sympy as sp
 
 from devito import (Eq, Operator, VectorTimeFunction, TensorTimeFunction,
                     div, grad, diag)
-from seismic.elastic import src_rec
+from examples.seismic.elastic import src_rec
 
 
 def ForwardOperator(model, geometry, space_order=4, save=False, **kwargs):
@@ -22,8 +22,8 @@ def ForwardOperator(model, geometry, space_order=4, save=False, **kwargs):
         Saving flag, True saves all time steps, False saves three buffered
         indices (last three time steps). Defaults to False.
     """
-    l, qp, mu, qs, ro, damp = \
-        model.lam, model.qp, model.mu, model.qs, model.irho, model.damp
+    l, qp, mu, qs, b, damp = \
+        model.lam, model.qp, model.mu, model.qs, model.b, model.damp
     s = model.grid.stepping_dim.spacing
 
     f0 = geometry._f0
@@ -46,10 +46,10 @@ def ForwardOperator(model, geometry, space_order=4, save=False, **kwargs):
                            space_order=space_order, time_order=1)
 
     # Particle velocity
-    u_v = Eq(v.forward, damp * (v + s*ro*div(tau)))
+    u_v = Eq(v.forward, damp * (v + s*b*div(tau)))
     symm_grad = grad(v.forward) + grad(v.forward).T
     # Stress equations:
-    u_t = Eq(tau.forward, damp * (r.forward + tau +
+    u_t = Eq(tau.forward, damp * (s*r.forward + tau +
                                   s * (l * t_ep / t_s * diag(div(v.forward)) +
                                        mu * t_es / t_s * symm_grad)))
 

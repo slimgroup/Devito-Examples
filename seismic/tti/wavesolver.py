@@ -1,8 +1,9 @@
 # coding: utf-8
 from devito import TimeFunction, warning
 from devito.tools import memoized_meth
-from seismic.tti.operators import ForwardOperator, particle_velocity_fields
-from seismic import Receiver
+from examples.seismic.tti.operators import ForwardOperator, AdjointOperator
+from examples.seismic.tti.operators import particle_velocity_fields
+from examples.seismic import PointSource, Receiver
 
 
 class AnisotropicWaveSolver(object):
@@ -30,17 +31,21 @@ class AnisotropicWaveSolver(object):
         self.geometry = geometry
 
         if space_order % 2 != 0:
-            raise ValueError("space_order must be even but got %s" % space_order)
+            raise ValueError("space_order must be even but got %s"
+                             % space_order)
 
         if space_order % 4 != 0:
-            warning("It is recommended for space_order to be a multiple of 4 " +
+            warning("It is recommended for space_order to be a multiple of 4" +
                     "but got %s" % space_order)
 
         self.space_order = space_order
-        self.dt = self.model.critical_dt
 
         # Cache compiler options
         self._kwargs = kwargs
+
+    @property
+    def dt(self):
+        return self.model.critical_dt
 
     @memoized_meth
     def op_fwd(self, kernel='centered', save=False):
@@ -49,8 +54,14 @@ class AnisotropicWaveSolver(object):
                                space_order=self.space_order,
                                kernel=kernel, **self._kwargs)
 
+    @memoized_meth
+    def op_adj(self):
+        """Cached operator for adjoint runs"""
+        return AdjointOperator(self.model, save=None, geometry=self.geometry,
+                               space_order=self.space_order, **self._kwargs)
+
     def forward(self, src=None, rec=None, u=None, v=None, vp=None,
-                epsilon=None, delta=None, theta=None, phi=None, rho=None,
+                epsilon=None, delta=None, theta=None, phi=None,
                 save=False, kernel='centered', **kwargs):
         """
         Forward modelling function that creates the necessary
@@ -67,8 +78,6 @@ class AnisotropicWaveSolver(object):
             The computed wavefield second component.
         vp : Function or float, optional
             The time-constant velocity.
-        rho : Function or float, optional
-            The time-constant density.
         epsilon : Function or float, optional
             The time-constant first Thomsen parameter.
         delta : Function or float, optional
@@ -86,7 +95,6 @@ class AnisotropicWaveSolver(object):
         -------
         Receiver, wavefield and performance summary.
         """
-
         if kernel == 'staggered':
             time_order = 1
             dims = self.model.space_dimensions
@@ -106,12 +114,14 @@ class AnisotropicWaveSolver(object):
         if u is None:
             u = TimeFunction(name='u', grid=self.model.grid, staggered=stagg_u,
                              save=self.geometry.nt if save else None,
-                             time_order=time_order, space_order=self.space_order)
+                             time_order=time_order,
+                             space_order=self.space_order)
         # Create the forward wavefield if not provided
         if v is None:
             v = TimeFunction(name='v', grid=self.model.grid, staggered=stagg_v,
                              save=self.geometry.nt if save else None,
-                             time_order=time_order, space_order=self.space_order)
+                             time_order=time_order,
+                             space_order=self.space_order)
 
         if kernel == 'staggered':
             vx, vz, vy = particle_velocity_fields(self.model, self.space_order)
@@ -121,10 +131,75 @@ class AnisotropicWaveSolver(object):
                 kwargs["vy"] = vy
 
         # Pick vp and Thomsen parameters from model unless explicitly provided
-        kwargs.update(self.model.physical_params(vp=vp, epsilon=epsilon, delta=delta,
-                                                 theta=theta, phi=phi, rho=rho))
+        kwargs.update(self.model.physical_params(
+            vp=vp, epsilon=epsilon, delta=delta, theta=theta, phi=phi)
+        )
+        if self.model.dim < 3:
+            kwargs.pop('phi', None)
         # Execute operator and return wavefield and receiver data
         op = self.op_fwd(kernel, save)
         summary = op.apply(src=src, rec=rec, u=u, v=v,
                            dt=kwargs.pop('dt', self.dt), **kwargs)
         return rec, u, v, summary
+
+    def adjoint(self, rec, srca=None, p=None, r=None, vp=None,
+                epsilon=None, delta=None, theta=None, phi=None,
+                save=None, kernel='centered', **kwargs):
+        """
+        Adjoint modelling function that creates the necessary
+        data objects for running an adjoint modelling operator.
+
+        Parameters
+        ----------
+        geometry : AcquisitionGeometry
+            Geometry object that contains the source (SparseTimeFunction) and
+            receivers (SparseTimeFunction) and their position.
+        p : TimeFunction, optional
+            The computed wavefield first component.
+        r : TimeFunction, optional
+            The computed wavefield second component.
+        vp : Function or float, optional
+            The time-constant velocity.
+        epsilon : Function or float, optional
+            The time-constant first Thomsen parameter.
+        delta : Function or float, optional
+            The time-constant second Thomsen parameter.
+        theta : Function or float, optional
+            The time-constant Dip angle (radians).
+        phi : Function or float, optional
+            The time-constant Azimuth angle (radians).
+
+        Returns
+        -------
+        Adjoint source, wavefield and performance summary.
+        """
+        if kernel != 'centered':
+            raise RuntimeError('Only centered kernel is supported for the adjoint')
+
+        time_order = 2
+        stagg_p = stagg_r = None
+        # Source term is read-only, so re-use the default
+        srca = srca or PointSource(name='srca', grid=self.model.grid,
+                                   time_range=self.geometry.time_axis,
+                                   coordinates=self.geometry.src_positions)
+        # Create the wavefield if not provided
+        if p is None:
+            p = TimeFunction(name='p', grid=self.model.grid, staggered=stagg_p,
+                             time_order=time_order,
+                             space_order=self.space_order)
+        # Create the wavefield if not provided
+        if r is None:
+            r = TimeFunction(name='r', grid=self.model.grid, staggered=stagg_r,
+                             time_order=time_order,
+                             space_order=self.space_order)
+
+        # Pick vp and Thomsen parameters from model unless explicitly provided
+        kwargs.update(self.model.physical_params(
+            vp=vp, epsilon=epsilon, delta=delta, theta=theta, phi=phi)
+        )
+        if self.model.dim < 3:
+            kwargs.pop('phi', None)
+        # Execute operator and return wavefield and receiver data
+        summary = self.op_adj().apply(srca=srca, rec=rec, p=p, r=r,
+                                      dt=kwargs.pop('dt', self.dt), **kwargs)
+        return srca, p, r, summary

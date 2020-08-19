@@ -29,11 +29,10 @@ def plot_perturbation(model, model1, colorbar=True):
     domain_size = 1.e-3 * np.array(model.domain_size)
     extent = [model.origin[0], model.origin[0] + domain_size[0],
               model.origin[1] + domain_size[1], model.origin[1]]
-    dv = model.vp.data.T - model1.vp.data.T
+    dv = np.transpose(model.vp.data) - np.transpose(model1.vp.data)
 
-    scale = max(dv.reshape(-1))/5
-    plot = plt.imshow(dv, animated=True, cmap=cm.Greys,
-                      vmin=-scale, vmax=scale,
+    plot = plt.imshow(dv, animated=True, cmap=cm.jet,
+                      vmin=min(dv.reshape(-1)), vmax=max(dv.reshape(-1)),
                       extent=extent)
     plt.xlabel('X position (km)')
     plt.ylabel('Depth (km)')
@@ -69,7 +68,10 @@ def plot_velocity(model, source=None, receiver=None, colorbar=True, cmap="jet"):
               model.origin[1] + domain_size[1], model.origin[1]]
 
     slices = tuple(slice(model.nbl, -model.nbl) for _ in range(2))
-    field = (getattr(model, 'vp', None) or getattr(model, 'lam')).data[slices]
+    if getattr(model, 'vp', None) is not None:
+        field = model.vp.data[slices]
+    else:
+        field = model.lam.data[slices]
     plot = plt.imshow(np.transpose(field), animated=True, cmap=cmap,
                       vmin=np.min(field), vmax=np.max(field),
                       extent=extent)
@@ -115,11 +117,11 @@ def plot_shotrecord(rec, model, t0, tn, colorbar=True):
     tn : int
         End of time dimension to plot.
     """
-    scale = np.max(rec) / 5.
+    scale = np.max(rec) / 10.
     extent = [model.origin[0], model.origin[0] + 1e-3*model.domain_size[0],
               1e-3*tn, t0]
 
-    plot = plt.imshow(rec, vmin=-scale, vmax=scale, cmap=cm.Greys, extent=extent)
+    plot = plt.imshow(rec, vmin=-scale, vmax=scale, cmap=cm.gray, extent=extent)
     plt.xlabel('X position (km)')
     plt.ylabel('Time (s)')
 
@@ -132,8 +134,7 @@ def plot_shotrecord(rec, model, t0, tn, colorbar=True):
     plt.show()
 
 
-def plot_image(im, colorbar=True, vmin=None, vmax=None,
-               cmap="Greys", depth_scaling=False, diff=False):
+def plot_image(data, vmin=None, vmax=None, colorbar=True, cmap="gray"):
     """
     Plot image data, such as RTM images or FWI gradients.
 
@@ -145,23 +146,10 @@ def plot_image(im, colorbar=True, vmin=None, vmax=None,
         Choice of colormap. Defaults to gray scale for images as a
         seismic convention.
     """
-    extent = [0, 1, 1, 0]
-    if getattr(im, 'is_Function', False):
-        extent = [im.grid.origin[0].data, im.grid.extent[0],
-                  im.grid.extent[1], im.grid.origin[1].data]
-        im = im.data
-    if diff:
-        im = np.gradient(im)[-1]
-
-    if depth_scaling:
-        depth = np.diag(np.linspace(1.0, 2.0, im.shape[-1])**1.4)
-        im = np.dot(depth, im)
-
-    scale = np.max(im)
-    plot = plt.imshow(im.T, extent=extent, vmin=vmin or -scale,
-                      vmax=vmax or scale, cmap=cmap)
-    plt.xlabel('X position (km)')
-    plt.ylabel('Depth (km)')
+    plot = plt.imshow(np.transpose(data),
+                      vmin=vmin or 0.9 * np.min(data),
+                      vmax=vmax or 1.1 * np.max(data),
+                      cmap=cmap)
 
     # Create aligned colorbar on the right
     if colorbar:
