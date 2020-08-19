@@ -130,7 +130,7 @@
 <li><strong>Receiver</strong> - A set of microphones or hydrophones are used to measure the resulting wave and create a set of measurements called a <em>Shot Record</em>. These measurements are recorded at multiple locations, and usually at the surface of the domain or at the bottom of the ocean in some marine cases.</li>
 </ul>
 <p>In order to create a numerical model of a seismic survey, we need to solve the wave equation and implement source and receiver interpolation to inject the source and record the seismic wave at sparse point locations in the grid.</p>
-<p><img src='./survey-ship-diagram.png' width=400></p>
+<p><img alt="ship" src="https://lh6.googleusercontent.com/gEPgCb9K0cm_10iFOBL98swm_rzfWAmrDNxwMHHljzVq6yxMGK27qO4PneK14ma5qY63DWBEP5t5_KBRRUcKKAf8NqCXUBmMfZutnOsDHFCd0J6zKuT8v9rITjHbOGCmF-KP5ps" /></p>
 <h2 id="the-acoustic-seismic-wave-equation">The acoustic seismic wave equation</h2>
 <p>The acoustic wave equation for the square slowness <span><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>, defined as <span><span class="MathJax_Preview">m=\frac{1}{c^2}</span><script type="math/tex">m=\frac{1}{c^2}</script></span>, where <span><span class="MathJax_Preview">c</span><script type="math/tex">c</script></span> is the speed of sound in the given physical media, and a source <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is given by:</p>
 <div>
@@ -369,18 +369,18 @@ On the receiver side, the problem is either as it only requires to record the da
 <span class="n">op</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">)</span>
 </code></pre></div>
 
-<pre><code>Operator `Kernel` run in 0.01 s
+<pre><code>Operator `Kernel` run in 0.04 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-                     PerfEntry(time=0.0032300000000000237, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+                     PerfEntry(time=0.01473899999999997, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
                     (PerfKey(name='section1', rank=None),
-                     PerfEntry(time=1.4000000000000003e-05, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+                     PerfEntry(time=0.009967999999999994, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
                     (PerfKey(name='section2', rank=None),
-                     PerfEntry(time=0.0006070000000000032, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+                     PerfEntry(time=0.005742000000000012, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <p>After running our operator kernel, the data associated with the receiver symbol <code>rec.data</code> has now been populated due to the interpolation expression we inserted into the operator. This allows us the visualize the shot record:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
