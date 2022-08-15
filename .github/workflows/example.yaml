@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      DEVITO_ARCH: gcc-7
+      DEVITO_ARCH: gcc
       DEVITO_LANGUAGE: "openmp"
       DEVITO_BACKEND: "core"
       PYTHON_VERSION: "3.7"
