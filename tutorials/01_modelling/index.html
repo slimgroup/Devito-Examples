@@ -1,125 +1,106 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <meta name="author" content="Mathias Louboutin">
-  
-  <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Acoustic modeling - SLIM's Devito examples</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
-
-  <link rel="stylesheet" href="../../css/theme.css" />
-  <link rel="stylesheet" href="../../css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Acoustic modeling";
-    var mkdocs_page_input_path = "tutorials/01_modelling.md";
-    var mkdocs_page_url = null;
-  </script>
-  
-  <script src="../../js/jquery-2.1.1.min.js" defer></script>
-  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
-  
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Mathias Louboutin" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Acoustic modeling - SLIM's Devito examples</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Acoustic modeling";
+        var mkdocs_page_input_path = "tutorials/01_modelling.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
-        <div role="search">
+          <a href="../.." class="icon icon-home"> SLIM's Devito examples
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">Tutorials</span></p>
-                <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic modeling</a>
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic modeling</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#modelling-workflow">Modelling workflow</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#the-acoustic-seismic-wave-equation">The acoustic seismic wave equation</a>
     </li>
     </ul>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
-                    </li>
-                </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                  </li>
+              </ul>
       </div>
     </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../..">SLIM's Devito examples</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">SLIM's Devito examples</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../..">Docs</a> &raquo;</li>
-    
-      
-        
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
           <li>Tutorials &raquo;</li>
-        
-      
-    
-    <li>Acoustic modeling</li>
+      <li>Acoustic modeling</li>
     <li class="wy-breadcrumbs-aside">
-      
     </li>
   </ul>
-  
   <hr/>
 </div>
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
                 <h1 id="01-introduction-to-seismic-modelling">01 - Introduction to seismic modelling</h1>
 <p>This notebook is the first in a series of tutorials highlighting various aspects of seismic inversion based on Devito operators. In this first example we aim to highlight the core ideas behind seismic modelling, where we create a numerical model that captures the processes involved in a seismic survey. This forward model will then form the basis for further tutorials on the implementation of inversion processes using Devito operators.</p>
@@ -132,8 +113,8 @@
 <p>In order to create a numerical model of a seismic survey, we need to solve the wave equation and implement source and receiver interpolation to inject the source and record the seismic wave at sparse point locations in the grid.</p>
 <p><img alt="ship" src="https://lh6.googleusercontent.com/gEPgCb9K0cm_10iFOBL98swm_rzfWAmrDNxwMHHljzVq6yxMGK27qO4PneK14ma5qY63DWBEP5t5_KBRRUcKKAf8NqCXUBmMfZutnOsDHFCd0J6zKuT8v9rITjHbOGCmF-KP5ps" /></p>
 <h2 id="the-acoustic-seismic-wave-equation">The acoustic seismic wave equation</h2>
-<p>The acoustic wave equation for the square slowness <span><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>, defined as <span><span class="MathJax_Preview">m=\frac{1}{c^2}</span><script type="math/tex">m=\frac{1}{c^2}</script></span>, where <span><span class="MathJax_Preview">c</span><script type="math/tex">c</script></span> is the speed of sound in the given physical media, and a source <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is given by:</p>
-<div>
+<p>The acoustic wave equation for the square slowness <span class="arithmatex"><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>, defined as <span class="arithmatex"><span class="MathJax_Preview">m=\frac{1}{c^2}</span><script type="math/tex">m=\frac{1}{c^2}</script></span>, where <span class="arithmatex"><span class="MathJax_Preview">c</span><script type="math/tex">c</script></span> is the speed of sound in the given physical media, and a source <span class="arithmatex"><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is given by:</p>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{cases}
  &amp;m \frac{d^2 u(x,t)}{dt^2} - \nabla^2 u(x,t) = q \ \text{in } \Omega \\
  &amp;u(.,t=0) = 0 \\
@@ -151,11 +132,11 @@ The boundary conditions are Dirichlet conditions:
  u(x,t)|_\delta\Omega = 0
 \end{equation}</script>
 </p>
-<p>where <span><span class="MathJax_Preview">\delta\Omega</span><script type="math/tex">\delta\Omega</script></span> is the surface of the boundary of the model <span><span class="MathJax_Preview">\Omega</span><script type="math/tex">\Omega</script></span>.</p>
+<p>where <span class="arithmatex"><span class="MathJax_Preview">\delta\Omega</span><script type="math/tex">\delta\Omega</script></span> is the surface of the boundary of the model <span class="arithmatex"><span class="MathJax_Preview">\Omega</span><script type="math/tex">\Omega</script></span>.</p>
 <h1 id="finite-domains">Finite domains</h1>
 <p>The last piece of the puzzle is the computational limitation. In the field, the seismic wave propagates in every direction to an "infinite" distance. However, solving the wave equation in a mathematically/discrete infinite domain is not feasible. In order to compensate, Absorbing Boundary Conditions (ABC) or Perfectly Matched Layers (PML) are required to mimic an infinite domain. These two methods allow to approximate an infinite media by damping and absorbing the waves at the limit of the domain to avoid reflections.</p>
 <p>The simplest of these methods is the absorbing damping mask. The core idea is to extend the physical domain and to add a Sponge mask in this extension that will absorb the incident waves. The acoustic wave equation with this damping mask can be rewritten as:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{cases} 
  &amp;m \frac{d^2 u(x,t)}{dt^2} - \nabla^2 u(x,t) + \eta \frac{d u(x,t)}{dt}=q  \ \text{in } \Omega \\
  &amp;u(.,0) = 0 \\
@@ -167,7 +148,7 @@ The boundary conditions are Dirichlet conditions:
  &\frac{d u(x,t)}{dt}|_{t=0} = 0 
 \end{cases}</script>
 </div>
-<p>where <span><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> is the damping mask equal to <span><span class="MathJax_Preview">0</span><script type="math/tex">0</script></span> inside the physical domain and increasing inside the sponge layer. Multiple choice of profile can be chosen for <span><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> from linear to exponential.</p>
+<p>where <span class="arithmatex"><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> is the damping mask equal to <span class="arithmatex"><span class="MathJax_Preview">0</span><script type="math/tex">0</script></span> inside the physical domain and increasing inside the sponge layer. Multiple choice of profile can be chosen for <span class="arithmatex"><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> from linear to exponential.</p>
 <h1 id="seismic-modelling-with-devito">Seismic modelling with devito</h1>
 <p>We describe here a step by step setup of seismic modelling with Devito in a simple 2D case. We will create a physical model of our domain and define a single source and an according set of receivers to model for the forward model. But first, we initialize some basic utilities.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
@@ -175,14 +156,13 @@ The boundary conditions are Dirichlet conditions:
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </code></pre></div>
-
 <h2 id="define-the-physical-problem">Define the physical problem</h2>
 <p>The first step is to define the physical model:</p>
 <ul>
 <li>What are the physical dimensions of interest</li>
 <li>What is the velocity profile of this physical domain</li>
 </ul>
-<p>We will create a simple velocity model here by hand for demonstration purposes. This model essentially consists of two layers, each with a different velocity: <span><span class="MathJax_Preview">1.5km/s</span><script type="math/tex">1.5km/s</script></span> in the top layer and <span><span class="MathJax_Preview">2.5km/s</span><script type="math/tex">2.5km/s</script></span> in the bottom layer. We will use this simple model a lot in the following tutorials, so we will rely on a utility function to create it again later.</p>
+<p>We will create a simple velocity model here by hand for demonstration purposes. This model essentially consists of two layers, each with a different velocity: <span class="arithmatex"><span class="MathJax_Preview">1.5km/s</span><script type="math/tex">1.5km/s</script></span> in the top layer and <span class="arithmatex"><span class="MathJax_Preview">2.5km/s</span><script type="math/tex">2.5km/s</script></span> in the bottom layer. We will use this simple model a lot in the following tutorials, so we will rely on a utility function to create it again later.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">plot_velocity</span>
 
@@ -204,14 +184,13 @@ The boundary conditions are Dirichlet conditions:
 
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>Operator `initdamp` run in 0.01 s
 Operator `padfunc` run in 0.01 s
 </code></pre>
 <p><img alt="png" src="../01_modelling_files/01_modelling_5_1.png" /></p>
 <h1 id="acquisition-geometry">Acquisition geometry</h1>
 <p>To fully define our problem setup we also need to define the source that injects the wave to model and the set of receiver locations at which to sample the wavefield. The source time signature will be modelled using a Ricker wavelet defined as</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{equation}
   q(t) = (1-2\pi^2 f_0^2 (t - \frac{1}{f_0})^2 )e^{- \pi^2 f_0^2 (t - \frac{1}{f_0})}
 \end{equation}</div>
@@ -228,8 +207,7 @@ Operator `padfunc` run in 0.01 s
 
 <span class="n">time_range</span> <span class="o">=</span> <span class="n">TimeAxis</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
-
-<p>The source is positioned at a <span><span class="MathJax_Preview">20m</span><script type="math/tex">20m</script></span> depth and at the middle of the <span><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> axis (<span><span class="MathJax_Preview">x_{src}=500m</span><script type="math/tex">x_{src}=500m</script></span>), with a peak wavelet frequency of <span><span class="MathJax_Preview">10Hz</span><script type="math/tex">10Hz</script></span>.</p>
+<p>The source is positioned at a <span class="arithmatex"><span class="MathJax_Preview">20m</span><script type="math/tex">20m</script></span> depth and at the middle of the <span class="arithmatex"><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> axis (<span class="arithmatex"><span class="MathJax_Preview">x_{src}=500m</span><script type="math/tex">x_{src}=500m</script></span>), with a peak wavelet frequency of <span class="arithmatex"><span class="MathJax_Preview">10Hz</span><script type="math/tex">10Hz</script></span>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">RickerSource</span>
 
@@ -238,16 +216,15 @@ Operator `padfunc` run in 0.01 s
                    <span class="n">npoint</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">time_range</span><span class="o">=</span><span class="n">time_range</span><span class="p">)</span>
 
 <span class="c1"># First, position source centrally in all dimensions, then set depth</span>
-<span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+<span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">)</span> <span class="o">*</span> <span class="mf">.5</span>
 <span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">20.</span>  <span class="c1"># Depth is 20m</span>
 
 <span class="c1"># We can plot the time signature to see the wavelet</span>
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../01_modelling_files/01_modelling_9_0.png" /></p>
 <p>Similarly to our source object, we can now define our receiver geometry as a symbol of type <code>Receiver</code>. It is worth noting here that both utility classes, <code>RickerSource</code> and <code>Receiver</code> are thin wrappers around the Devito's <code>SparseTimeFunction</code> type, which encapsulates sparse point data and allows us to inject and interpolate values into and out of the computational grid. As we have already seen, both types provide a <code>.coordinates</code> property to define the position within the domain of all points encapsulated by that symbol. </p>
-<p>In this example we will position receivers at the same depth as the source, every <span><span class="MathJax_Preview">10m</span><script type="math/tex">10m</script></span> along the x axis. The <code>rec.data</code> property will be initialized, but left empty, as we will compute the receiver readings during the simulation.</p>
+<p>In this example we will position receivers at the same depth as the source, every <span class="arithmatex"><span class="MathJax_Preview">10m</span><script type="math/tex">10m</script></span> along the x axis. The <code>rec.data</code> property will be initialized, but left empty, as we will compute the receiver readings during the simulation.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
 
@@ -264,7 +241,6 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
               <span class="n">receiver</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[::</span><span class="mi">4</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
-
 <p><img alt="png" src="../01_modelling_files/01_modelling_11_0.png" /></p>
 <h1 id="finite-difference-discretization">Finite-difference discretization</h1>
 <p>Devito is a finite-difference DSL that solves the discretized wave-equation on a Cartesian grid. The finite-difference approximation is derived from Taylor expansions of the continuous field after removing the error term.</p>
@@ -276,8 +252,8 @@ Operator `padfunc` run in 0.01 s
 \end{aligned}
 \end{equation}</script>
 </p>
-<p>where <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> is the discrete wavefield, <span><span class="MathJax_Preview">\mathbf{\Delta t}</span><script type="math/tex">\mathbf{\Delta t}</script></span> is the discrete
-time-step (distance between two consecutive discrete time points) and <span><span class="MathJax_Preview">O(\mathbf{\Delta
+<p>where <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> is the discrete wavefield, <span class="arithmatex"><span class="MathJax_Preview">\mathbf{\Delta t}</span><script type="math/tex">\mathbf{\Delta t}</script></span> is the discrete
+time-step (distance between two consecutive discrete time points) and <span class="arithmatex"><span class="MathJax_Preview">O(\mathbf{\Delta
   t}^2)</span><script type="math/tex">O(\mathbf{\Delta
   t}^2)</script></span> is the discretization error term. The discretized approximation of the
 second order time derivative is then given by dropping the error term. This derivative is represented in Devito by <code>u.dt2</code> where u is a <code>TimeFunction</code> object.</p>
@@ -296,7 +272,7 @@ derivatives in the three dimensions:
 </p>
 <p>This derivative is represented in Devito by <code>u.laplace</code> where u is a <code>TimeFunction</code> object.</p>
 <h2 id="wave-equation">Wave equation</h2>
-<p>With the space and time discretization defined, we can fully discretize the wave-equation with the combination of time and space discretizations and obtain the following second order in time and <span><span class="MathJax_Preview">k^{th}</span><script type="math/tex">k^{th}</script></span> order in space discrete stencil to update one grid point at position <span><span class="MathJax_Preview">\mathbf{x}, \mathbf{y},\mathbf{z}</span><script type="math/tex">\mathbf{x}, \mathbf{y},\mathbf{z}</script></span> at time <span><span class="MathJax_Preview">\mathbf{t}</span><script type="math/tex">\mathbf{t}</script></span>, i.e.
+<p>With the space and time discretization defined, we can fully discretize the wave-equation with the combination of time and space discretizations and obtain the following second order in time and <span class="arithmatex"><span class="MathJax_Preview">k^{th}</span><script type="math/tex">k^{th}</script></span> order in space discrete stencil to update one grid point at position <span class="arithmatex"><span class="MathJax_Preview">\mathbf{x}, \mathbf{y},\mathbf{z}</span><script type="math/tex">\mathbf{x}, \mathbf{y},\mathbf{z}</script></span> at time <span class="arithmatex"><span class="MathJax_Preview">\mathbf{t}</span><script type="math/tex">\mathbf{t}</script></span>, i.e.
 <script type="math/tex; mode=display">\begin{equation}
 \begin{aligned}
 \mathbf{u}(\mathbf{x},\mathbf{y},\mathbf{z},\mathbf{t+\Delta t}) = &2\mathbf{u}(\mathbf{x},\mathbf{y},\mathbf{z},\mathbf{t}) - \mathbf{u}(\mathbf{x},\mathbf{y}, \mathbf{z},\mathbf{t-\Delta t}) +\\
@@ -318,8 +294,7 @@ derivatives in the three dimensions:
 <span class="c1"># The PDE representation is as on paper</span>
 <span class="n">pde</span>
 </code></pre></div>
-
-<p><span><span class="MathJax_Preview">\displaystyle \operatorname{damp}{\left(x,y \right)} \frac{\partial}{\partial t} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\frac{\partial^{2}}{\partial t^{2}} u{\left(t,x,y \right)}}{\operatorname{vp}^{2}{\left(x,y \right)}}</span><script type="math/tex">\displaystyle \operatorname{damp}{\left(x,y \right)} \frac{\partial}{\partial t} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\frac{\partial^{2}}{\partial t^{2}} u{\left(t,x,y \right)}}{\operatorname{vp}^{2}{\left(x,y \right)}}</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \operatorname{damp}{\left(x,y \right)} \frac{\partial}{\partial t} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\frac{\partial^{2}}{\partial t^{2}} u{\left(t,x,y \right)}}{\operatorname{vp}^{2}{\left(x,y \right)}}</span><script type="math/tex">\displaystyle \operatorname{damp}{\left(x,y \right)} \frac{\partial}{\partial t} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\frac{\partial^{2}}{\partial t^{2}} u{\left(t,x,y \right)}}{\operatorname{vp}^{2}{\left(x,y \right)}}</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># This discrete PDE can be solved in a time-marching way updating u(t+dt) from the previous time step</span>
 <span class="c1"># Devito as a shortcut for u(t+dt) which is u.forward. We can then rewrite the PDE as </span>
 <span class="c1"># a time marching updating equation known as a stencil using customized SymPy functions</span>
@@ -327,10 +302,9 @@ derivatives in the three dimensions:
 
 <span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 </code></pre></div>
-
 <h1 id="source-injection-and-receiver-interpolation">Source injection and receiver interpolation</h1>
 <p>With a numerical scheme to solve the homogenous wave equation, we need to add the source to introduce seismic waves and to implement the measurement operator, and interpolation operator. This operation is linked to the discrete scheme and needs to be done at the proper time step. The semi-discretized in time wave equation with a source reads:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{equation}
 \begin{aligned}
 \mathbf{u}(\mathbf{x},\mathbf{y},\mathbf{z},\mathbf{t+\Delta t}) = &amp;2\mathbf{u}(\mathbf{x},\mathbf{y},\mathbf{z},\mathbf{t}) - \mathbf{u}(\mathbf{x},\mathbf{y}, \mathbf{z},\mathbf{t-\Delta t}) +\\
@@ -344,15 +318,14 @@ derivatives in the three dimensions:
 \end{aligned}
 \end{equation}</script>
 </div>
-<p>It shows that in order to update <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> at time <span><span class="MathJax_Preview">\mathbf{t+\Delta t}</span><script type="math/tex">\mathbf{t+\Delta t}</script></span> we have to inject the value of the source term <span><span class="MathJax_Preview">\mathbf{q}</span><script type="math/tex">\mathbf{q}</script></span> of time <span><span class="MathJax_Preview">\mathbf{t}</span><script type="math/tex">\mathbf{t}</script></span>. In Devito, it corresponds the update of <span><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span> at index <span><span class="MathJax_Preview">t+1</span><script type="math/tex">t+1</script></span> (t = time implicitly) with the source of time <span><span class="MathJax_Preview">t</span><script type="math/tex">t</script></span>.
-On the receiver side, the problem is either as it only requires to record the data at the given time step <span><span class="MathJax_Preview">t</span><script type="math/tex">t</script></span> for the receiver at time <span><span class="MathJax_Preview">time=t</span><script type="math/tex">time=t</script></span>.</p>
+<p>It shows that in order to update <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> at time <span class="arithmatex"><span class="MathJax_Preview">\mathbf{t+\Delta t}</span><script type="math/tex">\mathbf{t+\Delta t}</script></span> we have to inject the value of the source term <span class="arithmatex"><span class="MathJax_Preview">\mathbf{q}</span><script type="math/tex">\mathbf{q}</script></span> of time <span class="arithmatex"><span class="MathJax_Preview">\mathbf{t}</span><script type="math/tex">\mathbf{t}</script></span>. In Devito, it corresponds the update of <span class="arithmatex"><span class="MathJax_Preview">u</span><script type="math/tex">u</script></span> at index <span class="arithmatex"><span class="MathJax_Preview">t+1</span><script type="math/tex">t+1</script></span> (t = time implicitly) with the source of time <span class="arithmatex"><span class="MathJax_Preview">t</span><script type="math/tex">t</script></span>.
+On the receiver side, the problem is either as it only requires to record the data at the given time step <span class="arithmatex"><span class="MathJax_Preview">t</span><script type="math/tex">t</script></span> for the receiver at time <span class="arithmatex"><span class="MathJax_Preview">time=t</span><script type="math/tex">time=t</script></span>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Finally we define the source injection and receiver read function to generate the corresponding code</span>
 <span class="n">src_term</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span> <span class="o">*</span> <span class="n">dt</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
 
 <span class="c1"># Create interpolation expression for receivers</span>
 <span class="n">rec_term</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span>
 </code></pre></div>
-
 <h1 id="devito-operator-and-solve">Devito operator and solve</h1>
 <p>After constructing all the necessary expressions for updating the wavefield, injecting the source term and interpolating onto the receiver points, we can now create the Devito operator that will generate the C code at runtime. When creating the operator, Devito's two optimization engines will log which performance optimizations have been performed:
 * <strong>DSE:</strong> The Devito Symbolics Engine will attempt to reduce the number of operations required by the kernel.
@@ -363,12 +336,10 @@ On the receiver side, the problem is either as it only requires to record the da
 
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_term</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)</span>
 </code></pre></div>
-
 <p>Now we can execute the create operator for a number of timesteps. We specify the number of timesteps to compute with the keyword <code>time</code> and the timestep size with <code>dt</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>Operator `Kernel` run in 0.04 s
 
 
@@ -388,37 +359,27 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
-
 <p><img alt="png" src="../01_modelling_files/01_modelling_22_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="mi">370</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
               
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../.." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../accuracy/" class="btn btn-neutral float-right" title="Convergence analysis for the acoustic wave-equation">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../.." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
       <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
-    
   </div>
 
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
+          
         </div>
       </div>
 
@@ -426,20 +387,23 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
   </div>
 
-  <div class="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-        <span><a href="../.." style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../accuracy/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../.." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../accuracy/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
 </div>
     <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
     <script src="../../js/theme.js" defer></script>
       <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
       <script src="../../search/main.js" defer></script>

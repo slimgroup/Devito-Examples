@@ -1,121 +1,102 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <meta name="author" content="Mathias Louboutin">
-  
-  <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Convergence analysis for the acoustic wave-equation - SLIM's Devito examples</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
-
-  <link rel="stylesheet" href="../../css/theme.css" />
-  <link rel="stylesheet" href="../../css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Convergence analysis for the acoustic wave-equation";
-    var mkdocs_page_input_path = "tutorials/accuracy.md";
-    var mkdocs_page_url = null;
-  </script>
-  
-  <script src="../../js/jquery-2.1.1.min.js" defer></script>
-  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
-  
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Mathias Louboutin" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Convergence analysis for the acoustic wave-equation - SLIM's Devito examples</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Convergence analysis for the acoustic wave-equation";
+        var mkdocs_page_input_path = "tutorials/accuracy.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
-        <div role="search">
+          <a href="../.." class="icon icon-home"> SLIM's Devito examples
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">Tutorials</span></p>
-                <ul class="current">
-                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Convergence analysis for the acoustic wave-equation</a>
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Convergence analysis for the acoustic wave-equation</a>
     <ul class="current">
     </ul>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
-                    </li>
-                </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                  </li>
+              </ul>
       </div>
     </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../..">SLIM's Devito examples</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">SLIM's Devito examples</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../..">Docs</a> &raquo;</li>
-    
-      
-        
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
           <li>Tutorials &raquo;</li>
-        
-      
-    
-    <li>Convergence analysis for the acoustic wave-equation</li>
+      <li>Convergence analysis for the acoustic wave-equation</li>
     <li class="wy-breadcrumbs-aside">
-      
     </li>
   </ul>
-  
   <hr/>
 </div>
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
                 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">hankel2</span>
@@ -128,12 +109,10 @@
 <span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># Switch to error logging so that info is printed but runtime is hidden</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ERROR&#39;</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># Model with fixed time step value</span>
 <span class="k">class</span> <span class="nc">ModelBench</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -145,16 +124,14 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">critical_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Critical computational time step value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="o">.</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="mf">.1</span>
 </code></pre></div>
-
 <h1 id="verification">Verification</h1>
 <p>We compute the error between the numerical and reference solutions for varying spatial discretization order and grid spacing. We also compare the time to solution to the error for these parameters.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Discretization order</span>
 <span class="n">orders</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">norder</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orders</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># Number of time steps</span>
 <span class="n">nt</span> <span class="o">=</span> <span class="mi">1501</span>
 <span class="c1"># Time axis</span>
@@ -164,9 +141,8 @@
 <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">nt</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;t0, tn, dt, nt; </span><span class="si">%.4f</span><span class="s2"> </span><span class="si">%.4f</span><span class="s2"> </span><span class="si">%.4f</span><span class="s2"> </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">nt</span><span class="p">))</span>
 <span class="c1"># Source peak frequency in KHz</span>
-<span class="n">f0</span> <span class="o">=</span> <span class="o">.</span><span class="mi">09</span>
+<span class="n">f0</span> <span class="o">=</span> <span class="mf">.09</span>
 </code></pre></div>
-
 <pre><code>t0, tn, dt, nt; 0.0000 150.0000 0.1000 1501
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1"># Domain sizes and gird spacing</span>
@@ -174,13 +150,11 @@
 <span class="n">dx</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]</span>
 <span class="n">nshapes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># Fine grid model</span>
 <span class="n">c0</span> <span class="o">=</span> <span class="mf">1.5</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">ModelBench</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">c0</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">),</span> <span class="n">bcs</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">,</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ModelBench</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">c0</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">),</span> <span class="n">bcs</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">,</span>
                    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">801</span><span class="p">,</span> <span class="mi">801</span><span class="p">),</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># Source and receiver geometries</span>
 <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">200.</span>
@@ -198,7 +172,6 @@
 <span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> 
                                <span class="n">t0</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span> <span class="n">t0w</span><span class="o">=</span><span class="mf">1.5</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>The computational Grid has (881, 881) grid points and a physical extent of (440.0m, 440.0m)
 Source is at the center with coordinates (200.0m, 200.0m)
 Receiver (single receiver) is located at (260.0m, 260.0m)
@@ -207,10 +180,9 @@ Receiver (single receiver) is located at (260.0m, 260.0m)
 <div class="highlight"><pre><span></span><code><span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;OT2&#39;</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 <span class="n">ref_rec</span><span class="p">,</span> <span class="n">ref_u</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">()</span>
 </code></pre></div>
-
 <h1 id="analytical-solution-for-comparison-with-the-reference-numerical-solution">Analytical solution for comparison with the reference numerical solution</h1>
 <p>The analytical solution of the 2D acoustic wave-equation with a source pulse is defined as:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">
 \begin{aligned}
 u_s(r, t) &amp;= \frac{1}{2\pi} \int_{-\infty}^{\infty} \{ -i \pi H_0^{(2)}\left(k r \right) q(\omega) e^{i\omega t} d\omega\}\\[10pt]
@@ -224,7 +196,7 @@ r &= \sqrt{(x - x_{src})^2+(y - y_{src})^2}
 \end{aligned}
 </script>
 </div>
-<p>where <span><span class="MathJax_Preview">H_0^{(2)}</span><script type="math/tex">H_0^{(2)}</script></span> is the Hankel function of the second kind, <span><span class="MathJax_Preview">F(\omega)</span><script type="math/tex">F(\omega)</script></span> is the Fourier spectrum of the source time function at angular frequencies <span><span class="MathJax_Preview">\omega</span><script type="math/tex">\omega</script></span> and <span><span class="MathJax_Preview">k = \frac{\omega}{v}</span><script type="math/tex">k = \frac{\omega}{v}</script></span> is the wavenumber.</p>
+<p>where <span class="arithmatex"><span class="MathJax_Preview">H_0^{(2)}</span><script type="math/tex">H_0^{(2)}</script></span> is the Hankel function of the second kind, <span class="arithmatex"><span class="MathJax_Preview">F(\omega)</span><script type="math/tex">F(\omega)</script></span> is the Fourier spectrum of the source time function at angular frequencies <span class="arithmatex"><span class="MathJax_Preview">\omega</span><script type="math/tex">\omega</script></span> and <span class="arithmatex"><span class="MathJax_Preview">k = \frac{\omega}{v}</span><script type="math/tex">k = \frac{\omega}{v}</script></span> is the wavenumber.</p>
 <p>We look at the analytical and numerical solution at a single grid point. We ensure that this grid point is on-the-grid for all discretizations analyised in the further verification.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Source and receiver coordinates</span>
 <span class="n">sx</span><span class="p">,</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
@@ -265,19 +237,16 @@ r &= \sqrt{(x - x_{src})^2+(y - y_{src})^2}
     <span class="c1"># The analytic solution needs be scaled by dx^2 to convert to pressure</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">U_t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="n">time1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3000.</span><span class="p">,</span> <span class="mi">30001</span><span class="p">)</span>
 <span class="n">U_t</span> <span class="o">=</span> <span class="n">analytical</span><span class="p">(</span><span class="mi">30001</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">time1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">time1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="n">U_t</span> <span class="o">=</span> <span class="n">U_t</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1501</span><span class="p">]</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Numerical data min,max,abs; </span><span class="si">%+.6e</span><span class="s2"> </span><span class="si">%+.6e</span><span class="s2"> </span><span class="si">%+.6e</span><span class="s2">&quot;</span> <span class="o">%</span> 
       <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analytic  data min,max,abs; </span><span class="si">%+.6e</span><span class="s2"> </span><span class="si">%+.6e</span><span class="s2"> </span><span class="si">%+.6e</span><span class="s2">&quot;</span> <span class="o">%</span> 
       <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">U_t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">U_t</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">U_t</span><span class="p">)))))</span>
 </code></pre></div>
-
 <pre><code>Numerical data min,max,abs; -5.349830e-03 +8.529913e-03 +8.529913e-03
 Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
 </code></pre>
@@ -312,7 +281,6 @@ Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;ref.pdf&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../accuracy_files/accuracy_15_0.png" /></p>
 <p><img alt="png" src="../accuracy_files/accuracy_15_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
@@ -321,12 +289,11 @@ Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
 <span class="n">errors_plot</span> <span class="o">=</span> <span class="p">[(</span><span class="n">time</span><span class="p">,</span> <span class="n">U_t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">error_time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </code></pre></div>
-
 <pre><code>1.1274823771092997e-05
 </code></pre>
 <h1 id="convergence-in-time">Convergence in time</h1>
 <p>We first show the convergence of the time discretization for a fix high-order spatial discretization (20<sup>th</sup> order).</p>
-<p>After we show that the time discretization converges in <span><span class="MathJax_Preview">O(dt^2)</span><script type="math/tex">O(dt^2)</script></span> and therefore only contains the error in time, we will take the numerical solution for <code>dt=.1ms</code> as a reference for the spatial discretization analysis.</p>
+<p>After we show that the time discretization converges in <span class="arithmatex"><span class="MathJax_Preview">O(dt^2)</span><script type="math/tex">O(dt^2)</script></span> and therefore only contains the error in time, we will take the numerical solution for <code>dt=.1ms</code> as a reference for the spatial discretization analysis.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">dt</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1000</span><span class="p">,</span> <span class="mf">0.0800</span><span class="p">,</span> <span class="mf">0.0750</span><span class="p">,</span> <span class="mf">0.0625</span><span class="p">,</span> <span class="mf">0.0500</span><span class="p">]</span>
 <span class="n">nnt</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="mf">150.0</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -369,7 +336,6 @@ Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
           <span class="p">(</span><span class="n">dt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">error_time</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ratio_d</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">ratio_e</span><span class="p">))</span>
     <span class="n">errors_plot</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="o">.</span><span class="n">time_values</span><span class="p">,</span> <span class="n">U_t1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec1_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
 </code></pre></div>
-
 <pre><code>geometry.time_axes;  TimeAxis: start=0, stop=150.08, step=0.08, num=1877
 error for dt=0.0800 is 7.403730e-06 -- ratio dt^2,ratio err;     1.562500     1.522857
 
@@ -401,7 +367,6 @@ error for dt=0.0500 is 3.026210e-06 -- ratio dt^2,ratio err;     1.562500     1.
             <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;landscape&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../accuracy_files/accuracy_19_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;--y&#39;</span><span class="p">,</span> <span class="s1">&#39;--b&#39;</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">,</span> <span class="s1">&#39;--g&#39;</span><span class="p">,</span> <span class="s1">&#39;--c&#39;</span><span class="p">)</span>
@@ -423,14 +388,12 @@ error for dt=0.0500 is 3.026210e-06 -- ratio dt^2,ratio err;     1.562500     1.
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../accuracy_files/accuracy_20_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">error_time</span><span class="p">),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence rate in time is: </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.9</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=.</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.9</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">.1</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>Convergence rate in time is: 1.8966
 </code></pre>
 <h1 id="convergence-in-space">Convergence in space</h1>
@@ -477,7 +440,6 @@ error for dt=0.0500 is 3.026210e-06 -- ratio dt^2,ratio err;     1.562500     1.
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;starting space order </span><span class="si">%s</span><span class="s2"> with (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) grid points the error is </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2"> seconds runtime&quot;</span> <span class="o">%</span>
               <span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">errorl2</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">],</span> <span class="n">timing</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">]))</span>
 </code></pre></div>
-
 <pre><code>starting space order 2 with (201, 201) grid points the error is 0.00376890390735257 for 0.11462100000000232 seconds runtime
 starting space order 2 with (161, 161) grid points the error is 0.005813084671822352 for 0.21845700000000504 seconds runtime
 starting space order 2 with (101, 101) grid points the error is 0.013011803756815122 for 0.032794999999999366 seconds runtime
@@ -511,7 +473,6 @@ starting space order 10 with (101, 101) grid points the error is 0.0019485859969
             <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;landscape&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../accuracy_files/accuracy_24_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
 <span class="n">style2</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;--k&#39;</span><span class="p">,</span> <span class="s1">&#39;--b&#39;</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">,</span> <span class="s1">&#39;--g&#39;</span><span class="p">,</span> <span class="s1">&#39;--c&#39;</span><span class="p">)</span>
@@ -534,7 +495,6 @@ starting space order 10 with (101, 101) grid points the error is 0.0019485859969
             <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;landscape&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../accuracy_files/accuracy_25_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
@@ -543,9 +503,8 @@ starting space order 10 with (101, 101) grid points the error is 0.0019485859969
         <span class="n">pf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="n">sc</span> <span class="k">for</span> <span class="n">sc</span> <span class="ow">in</span> <span class="n">dx</span><span class="p">][</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">errorl2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence rate for order </span><span class="si">%s</span><span class="s2"> is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pf</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">,</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">,</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">.2</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>Convergence rate for order 2 is 1.7762872863258858
 Convergence rate for order 4 is 4.196113606027213
 Convergence rate for order 6 is 6.343794127096714
@@ -554,31 +513,22 @@ Convergence rate for order 10 is 5.827482875857245
 </code></pre>
               
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../01_modelling/" class="btn btn-neutral float-left" title="Acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../02_rtm/" class="btn btn-neutral float-right" title="Acoustic RTM">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../01_modelling/" class="btn btn-neutral" title="Acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
       <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
-    
   </div>
 
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
+          
         </div>
       </div>
 
@@ -586,20 +536,23 @@ Convergence rate for order 10 is 5.827482875857245
 
   </div>
 
-  <div class="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-        <span><a href="../01_modelling/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../02_rtm/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../01_modelling/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../02_rtm/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
 </div>
     <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
     <script src="../../js/theme.js" defer></script>
       <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
       <script src="../../search/main.js" defer></script>

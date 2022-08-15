@@ -1,63 +1,56 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <meta name="author" content="Mathias Louboutin">
-  
-  <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Acoustic RTM - SLIM's Devito examples</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
-
-  <link rel="stylesheet" href="../../css/theme.css" />
-  <link rel="stylesheet" href="../../css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Acoustic RTM";
-    var mkdocs_page_input_path = "tutorials/02_rtm.md";
-    var mkdocs_page_url = null;
-  </script>
-  
-  <script src="../../js/jquery-2.1.1.min.js" defer></script>
-  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
-  
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Mathias Louboutin" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Acoustic RTM - SLIM's Devito examples</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Acoustic RTM";
+        var mkdocs_page_input_path = "tutorials/02_rtm.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
-        <div role="search">
+          <a href="../.." class="icon icon-home"> SLIM's Devito examples
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">Tutorials</span></p>
-                <ul class="current">
-                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
-                    </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic RTM</a>
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic RTM</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#imaging-requirement">Imaging requirement</a>
     </li>
@@ -68,62 +61,50 @@
     <li class="toctree-l2"><a class="reference internal" href="#computational-considerations">Computational considerations</a>
     </li>
     </ul>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
-                    </li>
-                </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Adjoint/">Adjoint Modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                  </li>
+              </ul>
       </div>
     </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../..">SLIM's Devito examples</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">SLIM's Devito examples</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../..">Docs</a> &raquo;</li>
-    
-      
-        
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
           <li>Tutorials &raquo;</li>
-        
-      
-    
-    <li>Acoustic RTM</li>
+      <li>Acoustic RTM</li>
     <li class="wy-breadcrumbs-aside">
-      
     </li>
   </ul>
-  
   <hr/>
 </div>
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
                 <h1 id="02-reverse-time-migration">02 - Reverse Time Migration</h1>
 <p>This notebook is the second in a series of tutorial highlighting various aspects of seismic inversion based on Devito operators. In this second example we aim to highlight the core ideas behind seismic inversion, where we create an image of the subsurface from field recorded data. This tutorial follows on the modelling tutorial and will reuse the modelling operator and velocity model.</p>
@@ -148,7 +129,6 @@
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
 </code></pre></div>
-
 <h2 id="computational-considerations">Computational considerations</h2>
 <p>Seismic inversion algorithms are generally very computationally demanding and require a large amount of memory to store the forward wavefield. In order to keep this tutorial as lightweight as possible we are using a very simple
 velocity model that requires low temporal and spatial resolution. For a more realistic model, a second set of preset parameters for a reduced version of the 2D Marmousi data set [1] is provided below in comments. This can be run to create some more realistic subsurface images. However, this second preset is more computationally demanding and requires a slightly more powerful workstation.</p>
@@ -184,7 +164,6 @@ velocity model that requires low temporal and spatial resolution. For a more rea
     <span class="n">tn</span> <span class="o">=</span> <span class="mf">3500.</span>  <span class="c1"># Simulation last 3.5 second (3500 ms)</span>
     <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.025</span>  <span class="c1"># Source peak frequency is 25Hz (0.025 kHz)</span>
 </code></pre></div>
-
 <h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
 <p>First, we create the model data for the "true" model from a given demonstration preset. This model represents the subsurface topology for the purposes of this example and we will later use it to generate our synthetic data readings. We also generate a second model and apply a smoothing filter to it, which represents our initial model for the imaging algorithm. The perturbation between these two models can be thought of as the image we are trying to recover.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
@@ -203,7 +182,6 @@ velocity model that requires low temporal and spatial resolution. For a more rea
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model0</span><span class="p">)</span>
 <span class="n">plot_perturbation</span><span class="p">(</span><span class="n">model0</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
 </code></pre></div>
-
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_1.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_6_2.png" /></p>
@@ -216,7 +194,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 
 <span class="c1"># First, position source centrally in all dimensions, then set depth</span>
 <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">)</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span>
+<span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">domain_size</span><span class="p">)</span> <span class="o">*</span> <span class="mf">.5</span>
 <span class="n">src_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">20.</span>  <span class="c1"># Depth is 20m</span>
 
 
@@ -229,11 +207,10 @@ which again depends on the grid spacing used in our model. For consistency this 
 
 <span class="c1"># Geometry</span>
 
-<span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=.</span><span class="mi">010</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
+<span class="n">geometry</span> <span class="o">=</span> <span class="n">AcquisitionGeometry</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">rec_coordinates</span><span class="p">,</span> <span class="n">src_coordinates</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="mf">.010</span><span class="p">,</span> <span class="n">src_type</span><span class="o">=</span><span class="s1">&#39;Ricker&#39;</span><span class="p">)</span>
 <span class="c1"># We can plot the time signature to see the wavelet</span>
 <span class="n">geometry</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../02_rtm_files/02_rtm_8_0.png" /></p>
 <h1 id="true-and-smooth-data">True and smooth data</h1>
 <p>We can now generate the shot record (receiver readings) corresponding to our true and initial models. The difference between these two records will be the basis of the imaging procedure.</p>
@@ -244,11 +221,9 @@ which again depends on the grid spacing used in our model. For consistency this 
 <span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">true_d</span> <span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute initial data with forward operator </span>
 <span class="n">smooth_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Plot shot record for true and smooth velocity model and the difference</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
@@ -257,7 +232,6 @@ which again depends on the grid spacing used in our model. For consistency this 
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
-
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_0.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_1.png" /></p>
 <p><img alt="png" src="../02_rtm_files/02_rtm_12_2.png" /></p>
@@ -265,7 +239,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 <p>As explained in the introduction of this tutorial, this method is based on back-propagation. </p>
 <h2 id="adjoint-wave-equation">Adjoint wave equation</h2>
 <p>If we go back to the modelling part, we can rewrite the simulation as a linear system solve:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{equation}
 \mathbf{A}(\mathbf{m}) \mathbf{u} = \mathbf{q}
 \end{equation}</div>
@@ -273,9 +247,9 @@ which again depends on the grid spacing used in our model. For consistency this 
 \mathbf{A}(\mathbf{m}) \mathbf{u} = \mathbf{q}
 \end{equation}</script>
 </div>
-<p>where <span><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span> is the discretized square slowness, <span><span class="MathJax_Preview">\mathbf{q}</span><script type="math/tex">\mathbf{q}</script></span> is the discretized source and <span><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})</span><script type="math/tex">\mathbf{A}(\mathbf{m})</script></span> is the discretized wave-equation. The discretized wave-equation matricial representation is a lower triangular matrix that can be solve with forward substitution. The pointwise writing or the forward substitution leads to the time-stepping stencil.</p>
+<p>where <span class="arithmatex"><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span> is the discretized square slowness, <span class="arithmatex"><span class="MathJax_Preview">\mathbf{q}</span><script type="math/tex">\mathbf{q}</script></span> is the discretized source and <span class="arithmatex"><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})</span><script type="math/tex">\mathbf{A}(\mathbf{m})</script></span> is the discretized wave-equation. The discretized wave-equation matricial representation is a lower triangular matrix that can be solve with forward substitution. The pointwise writing or the forward substitution leads to the time-stepping stencil.</p>
 <p>On a small problem one could form the matrix explicitly and transpose it to obtain the adjoint discrete wave-equation:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{equation}
 \mathbf{A}(\mathbf{m})^T \mathbf{v} = \delta \mathbf{d}
 \end{equation}</div>
@@ -283,14 +257,14 @@ which again depends on the grid spacing used in our model. For consistency this 
 \mathbf{A}(\mathbf{m})^T \mathbf{v} = \delta \mathbf{d}
 \end{equation}</script>
 </div>
-<p>where <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> is the discrete <strong>adjoint wavefield</strong> and  <span><span class="MathJax_Preview">\delta \mathbf{d}</span><script type="math/tex">\delta \mathbf{d}</script></span> is the data residual defined as the difference between the field/observed data and the synthetic data <span><span class="MathJax_Preview">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</span><script type="math/tex">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</script></span>. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. </p>
+<p>where <span class="arithmatex"><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> is the discrete <strong>adjoint wavefield</strong> and  <span class="arithmatex"><span class="MathJax_Preview">\delta \mathbf{d}</span><script type="math/tex">\delta \mathbf{d}</script></span> is the data residual defined as the difference between the field/observed data and the synthetic data <span class="arithmatex"><span class="MathJax_Preview">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</span><script type="math/tex">\mathbf{d}_s = \mathbf{P}_r \mathbf{u}</script></span>. In our case we derive the discrete adjoint wave-equation from the discrete forward wave-equation to get its stencil. </p>
 <h2 id="imaging">Imaging</h2>
 <p>Wave-equation based imaging relies on one simple concept:</p>
 <ul>
-<li>If the background velocity model is cinematically correct, the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
+<li>If the background velocity model is cinematically correct, the forward wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span> and the adjoint wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> meet at the reflectors position at zero time offset. </li>
 </ul>
 <p>The sum over time of the zero time-offset correlation of these two fields then creates an image of the subsurface. Mathematically this leads to the simple imaging condition:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">\begin{equation}
   \text{Image} = \sum_{t=1}^{n_t} \mathbf{u}[t] \mathbf{v}[t]
 \end{equation}</div>
@@ -300,7 +274,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 </div>
 <p>In the following tutorials we will describe a more advanced imaging condition that produces shaper and more accurate results.</p>
 <h2 id="operator">Operator</h2>
-<p>We will now define the imaging operator that computes the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> and correlates it with the forward wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This operator essentially consists of three components:
+<p>We will now define the imaging operator that computes the adjoint wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> and correlates it with the forward wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span>. This operator essentially consists of three components:
 * Stencil update of the adjoint wavefield <code>v</code>
 * Injection of the data residual at the adjoint source (forward receiver) location
 * Correlation of <code>u</code> and <code>v</code> to compute the image contribution at each timestep</p>
@@ -334,11 +308,10 @@ which again depends on the grid spacing used in our model. For consistency this 
     <span class="k">return</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil</span><span class="p">]</span> <span class="o">+</span> <span class="n">res_term</span> <span class="o">+</span> <span class="p">[</span><span class="n">image_update</span><span class="p">],</span>
                     <span class="n">subs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)</span>
 </code></pre></div>
-
 <h2 id="implementation-of-the-imaging-loop">Implementation of the imaging loop</h2>
 <p>As just explained, the forward wave-equation is solved forward in time while the adjoint wave-equation is solved in a reversed time order. Therefore, the correlation of these two fields over time requires to store one of the two fields. The computational procedure for imaging follows:</p>
 <ul>
-<li>Simulate the forward wave-equation with the background velocity model to get the synthetic data and save the full wavefield <span><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span></li>
+<li>Simulate the forward wave-equation with the background velocity model to get the synthetic data and save the full wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}</span><script type="math/tex">\mathbf{u}</script></span></li>
 <li>Compute the data residual</li>
 <li>Back-propagate the data residual and compute on the fly the image contribution at each time step. </li>
 </ul>
@@ -352,7 +325,6 @@ which again depends on the grid spacing used in our model. For consistency this 
 
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source_locations</span><span class="p">)</span>
 </code></pre></div>
-
 <p><img alt="png" src="../02_rtm_files/02_rtm_16_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Run imaging loop over shots</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span>
@@ -379,7 +351,6 @@ which again depends on the grid spacing used in our model. For consistency this 
     <span class="n">op_imaging</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">u0</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> 
                <span class="n">residual</span><span class="o">=</span><span class="n">residual</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>Imaging source 1 out of 21
 Imaging source 2 out of 21
 Imaging source 3 out of 21
@@ -408,42 +379,31 @@ Imaging source 21 out of 21
 <span class="c1"># Plot the inverted image</span>
 <span class="n">plot_image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 </code></pre></div>
-
 <p><img alt="png" src="../02_rtm_files/02_rtm_18_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">norm</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="mf">1e7</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e1</span><span class="p">)</span>
 </code></pre></div>
-
 <p>And we have an image of the subsurface with a strong reflector at the original location.</p>
 <h2 id="references">References</h2>
 <p>[1] <em>Versteeg, R.J. &amp; Grau, G. (eds.) (1991): The Marmousi experience. Proc. EAGE workshop on Practical Aspects of Seismic Data Inversion (Copenhagen, 1990), Eur. Assoc. Explor. Geophysicists, Zeist.</em></p>
               
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../accuracy/" class="btn btn-neutral float-left" title="Convergence analysis for the acoustic wave-equation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../03_fwi/" class="btn btn-neutral float-right" title="Acoustic FWI">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../accuracy/" class="btn btn-neutral" title="Convergence analysis for the acoustic wave-equation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
       <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
-    
   </div>
 
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
+          
         </div>
       </div>
 
@@ -451,20 +411,23 @@ Imaging source 21 out of 21
 
   </div>
 
-  <div class="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-        <span><a href="../accuracy/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../03_fwi/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../accuracy/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../03_fwi/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
 </div>
     <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
     <script src="../../js/theme.js" defer></script>
       <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
       <script src="../../search/main.js" defer></script>

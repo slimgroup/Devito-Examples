@@ -1,128 +1,108 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <meta name="author" content="Mathias Louboutin">
-  
-  <link rel="shortcut icon" href="../../img/favicon.ico">
-  <title>Adjoint Modeling - SLIM's Devito examples</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
-
-  <link rel="stylesheet" href="../../css/theme.css" />
-  <link rel="stylesheet" href="../../css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" />
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Adjoint Modeling";
-    var mkdocs_page_input_path = "tutorials/TLE_Adjoint.md";
-    var mkdocs_page_url = null;
-  </script>
-  
-  <script src="../../js/jquery-2.1.1.min.js" defer></script>
-  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
-  
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Mathias Louboutin" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Adjoint Modeling - SLIM's Devito examples</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Adjoint Modeling";
+        var mkdocs_page_input_path = "tutorials/TLE_Adjoint.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href="../.." class="icon icon-home"> SLIM's Devito examples</a>
-        <div role="search">
+          <a href="../.." class="icon icon-home"> SLIM's Devito examples
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">Tutorials</span></p>
-                <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
-                    </li>
-                </ul>
-                <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
-                <ul class="current">
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
-                    </li>
-                    <li class="toctree-l1 current"><a class="reference internal current" href="./">Adjoint Modeling</a>
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../03_fwi/">Acoustic FWI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_Forward/">Forward modeling</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Adjoint Modeling</a>
     <ul class="current">
     </ul>
-                    </li>
-                    <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
-                    </li>
-                </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TLE_fwi/">FWI and algorithms</a>
+                  </li>
+              </ul>
       </div>
     </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../..">SLIM's Devito examples</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">SLIM's Devito examples</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../..">Docs</a> &raquo;</li>
-    
-      
-        
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
           <li>The Leading Edge tutorials &raquo;</li>
-        
-      
-    
-    <li>Adjoint Modeling</li>
+      <li>Adjoint Modeling</li>
     <li class="wy-breadcrumbs-aside">
-      
     </li>
   </ul>
-  
   <hr/>
 </div>
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
                 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </code></pre></div>
-
 <div style="padding: 6px 12px 18px 12px; background: #eeffee; border: 2px solid #88aa88; border-radius: 4px;">
 
 <h2>Preface: Installing Devito (do not include in manuscipt)</h2>
@@ -179,8 +159,8 @@
 <p><strong>Figure 1:</strong> (a) The velocity model, with sources and receivers arranged vertically. (b) The initial estimate. &copy; The difference between the model and the initial estimate.</p>
 </blockquote>
 <h2 id="the-adjoint-wave-equation">The adjoint wave equation</h2>
-<p>Adjoint wave equations are a main component in seismic inversion algorithms and are required for computing gradients of both linear and non-linear objective functions. To ensure stability of the adjoint modeling scheme and the expected convergence of inversion algorithms, it is very important that the adjoint wave equation is in fact the adjoint (transpose) of the forward wave equation. The derivation of the adjoint wave equation in the acoustic case is simple, as it is self-adjoint if we ignore the absorbing boundaries for the moment. However, in the general case, discrete wave equations do not have this property (such as the coupled anisotropic TTI wave equation (Zhang et al., 2011)) and require correct derivations of their adjoints. We concentrate here, as in part 1, on the acoustic case and follow an optimize-discretize approach, which means we write out the adjoint wave equation for the continuous case first and then discretize it, using finite difference operators of the same order as for the forward equation. With the variables defined as in part 1 and the data residual <span><span class="MathJax_Preview">\delta d(x,y,t; x_r, y_r)</span><script type="math/tex">\delta d(x,y,t; x_r, y_r)</script></span>, located at <span><span class="MathJax_Preview">x_r, y_r</span><script type="math/tex">x_r, y_r</script></span> (receiver locations) as the adjoint source, the continuous adjoint wave equation is given by:</p>
-<div>
+<p>Adjoint wave equations are a main component in seismic inversion algorithms and are required for computing gradients of both linear and non-linear objective functions. To ensure stability of the adjoint modeling scheme and the expected convergence of inversion algorithms, it is very important that the adjoint wave equation is in fact the adjoint (transpose) of the forward wave equation. The derivation of the adjoint wave equation in the acoustic case is simple, as it is self-adjoint if we ignore the absorbing boundaries for the moment. However, in the general case, discrete wave equations do not have this property (such as the coupled anisotropic TTI wave equation (Zhang et al., 2011)) and require correct derivations of their adjoints. We concentrate here, as in part 1, on the acoustic case and follow an optimize-discretize approach, which means we write out the adjoint wave equation for the continuous case first and then discretize it, using finite difference operators of the same order as for the forward equation. With the variables defined as in part 1 and the data residual <span class="arithmatex"><span class="MathJax_Preview">\delta d(x,y,t; x_r, y_r)</span><script type="math/tex">\delta d(x,y,t; x_r, y_r)</script></span>, located at <span class="arithmatex"><span class="MathJax_Preview">x_r, y_r</span><script type="math/tex">x_r, y_r</script></span> (receiver locations) as the adjoint source, the continuous adjoint wave equation is given by:</p>
+<div class="arithmatex">
 <div class="MathJax_Preview">
  m(x,y) \frac{\mathrm{d}^2 v(t,x,y)}{\mathrm{d}t^2}\ -\ \Delta v(t,x,y)\ -\ \eta(x,y) \frac{\mathrm{d} v(t,x,y)}{\mathrm{d}t}\ \ =\ \ \delta d(t,x,y;x_r, y_r)
 </div>
@@ -188,8 +168,8 @@
  m(x,y) \frac{\mathrm{d}^2 v(t,x,y)}{\mathrm{d}t^2}\ -\ \Delta v(t,x,y)\ -\ \eta(x,y) \frac{\mathrm{d} v(t,x,y)}{\mathrm{d}t}\ \ =\ \ \delta d(t,x,y;x_r, y_r)
 </script>
 </div>
-<p>The adjoint acoustic wave equation is equivalent to the forward equation with the exception of the damping term <span><span class="MathJax_Preview">\eta(x,y) \mathrm{d}v(t,x,y)/\mathrm{d}t</span><script type="math/tex">\eta(x,y) \mathrm{d}v(t,x,y)/\mathrm{d}t</script></span>, which contains a first time derivative and therefore has a change of sign in its adjoint. (A second derivative matrix is the same as its transpose, whereas a first derivative matrix is equal to its negative transpose and vice versa.)</p>
-<p>Following the pattern of part 1, we first define the discrete adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> as a Devito <code>TimeFunction</code> object. For reasons we'll explain later, we do not need to save the adjoint wavefield:</p>
+<p>The adjoint acoustic wave equation is equivalent to the forward equation with the exception of the damping term <span class="arithmatex"><span class="MathJax_Preview">\eta(x,y) \mathrm{d}v(t,x,y)/\mathrm{d}t</span><script type="math/tex">\eta(x,y) \mathrm{d}v(t,x,y)/\mathrm{d}t</script></span>, which contains a first time derivative and therefore has a change of sign in its adjoint. (A second derivative matrix is the same as its transpose, whereas a first derivative matrix is equal to its negative transpose and vice versa.)</p>
+<p>Following the pattern of part 1, we first define the discrete adjoint wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span> as a Devito <code>TimeFunction</code> object. For reasons we'll explain later, we do not need to save the adjoint wavefield:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
 
@@ -224,31 +204,25 @@
 <span class="n">nt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">tn</span><span class="o">-</span><span class="n">t0</span><span class="p">)</span> <span class="o">/</span> <span class="n">dt</span><span class="p">)</span>  <span class="c1"># Discrete time axis length</span>
 <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">,</span> <span class="n">nt</span><span class="p">)</span>  <span class="c1"># Discrete modelling time</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="n">v</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
                  <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
                  <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
-
 <p>Now symbolically set up the PDE:</p>
 <div class="highlight"><pre><span></span><code><span class="n">pde</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span> <span class="o">*</span> <span class="n">v</span><span class="o">.</span><span class="n">dt2</span> <span class="o">-</span> <span class="n">v</span><span class="o">.</span><span class="n">laplace</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">v</span><span class="o">.</span><span class="n">dt</span>
 </code></pre></div>
-
 <p>As before, we then define a stencil:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Eq</span>
 <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">solve</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="n">stencil_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">backward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">backward</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 </code></pre></div>
-
 <p>Just as for the forward wave equation, <code>stencil_v</code> defines the update for the adjoint wavefield of a single time step. The only difference is that, while the forward modeling propagator goes forward in time, the adjoint propagator goes backwards in time, since the initial time conditions for the forward propagator turn into final time conditions for the adjoint propagator. As for the forward stencil, we can write out the corresponding discrete expression for the update of the adjoint wavefield:</p>
-<div>
+<div class="arithmatex">
 <div class="MathJax_Preview">
 \mathbf{v}[\text{time}-\text{dt}] = 2\mathbf{v}[\text{time}] - \mathbf{v}[\text{time}+\text{dt}] + \frac{\text{dt}^2}{\mathbf{m}}\Delta \mathbf{v}[\text{time}], \quad \text{time} = n_{t-1} \cdots 1
 </div>
@@ -256,7 +230,7 @@
 \mathbf{v}[\text{time}-\text{dt}] = 2\mathbf{v}[\text{time}] - \mathbf{v}[\text{time}+\text{dt}] + \frac{\text{dt}^2}{\mathbf{m}}\Delta \mathbf{v}[\text{time}], \quad \text{time} = n_{t-1} \cdots 1
 </script>
 </div>
-<p>with <span><span class="MathJax_Preview">\text{dt}</span><script type="math/tex">\text{dt}</script></span> being the time stepping interval. Once again, this expression does not contain any (adjoint) source terms so far, which will be defined as a separate <code>SparseFunction</code> object. Since the source term for the adjoint wave equation is the difference between an observed and modeled shot record, we first define an (empty) shot record <code>residual</code> with <code>101</code> receivers and coordinates defined in <code>rec_coords</code>. We then set the data field <code>rec.data</code> of our shot record to be the data residual between the observed data <code>d_obs</code> and the predicted data <code>d_pred</code>. The symbolic residual source expression <code>res_term</code> for our adjoint wave equation is then obtained by <em>injecting</em> the data residual into the modeling scheme (<code>residual.inject</code>). Since we solve the time-stepping loop backwards in time, the <code>res_term</code> is used to update the previous adjoint wavefield <code>v.backward</code>, rather than the next wavefield. As in the forward modeling example, the source is scaled by  <span><span class="MathJax_Preview">\mathrm{dt}^2/\mathbf{m}</span><script type="math/tex">\mathrm{dt}^2/\mathbf{m}</script></span>. In Python, we have:</p>
+<p>with <span class="arithmatex"><span class="MathJax_Preview">\text{dt}</span><script type="math/tex">\text{dt}</script></span> being the time stepping interval. Once again, this expression does not contain any (adjoint) source terms so far, which will be defined as a separate <code>SparseFunction</code> object. Since the source term for the adjoint wave equation is the difference between an observed and modeled shot record, we first define an (empty) shot record <code>residual</code> with <code>101</code> receivers and coordinates defined in <code>rec_coords</code>. We then set the data field <code>rec.data</code> of our shot record to be the data residual between the observed data <code>d_obs</code> and the predicted data <code>d_pred</code>. The symbolic residual source expression <code>res_term</code> for our adjoint wave equation is then obtained by <em>injecting</em> the data residual into the modeling scheme (<code>residual.inject</code>). Since we solve the time-stepping loop backwards in time, the <code>res_term</code> is used to update the previous adjoint wavefield <code>v.backward</code>, rather than the next wavefield. As in the forward modeling example, the source is scaled by  <span class="arithmatex"><span class="MathJax_Preview">\mathrm{dt}^2/\mathbf{m}</span><script type="math/tex">\mathrm{dt}^2/\mathbf{m}</script></span>. In Python, we have:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
 
@@ -268,11 +242,9 @@
 <span class="n">z_locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">z_extent</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">nreceivers</span><span class="p">)</span>
 <span class="n">rec_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">980</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">z_locations</span><span class="p">])</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">PointSource</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="n">residual</span> <span class="o">=</span> <span class="n">PointSource</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;residual&#39;</span><span class="p">,</span> <span class="n">ntime</span><span class="o">=</span><span class="n">nt</span><span class="p">,</span>
                        <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">rec_coords</span><span class="p">)</span>    
 
@@ -280,12 +252,10 @@
                            <span class="n">expr</span><span class="o">=</span><span class="n">residual</span> <span class="o">*</span> <span class="n">dt</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
                            <span class="n">offset</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">nbpml</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="n">rec</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;rec&#39;</span><span class="p">,</span> <span class="n">npoint</span><span class="o">=</span><span class="n">nreceivers</span><span class="p">,</span> <span class="n">ntime</span><span class="o">=</span><span class="n">nt</span><span class="p">,</span>
                <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">rec_coords</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">RickerSource</span>
 
@@ -294,20 +264,17 @@
 <span class="n">z_locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">z_extent</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">nshots</span><span class="p">)</span>
 <span class="n">src_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">z_extent</span><span class="o">/</span><span class="mi">50</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">z_locations</span><span class="p">])</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.010</span>  <span class="c1"># kHz, peak frequency.</span>
 <span class="n">src</span> <span class="o">=</span> <span class="n">RickerSource</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span>
                    <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">src_coords</span><span class="p">[</span><span class="n">nshots</span><span class="o">//</span><span class="mi">2</span><span class="p">])</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Time (ms)&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Amplitude&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../TLE_Adjoint_files/TLE_Adjoint_18_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="c1"># Generates Figure 1</span>
@@ -363,7 +330,6 @@
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;../Figures/Figure_1.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../TLE_Adjoint_files/TLE_Adjoint_19_0.png" /></p>
 <p>In this demonstration, there is no real data. Instead we will generate the 'observed' data via forward modeling with the true model <code>model</code>. The synthetic data is generated from the initial model <code>model0</code>. The resulting data, and their difference, are shown in Figure 2.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
@@ -374,7 +340,6 @@
 <span class="c1"># Compute &#39;real&#39; data with forward operator.</span>
 <span class="n">obs</span> <span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>CustomCompiler: compiled /tmp/devito-gx10ovxj/7a282d6885f4ad3a7b16fd67992b9457900f0291.c [0.62 s]
 =========================================================================================
 Section section_1&lt;714,1&gt; with OI=0.73 computed in 0.000 s [0.52 GFlops/s]
@@ -386,7 +351,6 @@ Section main&lt;714,179,179&gt; with OI=1.95 computed in 0.090 s [8.15 GFlops/s,
 <span class="c1"># Compute initial data with forward operator.</span>
 <span class="n">pred</span><span class="p">,</span> <span class="n">u0</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>CustomCompiler: compiled /tmp/devito-gx10ovxj/460b72ec62af10f5fed261f3a591dc9679cffa88.c [0.25 s]
 =========================================================================================
 Section section_1&lt;714,1&gt; with OI=0.73 computed in 0.000 s [0.26 GFlops/s]
@@ -432,7 +396,6 @@ Section main&lt;714,179,179&gt; with OI=1.95 computed in 0.113 s [6.49 GFlops/s,
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;../Figures/Figure2.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../TLE_Adjoint_files/TLE_Adjoint_23_0.png" /></p>
 <blockquote>
 <p><strong>Figure 2.</strong> Shot records for a shot at a Z position of 0.5 km. (a) The observed data, using the known model with the high velocity disc, contains a perturbation not present in (b) the 'predicted' data, using the initial estimate of the model, which contais no disc. &copy; The residual.</p>
@@ -441,14 +404,12 @@ Section main&lt;714,179,179&gt; with OI=1.95 computed in 0.113 s [6.49 GFlops/s,
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">Backward</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="n">op_adj</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil_v</span><span class="p">]</span> <span class="o">+</span> <span class="n">res_term</span><span class="p">,</span> <span class="n">time_axis</span><span class="o">=</span><span class="n">Backward</span><span class="p">)</span>
 </code></pre></div>
-
 <p>In contrast to forward modeling, we do not record any measurements at the surface since we are only interested in the adjoint wavefield itself. The full script for setting up the adjoint wave equation, including an animation of the adjoint wavefield is available in <strong><code>adjoint_modeling.ipynb</code></strong>.</p>
 <h2 id="computing-the-fwi-gradient">Computing the FWI gradient</h2>
-<p>The goal of FWI is to estimate a discrete parametrization of the subsurface by minimizing the misfit between the observed shot records of a seismic survey and numerically modeled shot records. The predicted shot records are obtained by solving an individual wave equation per shot location and depend on the parametrization <span><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span> of our wave propagator. The most common function for measuring the data misfit between the observed and modeled data is the <span><span class="MathJax_Preview">\ell_2</span><script type="math/tex">\ell_2</script></span> norm, which leads to the following objective function (Lions (1971), Tarantola (1984)):</p>
-<div>
+<p>The goal of FWI is to estimate a discrete parametrization of the subsurface by minimizing the misfit between the observed shot records of a seismic survey and numerically modeled shot records. The predicted shot records are obtained by solving an individual wave equation per shot location and depend on the parametrization <span class="arithmatex"><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span> of our wave propagator. The most common function for measuring the data misfit between the observed and modeled data is the <span class="arithmatex"><span class="MathJax_Preview">\ell_2</span><script type="math/tex">\ell_2</script></span> norm, which leads to the following objective function (Lions (1971), Tarantola (1984)):</p>
+<div class="arithmatex">
 <div class="MathJax_Preview">
 \mathop{\hbox{minimize}}_{\mathbf{m}} \hspace{.2cm} f(\mathbf{m})= \sum_{i=1}^{n_\mathrm{s}} \frac{1}{2} \left\lVert \mathbf{d}^\mathrm{pred}_i (\mathbf{m}, \mathbf{q}_i) - \mathbf{d}_i^\mathrm{obs} \right\rVert_2^2,
 </div>
@@ -456,8 +417,8 @@ Section main&lt;714,179,179&gt; with OI=1.95 computed in 0.113 s [6.49 GFlops/s,
 \mathop{\hbox{minimize}}_{\mathbf{m}} \hspace{.2cm} f(\mathbf{m})= \sum_{i=1}^{n_\mathrm{s}} \frac{1}{2} \left\lVert \mathbf{d}^\mathrm{pred}_i (\mathbf{m}, \mathbf{q}_i) - \mathbf{d}_i^\mathrm{obs} \right\rVert_2^2,
 </script>
 </div>
-<p>where the index <span><span class="MathJax_Preview">i</span><script type="math/tex">i</script></span> runs over the total number of shots <span><span class="MathJax_Preview">n_\mathrm{s}</span><script type="math/tex">n_\mathrm{s}</script></span> and the model parameters are the squared slowness. Optimization problems of this form are called nonlinear least-squares problems, since the predicted data modeled with the forward modeling propagator (<code>op_fwd()</code> in part 1) depends nonlinearly on the unknown parameters <span><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span>. The full derivation of the FWI gradient using the adjoint state method is outside the scope of this tutorial, but conceptually we obtain the gradient by applying the chain rule and taking the partial derivative of the inverse wave equation <span><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})^{-1}</span><script type="math/tex">\mathbf{A}(\mathbf{m})^{-1}</script></span> with respect to <span><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span>, which yields the following expression (Plessix, 2006, Virieux and Operto, 2009): </p>
-<div>
+<p>where the index <span class="arithmatex"><span class="MathJax_Preview">i</span><script type="math/tex">i</script></span> runs over the total number of shots <span class="arithmatex"><span class="MathJax_Preview">n_\mathrm{s}</span><script type="math/tex">n_\mathrm{s}</script></span> and the model parameters are the squared slowness. Optimization problems of this form are called nonlinear least-squares problems, since the predicted data modeled with the forward modeling propagator (<code>op_fwd()</code> in part 1) depends nonlinearly on the unknown parameters <span class="arithmatex"><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span>. The full derivation of the FWI gradient using the adjoint state method is outside the scope of this tutorial, but conceptually we obtain the gradient by applying the chain rule and taking the partial derivative of the inverse wave equation <span class="arithmatex"><span class="MathJax_Preview">\mathbf{A}(\mathbf{m})^{-1}</span><script type="math/tex">\mathbf{A}(\mathbf{m})^{-1}</script></span> with respect to <span class="arithmatex"><span class="MathJax_Preview">\mathbf{m}</span><script type="math/tex">\mathbf{m}</script></span>, which yields the following expression (Plessix, 2006, Virieux and Operto, 2009): </p>
+<div class="arithmatex">
 <div class="MathJax_Preview">
  \nabla f (\mathbf{m})= -  \sum_{i=1}^{n_\mathrm{s}}  \sum_{\text{time}=1}^{n_t} \mathbf{u}[\text{time}]\odot \ddot{\mathbf{v}}[\text{time}].
 </div>
@@ -465,9 +426,9 @@ Section main&lt;714,179,179&gt; with OI=1.95 computed in 0.113 s [6.49 GFlops/s,
  \nabla f (\mathbf{m})= -  \sum_{i=1}^{n_\mathrm{s}}  \sum_{\text{time}=1}^{n_t} \mathbf{u}[\text{time}]\odot \ddot{\mathbf{v}}[\text{time}].
 </script>
 </div>
-<p>The inner sum <span><span class="MathJax_Preview">\text{time}=1,...,n_t</span><script type="math/tex">\text{time}=1,...,n_t</script></span> runs over the number of computational time steps <span><span class="MathJax_Preview">n_t</span><script type="math/tex">n_t</script></span> and <span><span class="MathJax_Preview">\ddot{\mathbf{v}}</span><script type="math/tex">\ddot{\mathbf{v}}</script></span> denotes the second temporal derivative of the adjoint wavefield <span><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span>. Computing the gradient of Equation 3, therefore corresponds to performing the point-wise multiplication (denoted  by the symbol <span><span class="MathJax_Preview">\odot</span><script type="math/tex">\odot</script></span>) of the forward wavefields with the second time derivative of the adjoint wavefield and summing over all time steps.</p>
-<p>To avoid the need to store the adjoint wavefield, the FWI gradient is calculated in the reverse time-loop while solving the adjoint wave equation. To compute the gradient <span><span class="MathJax_Preview">\mathbf{g}</span><script type="math/tex">\mathbf{g}</script></span> for the current time step <span><span class="MathJax_Preview">\mathbf{v}[\text{time}]</span><script type="math/tex">\mathbf{v}[\text{time}]</script></span>:</p>
-<div>
+<p>The inner sum <span class="arithmatex"><span class="MathJax_Preview">\text{time}=1,...,n_t</span><script type="math/tex">\text{time}=1,...,n_t</script></span> runs over the number of computational time steps <span class="arithmatex"><span class="MathJax_Preview">n_t</span><script type="math/tex">n_t</script></span> and <span class="arithmatex"><span class="MathJax_Preview">\ddot{\mathbf{v}}</span><script type="math/tex">\ddot{\mathbf{v}}</script></span> denotes the second temporal derivative of the adjoint wavefield <span class="arithmatex"><span class="MathJax_Preview">\mathbf{v}</span><script type="math/tex">\mathbf{v}</script></span>. Computing the gradient of Equation 3, therefore corresponds to performing the point-wise multiplication (denoted  by the symbol <span class="arithmatex"><span class="MathJax_Preview">\odot</span><script type="math/tex">\odot</script></span>) of the forward wavefields with the second time derivative of the adjoint wavefield and summing over all time steps.</p>
+<p>To avoid the need to store the adjoint wavefield, the FWI gradient is calculated in the reverse time-loop while solving the adjoint wave equation. To compute the gradient <span class="arithmatex"><span class="MathJax_Preview">\mathbf{g}</span><script type="math/tex">\mathbf{g}</script></span> for the current time step <span class="arithmatex"><span class="MathJax_Preview">\mathbf{v}[\text{time}]</span><script type="math/tex">\mathbf{v}[\text{time}]</script></span>:</p>
+<div class="arithmatex">
 <div class="MathJax_Preview">
  \mathbf{g} = \mathbf{g} - \frac{\mathbf{v}[\text{time-dt}] - 2\mathbf{v}[\text{time}] + \mathbf{v}[\text{time+dt}]}{\mathrm{dt}^2} \odot \mathbf{u}[\text{time}], \quad \text{time}=1 \cdots n_{t-1}
 </div>
@@ -480,32 +441,26 @@ Section main&lt;714,179,179&gt; with OI=1.95 computed in 0.113 s [6.49 GFlops/s,
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">Function</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="c1"># This is the same u as in Part 1.</span>
 <span class="n">u</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> 
                  <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
                  <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_dim</span><span class="o">=</span><span class="n">nt</span><span class="p">)</span>
 </code></pre></div>
-
 <div class="highlight"><pre><span></span><code><span class="n">grad</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
 </code></pre></div>
-
 <p>The update for the gradient as defined in Equations 4 and 5 is then:</p>
 <div class="highlight"><pre><span></span><code><span class="n">grad_update</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">grad</span> <span class="o">-</span> <span class="n">u</span> <span class="o">*</span> <span class="n">v</span><span class="o">.</span><span class="n">dt2</span><span class="p">)</span>
 </code></pre></div>
-
 <p>Now we must add the gradient update expression to the adjoint propagator <code>op_grad</code>. This yields a single symbolic expression with update instructions for both the adjoint wavefield and the gradient:</p>
 <div class="highlight"><pre><span></span><code><span class="n">op_grad</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil_v</span><span class="p">]</span> <span class="o">+</span> <span class="n">res_term</span> <span class="o">+</span> <span class="p">[</span><span class="n">grad_update</span><span class="p">],</span>
                    <span class="n">time_axis</span><span class="o">=</span><span class="n">Backward</span><span class="p">)</span>
 </code></pre></div>
-
 <p>Solving the adjoint wave equation by running the following now computes the FWI gradient for a single source. Its value is stored in <code>grad.data</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="n">op_grad</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">u0</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">m</span><span class="p">,</span>
         <span class="n">residual</span><span class="o">=</span><span class="n">pred</span><span class="o">.</span><span class="n">data</span><span class="o">-</span><span class="n">obs</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
         <span class="n">time</span><span class="o">=</span><span class="n">nt</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
-
 <pre><code>CustomCompiler: compiled /tmp/devito-gx10ovxj/ec66845144ec0c1fb8e1bb5f532cda21c551712e.c [0.28 s]
 =========================================================================================
 Section section_1&lt;714,101&gt; with OI=0.80 computed in 0.003 s [1.18 GFlops/s]
@@ -518,12 +473,10 @@ Section main&lt;714,179,179&gt; with OI=2.83 computed in 0.303 s [6.11 GFlops/s,
 <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../TLE_Adjoint_files/TLE_Adjoint_38_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="n">tmp</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </code></pre></div>
-
 <p>Now we can iterate over all the shot locations, running the same sequence of commands each time.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
@@ -568,7 +521,6 @@ Section main&lt;714,179,179&gt; with OI=2.83 computed in 0.303 s [6.11 GFlops/s,
 
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log_level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;INFO&#39;</span>
 </code></pre></div>
-
 <pre><code>Source 0 of 21
 Source 1 of 21
 Source 2 of 21
@@ -597,7 +549,6 @@ Source 20 of 21
 <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">shrink</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../TLE_Adjoint_files/TLE_Adjoint_42_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="c1"># Generates Figure 3</span>
@@ -637,7 +588,6 @@ Source 20 of 21
 <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;../Figures/Figure3.png&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-
 <p><img alt="png" src="../TLE_Adjoint_files/TLE_Adjoint_43_0.png" /></p>
 <blockquote>
 <p><strong>Figure 3.</strong> Gradient plots for (a) a single shot at 0.5 km and (b) the sum of all shots.</p>
@@ -672,31 +622,22 @@ Source 20 of 21
 <p>© 2017 The authors — licensed CC-BY-SA</p>
               
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../TLE_Forward/" class="btn btn-neutral float-left" title="Forward modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../TLE_fwi/" class="btn btn-neutral float-right" title="FWI and algorithms">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../TLE_Forward/" class="btn btn-neutral" title="Forward modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
       <p>Copyright (c) 2020 SLIM group @ Georgia Institute of Technology.</p>
-    
   </div>
 
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
+          
         </div>
       </div>
 
@@ -704,20 +645,23 @@ Source 20 of 21
 
   </div>
 
-  <div class="rst-versions" role="note" aria-label="versions">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
-      
-      
-        <span><a href="../TLE_Forward/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../TLE_fwi/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/mkdocs/mkdocs/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../TLE_Forward/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../TLE_fwi/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
 </div>
     <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
     <script src="../../js/theme.js" defer></script>
       <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
       <script src="../../search/main.js" defer></script>
