@@ -34,7 +34,7 @@
           <a href="../.." class="icon icon-home"> SLIM's Devito examples
         </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
@@ -87,7 +87,7 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
           <li>Tutorials &raquo;</li>
       <li>Convergence analysis for the acoustic wave-equation</li>
     <li class="wy-breadcrumbs-aside">
@@ -115,7 +115,7 @@
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># Model with fixed time step value</span>
 <span class="k">class</span> <span class="nc">ModelBench</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Physical model used for accuracy benchmarking.</span>
 <span class="sd">    The critical dt is made small enough to ignore</span>
 <span class="sd">    time discretization errors</span>
@@ -123,7 +123,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">critical_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Critical computational time step value.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Critical computational time step value.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mf">.1</span>
 </code></pre></div>
 <h1 id="verification">Verification</h1>

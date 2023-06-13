@@ -34,7 +34,7 @@
           <a href="../.." class="icon icon-home"> SLIM's Devito examples
         </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
@@ -95,7 +95,7 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
           <li>Tutorials &raquo;</li>
       <li>Acoustic FWI</li>
     <li class="wy-breadcrumbs-aside">
@@ -356,7 +356,7 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
 <span class="c1"># Define bounding box constraints on the solution.</span>
 <span class="k">def</span> <span class="nf">update_with_box</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.5</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply gradient update in-place to vp with box constraint</span>
 
 <span class="sd">    Notes:</span>
