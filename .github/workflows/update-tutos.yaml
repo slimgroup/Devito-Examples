@@ -1,0 +1,42 @@
+name: Sync Some Directory
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Runs daily at 6 AM UTC
+  workflow_dispatch:      # Allow manual trigger too
+  push:
+    branches:
+      - master
+
+jobs:
+  sync-directory:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone external repo
+        run: |
+          git clone https://github.com/devitocodes/devito
+
+      - name: Update only existing files in local
+        run: |
+          LOCAL_DIR="${GITHUB_WORKSPACE}/seismic"
+          SRC_DIR="${GITHUB_WORKSPACE}/devito/examples/seismic"
+          cd "$SRC_DIR"
+          find . -type f | while read -r f; do
+            if [ -f "${LOCAL_DIR}/$f" ]; then
+              cp "$f" "${LOCAL_DIR}/$f"
+            fi
+          done
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u
+          git commit -m "Sync local from external repo" || echo "Nothing to commit"
+          git push origin master
