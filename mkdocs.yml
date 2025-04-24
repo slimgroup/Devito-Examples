@@ -14,7 +14,7 @@ nav:
   - Parallel acoustic FWI with Dask: tutorials/04_dask.md
   - First order acoustic modeling: tutorials/05_staggered_acoustic.md
   - Elastic modeling with constant parameters: tutorials/06_elastic.md
-  - Elastic modeling with varying parameters: tutorials/07_elastic_varying_parameters.md
+  - Elastic modeling with varying parameters: tutorials/06_elastic_varying_parameters.md
 - 'The Leading Edge tutorials':
   - Forward modeling: tutorials/TLE_Forward.md
   - Adjoint Modeling: tutorials/TLE_Adjoint.md
