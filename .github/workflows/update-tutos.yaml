@@ -18,9 +18,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Clone external repo
+      - name: Clone lastest release of devito to update examples
         run: |
-          git clone https://github.com/devitocodes/devito
+          REPO="devitocodes/devito"
+          TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | jq -r .tag_name)
+          git clone --branch "$TAG" --depth=1 "https://github.com/${REPO}.git"
+
 
       - name: Update only existing files in local
         run: |
