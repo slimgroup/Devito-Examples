@@ -63,7 +63,7 @@
     </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  <li class="toctree-l1"><a class="" href="../07_elastic_varying_parameters.md">Elastic modeling with varying parameters</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
@@ -99,7 +99,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
+                <h1 id="06-bis-elastic-wave-equation-implementation-on-a-staggered-grid">06 bis - Elastic wave equation implementation on a staggered grid</h1>
 <p>This is a first attempt at implemenenting the elastic wave equation as described in:</p>
 <p>[1] Jean Virieux (1986). ”P-SV wave propagation in heterogeneous media: Velocity‐stress finite‐difference method.” GEOPHYSICS, 51(4), 889-901. <a href="https://doi.org/10.1190/1.1442147">https://doi.org/10.1190/1.1442147</a></p>
 <p>The current version actually attempts to mirror the FDELMODC implementation by Jan Thorbecke:</p>
@@ -171,20 +171,32 @@
 <span class="n">mu</span> <span class="o">=</span> <span class="n">cs2</span><span class="o">*</span><span class="n">density</span>
 <span class="n">l</span> <span class="o">=</span> <span class="p">(</span><span class="n">cp2</span><span class="o">*</span><span class="n">density</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">mu</span><span class="p">)</span>
 
-<span class="c1"># fdelmodc reference implementation</span>
-<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">dt</span><span class="o">*</span><span class="n">ro</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
-<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+<span class="c1"># First order elastic wave equation</span>
+<span class="n">pde_v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+<span class="n">pde_tau</span> <span class="o">=</span> <span class="n">tau</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">inner</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="c1"># Time update</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_v</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_tau</span><span class="p">,</span> <span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span>  <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="n">u_v</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)}\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.654728501098655 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)}\end{matrix}\right]</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}dt \left(0.555555555555556 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.555555555555556 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + \frac{\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)}}{dt}\right)\\dt \left(0.555555555555556 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.555555555555556 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)} + \frac{\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)}}{dt}\right)\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}dt \left(0.555555555555556 \frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,z \right)} + 0.555555555555556 \frac{\partial}{\partial z} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + \frac{\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)}}{dt}\right)\\dt \left(0.555555555555556 \frac{\partial}{\partial x} \operatorname{t_{xz}}{\left(t,x + \frac{h_{x}}{2},z + \frac{h_{z}}{2} \right)} + 0.555555555555556 \frac{\partial}{\partial z} \operatorname{t_{zz}}{\left(t,x,z \right)} + \frac{\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)}}{dt}\right)\end{matrix}\right]</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-<span class="n">op</span><span class="p">()</span>
+<span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 1.09 s
+<pre><code>Operator `Kernel` ran in 0.19 s
+
+
+
+
+
+PerformanceSummary([(PerfKey(name='section0', rank=None),
+  PerfEntry(time=0.175716, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section1', rank=None),
+  PerfEntry(time=0.009343000000000011, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
@@ -211,9 +223,13 @@
 <span class="c1"># The source injection term</span>
 <span class="n">src_xx</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
 <span class="n">src_zz</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
-<span class="c1"># fdelmodc reference implementation</span>
-<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">dt</span><span class="o">*</span><span class="n">ro</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
-<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">tau</span> <span class="o">+</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+
+<span class="c1"># First order elastic wave equation</span>
+<span class="n">pde_v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+<span class="n">pde_tau</span> <span class="o">=</span> <span class="n">tau</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">inner</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="c1"># Time update</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_v</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_tau</span><span class="p">,</span> <span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span><span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span> <span class="p">)</span>
 </code></pre></div>
@@ -224,9 +240,18 @@
 <span class="n">tau</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
 <span class="n">tau</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>
 
-<span class="n">op</span><span class="p">()</span>
+<span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.50 s
+<pre><code>Operator `Kernel` ran in 0.13 s
+
+
+
+
+
+PerformanceSummary([(PerfKey(name='section0', rank=None),
+  PerfEntry(time=0.12092999999999998, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section1', rank=None),
+  PerfEntry(time=0.005271000000000005, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
@@ -244,14 +269,14 @@
 <p><img alt="png" src="../06_elastic_files/06_elastic_13_4.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">0.736816932</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mf">0.62521476</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../05_staggered_acoustic/" class="btn btn-neutral float-left" title="First order acoustic modeling"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../07_elastic_varying_parameters/" class="btn btn-neutral float-right" title="Elastic modeling with varying parameters">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../TLE_Forward/" class="btn btn-neutral float-right" title="Forward modeling">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -282,7 +307,7 @@
       <span><a href="../05_staggered_acoustic/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../07_elastic_varying_parameters/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../TLE_Forward/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

@@ -56,10 +56,12 @@
                   <li class="toctree-l1"><a class="reference internal" href="../04_dask/">Parallel acoustic FWI with Dask</a>
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="#">First order acoustic modeling</a>
+    <ul class="current">
+    </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  <li class="toctree-l1"><a class="" href="../07_elastic_varying_parameters.md">Elastic modeling with varying parameters</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
@@ -95,7 +97,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+                <h1 id="05-first-order-acoustic-modeling-on-a-staggered-grid">05 - First order acoustic modeling on a staggered grid</h1>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic.source</span><span class="w"> </span><span class="kn">import</span> <span class="n">DGaussSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_image</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -122,7 +125,7 @@
 
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_3_0.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_4_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Now we create the velocity and pressure fields</span>
 <span class="n">p</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">v</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -135,30 +138,39 @@
 <span class="n">V_p</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="n">density</span> <span class="o">=</span> <span class="mf">1.</span>
 
-<span class="n">ro</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">density</span> <span class="o">*</span> <span class="n">dt</span>
-<span class="n">l2m</span> <span class="o">=</span> <span class="n">V_p</span><span class="o">*</span><span class="n">V_p</span><span class="o">*</span><span class="n">density</span> <span class="o">*</span> <span class="n">dt</span>
+<span class="n">ro</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">density</span>
+<span class="n">l2m</span> <span class="o">=</span> <span class="n">V_p</span><span class="o">*</span><span class="n">V_p</span><span class="o">*</span><span class="n">density</span>
 
 <span class="c1"># The source injection term</span>
 <span class="n">src_p</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
 
 <span class="c1"># 2nd order acoustic according to fdelmoc</span>
-<span class="n">u_v_2</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v</span> <span class="o">+</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">grad</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-<span class="n">u_p_2</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">l2m</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_v_2</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">grad</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_p_2</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">l2m</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="n">u_v_2</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 1.17851130197758 \frac{\partial}{\partial x} p{\left(t,x,z \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 1.17851130197758 \frac{\partial}{\partial z} p{\left(t,x,z \right)}\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)}\\\operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},z \right)} + 1.17851130197758 \frac{\partial}{\partial x} p{\left(t,x,z \right)}\\\operatorname{v_{z}}{\left(t,x,z + \frac{h_{z}}{2} \right)} + 1.17851130197758 \frac{\partial}{\partial z} p{\left(t,x,z \right)}\end{matrix}\right]</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}v_x(t + dt, x + h_x/2, z)\\v_z(t + dt, x, z + h_z/2)\end{matrix}\right] = \left[\begin{matrix}dt \left(1.0 \frac{\partial}{\partial x} p(t, x, z) + \frac{v_x(t, x + h_x/2, z)}{dt}\right)\\dt \left(1.0 \frac{\partial}{\partial z} p(t, x, z) + \frac{v_z(t, x, z + h_z/2)}{dt}\right)\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}v_x(t + dt, x + h_x/2, z)\\v_z(t + dt, x, z + h_z/2)\end{matrix}\right] = \left[\begin{matrix}dt \left(1.0 \frac{\partial}{\partial x} p(t, x, z) + \frac{v_x(t, x + h_x/2, z)}{dt}\right)\\dt \left(1.0 \frac{\partial}{\partial z} p(t, x, z) + \frac{v_z(t, x, z + h_z/2)}{dt}\right)\end{matrix}\right]</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="n">u_p_2</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle p{\left(t + dt,x,z \right)} = p{\left(t,x,z \right)} + 18.8561808316413 \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)} + 18.8561808316413 \frac{\partial}{\partial z} \operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}</span><script type="math/tex">\displaystyle p{\left(t + dt,x,z \right)} = p{\left(t,x,z \right)} + 18.8561808316413 \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},z \right)} + 18.8561808316413 \frac{\partial}{\partial z} \operatorname{v_{z}}{\left(t + dt,x,z + \frac{h_{z}}{2} \right)}</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle p(t + dt, x, z) = dt \left(16.0 \frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, z) + 16.0 \frac{\partial}{\partial z} v_z(t + dt, x, z + h_z/2) + \frac{p(t, x, z)}{dt}\right)</span><script type="math/tex">\displaystyle p(t + dt, x, z) = dt \left(16.0 \frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, z) + 16.0 \frac{\partial}{\partial z} v_z(t + dt, x, z + h_z/2) + \frac{p(t, x, z)}{dt}\right)</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="n">op_2</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v_2</span><span class="p">,</span> <span class="n">u_p_2</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_p</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
 <span class="c1"># Propagate the source</span>
-<span class="n">op_2</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">op_2</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.04 s
+<pre><code>Operator `Kernel` ran in 0.01 s
+
+
+
+
+
+PerformanceSummary([(PerfKey(name='section0', rank=None),
+  PerfEntry(time=0.005126, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section1', rank=None),
+  PerfEntry(time=0.0023490000000000017, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
@@ -167,25 +179,34 @@
 <span class="n">plot_image</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="n">plot_image</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </code></pre></div>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_10_0.png" /></p>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_10_1.png" /></p>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_10_2.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_11_0.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_11_1.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_11_2.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="mf">.35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># # 4th order acoustic according to fdelmoc</span>
-<span class="c1"># # Now we create the velocity and pressure fields</span>
 <span class="n">p4</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">v4</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">u_v_4</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">v4</span> <span class="o">+</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">grad</span><span class="p">(</span><span class="n">p4</span><span class="p">))</span>
-<span class="n">u_p_4</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">p4</span> <span class="o">+</span> <span class="n">l2m</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">src_p</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">p4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+<span class="n">u_v_4</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">grad</span><span class="p">(</span><span class="n">p4</span><span class="p">),</span> <span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_p_4</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">l2m</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">v4</span><span class="o">.</span><span class="n">forward</span><span class="p">),</span> <span class="n">p4</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op_4</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v_4</span><span class="p">,</span> <span class="n">u_p_4</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_p</span><span class="p">)</span>
 <span class="c1"># Propagate the source</span>
-<span class="n">op_4</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">op_4</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.01 s
+<pre><code>Operator `Kernel` ran in 0.01 s
+
+
+
+
+
+PerformanceSummary([(PerfKey(name='section0', rank=None),
+  PerfEntry(time=0.005326999999999997, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section1', rank=None),
+  PerfEntry(time=0.0017349999999999978, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
@@ -194,11 +215,11 @@
 <span class="n">plot_image</span><span class="p">(</span><span class="n">v4</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 <span class="n">plot_image</span><span class="p">(</span><span class="n">p4</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 </code></pre></div>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_14_0.png" /></p>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_14_1.png" /></p>
-<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_14_2.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="mf">.35098</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_15_0.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_15_1.png" /></p>
+<p><img alt="png" src="../05_staggered_acoustic_files/05_staggered_acoustic_15_2.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="n">norm_p</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">p4</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm_p</span><span class="p">,</span> <span class="mf">.33736</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
               
             </div>

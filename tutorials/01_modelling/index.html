@@ -65,7 +65,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  <li class="toctree-l1"><a class="" href="../07_elastic_varying_parameters.md">Elastic modeling with varying parameters</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
@@ -110,7 +110,7 @@
 <li><strong>Receiver</strong> - A set of microphones or hydrophones are used to measure the resulting wave and create a set of measurements called a <em>Shot Record</em>. These measurements are recorded at multiple locations, and usually at the surface of the domain or at the bottom of the ocean in some marine cases.</li>
 </ul>
 <p>In order to create a numerical model of a seismic survey, we need to solve the wave equation and implement source and receiver interpolation to inject the source and record the seismic wave at sparse point locations in the grid.</p>
-<p><img alt="ship" src="https://lh6.googleusercontent.com/gEPgCb9K0cm_10iFOBL98swm_rzfWAmrDNxwMHHljzVq6yxMGK27qO4PneK14ma5qY63DWBEP5t5_KBRRUcKKAf8NqCXUBmMfZutnOsDHFCd0J6zKuT8v9rITjHbOGCmF-KP5ps" /></p>
+<p><img src='./survey-ship-diagram.png' width=400></p>
 <h2 id="the-acoustic-seismic-wave-equation">The acoustic seismic wave equation</h2>
 <p>The acoustic wave equation for the square slowness <span class="arithmatex"><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span>, defined as <span class="arithmatex"><span class="MathJax_Preview">m=\frac{1}{c^2}</span><script type="math/tex">m=\frac{1}{c^2}</script></span>, where <span class="arithmatex"><span class="MathJax_Preview">c</span><script type="math/tex">c</script></span> is the speed of sound in the given physical media, and a source <span class="arithmatex"><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is given by:</p>
 <div class="arithmatex">
@@ -183,10 +183,10 @@ The boundary conditions are Dirichlet conditions:
 
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `initdamp` run in 0.01 s
-Operator `padfunc` run in 0.01 s
+<pre><code>Operator `initdamp` ran in 0.01 s
+Operator `pad_vp` ran in 0.01 s
 </code></pre>
-<p><img alt="png" src="../01_modelling_files/01_modelling_5_1.png" /></p>
+<p><img alt="svg" src="../01_modelling_files/01_modelling_5_1.svg" /></p>
 <h1 id="acquisition-geometry">Acquisition geometry</h1>
 <p>To fully define our problem setup we also need to define the source that injects the wave to model and the set of receiver locations at which to sample the wavefield. The source time signature will be modelled using a Ricker wavelet defined as</p>
 <div class="arithmatex">
@@ -221,7 +221,7 @@ Operator `padfunc` run in 0.01 s
 <span class="c1"># We can plot the time signature to see the wavelet</span>
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../01_modelling_files/01_modelling_9_0.png" /></p>
+<p><img alt="svg" src="../01_modelling_files/01_modelling_9_0.svg" /></p>
 <p>Similarly to our source object, we can now define our receiver geometry as a symbol of type <code>Receiver</code>. It is worth noting here that both utility classes, <code>RickerSource</code> and <code>Receiver</code> are thin wrappers around the Devito's <code>SparseTimeFunction</code> type, which encapsulates sparse point data and allows us to inject and interpolate values into and out of the computational grid. As we have already seen, both types provide a <code>.coordinates</code> property to define the position within the domain of all points encapsulated by that symbol. </p>
 <p>In this example we will position receivers at the same depth as the source, every <span class="arithmatex"><span class="MathJax_Preview">10m</span><script type="math/tex">10m</script></span> along the x axis. The <code>rec.data</code> property will be initialized, but left empty, as we will compute the receiver readings during the simulation.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
@@ -240,7 +240,7 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
               <span class="n">receiver</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[::</span><span class="mi">4</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
-<p><img alt="png" src="../01_modelling_files/01_modelling_11_0.png" /></p>
+<p><img alt="svg" src="../01_modelling_files/01_modelling_11_0.svg" /></p>
 <h1 id="finite-difference-discretization">Finite-difference discretization</h1>
 <p>Devito is a finite-difference DSL that solves the discretized wave-equation on a Cartesian grid. The finite-difference approximation is derived from Taylor expansions of the continuous field after removing the error term.</p>
 <h2 id="time-discretization">Time discretization</h2>
@@ -300,7 +300,9 @@ derivatives in the three dimensions:
 <span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
 
 <span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">stencil</span>
 </code></pre></div>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle u{\left(t + dt,x,y \right)} = \frac{- \frac{- \frac{2.0 u{\left(t,x,y \right)}}{dt^{2}} + \frac{u{\left(t - dt,x,y \right)}}{dt^{2}}}{\operatorname{vp}^{2}{\left(x,y \right)}} + \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} + \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\operatorname{damp}{\left(x,y \right)} u{\left(t,x,y \right)}}{dt}}{\frac{\operatorname{damp}{\left(x,y \right)}}{dt} + \frac{1}{dt^{2} \operatorname{vp}^{2}{\left(x,y \right)}}}</span><script type="math/tex">\displaystyle u{\left(t + dt,x,y \right)} = \frac{- \frac{- \frac{2.0 u{\left(t,x,y \right)}}{dt^{2}} + \frac{u{\left(t - dt,x,y \right)}}{dt^{2}}}{\operatorname{vp}^{2}{\left(x,y \right)}} + \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} + \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\operatorname{damp}{\left(x,y \right)} u{\left(t,x,y \right)}}{dt}}{\frac{\operatorname{damp}{\left(x,y \right)}}{dt} + \frac{1}{dt^{2} \operatorname{vp}^{2}{\left(x,y \right)}}}</script></span></p>
 <h1 id="source-injection-and-receiver-interpolation">Source injection and receiver interpolation</h1>
 <p>With a numerical scheme to solve the homogenous wave equation, we need to add the source to introduce seismic waves and to implement the measurement operator, and interpolation operator. This operation is linked to the discrete scheme and needs to be done at the proper time step. The semi-discretized in time wave equation with a source reads:</p>
 <div class="arithmatex">
@@ -339,18 +341,18 @@ On the receiver side, the problem is either as it only requires to record the da
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.04 s
+<pre><code>Operator `Kernel` ran in 0.01 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-                     PerfEntry(time=0.01473899999999997, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+                     PerfEntry(time=0.004936999999999981, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
                     (PerfKey(name='section1', rank=None),
-                     PerfEntry(time=0.009967999999999994, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+                     PerfEntry(time=2.600000000000001e-05, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
                     (PerfKey(name='section2', rank=None),
-                     PerfEntry(time=0.005742000000000012, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+                     PerfEntry(time=0.0007560000000000057, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <p>After running our operator kernel, the data associated with the receiver symbol <code>rec.data</code> has now been populated due to the interpolation expression we inserted into the operator. This allows us the visualize the shot record:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
@@ -358,7 +360,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
-<p><img alt="png" src="../01_modelling_files/01_modelling_22_0.png" /></p>
+<p><img alt="svg" src="../01_modelling_files/01_modelling_22_0.svg" /></p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="mi">370</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
               

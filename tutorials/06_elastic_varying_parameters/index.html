@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Mathias Louboutin" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Elastic modeling with varying parameters - SLIM's Devito examples</title>
+    <title>Elastic wave equation implementation on a staggered grid - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Elastic modeling with varying parameters";
-        var mkdocs_page_input_path = "tutorials/07_elastic_varying_parameters.md";
+        var mkdocs_page_name = "Elastic wave equation implementation on a staggered grid";
+        var mkdocs_page_input_path = "tutorials/06_elastic_varying_parameters.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -44,7 +44,7 @@
                 </li>
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
-              <ul class="current">
+              <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../01_modelling/">Acoustic modeling</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
@@ -59,11 +59,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Elastic modeling with varying parameters</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#explosive-source">Explosive source</a>
-    </li>
-    </ul>
+                  <li class="toctree-l1"><a class="" href="../07_elastic_varying_parameters.md">Elastic modeling with varying parameters</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
@@ -89,8 +85,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-          <li class="breadcrumb-item">Tutorials</li>
-      <li class="breadcrumb-item active">Elastic modeling with varying parameters</li>
+      <li class="breadcrumb-item active">Elastic wave equation implementation on a staggered grid</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -170,7 +165,7 @@ Operator `padfunc` run in 0.01 s
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_3_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_3_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Timestep size from Eq. 7 with V_p=6000. and dx=100</span>
 <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">2000.</span>
 <span class="n">dt</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span>
@@ -183,7 +178,7 @@ Operator `padfunc` run in 0.01 s
 
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_5_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_5_0.png" /></p>
 <h1 id="vectorial-form">Vectorial form</h1>
 <p>While conventional litterature writes the elastic wave-equation as a set of scalar PDEs, the higher level representation comes from Hooke's law and the equation of motion and writes as:</p>
 <div class="arithmatex">
@@ -251,8 +246,8 @@ Operator `padfunc` run in 0.01 s
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
               <span class="n">receiver</span><span class="o">=</span><span class="n">rec2</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[::</span><span class="mi">10</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_0.png" /></p>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_9_1.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_9_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_9_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Now let&#39;s try and create the staggered updates</span>
 <span class="c1"># Lame parameters</span>
 <span class="n">l</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">ro</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">b</span>
@@ -341,7 +336,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_17_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_17_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">_physical_parameters</span>
 </code></pre></div>
 <pre><code>['damp', 'lam', 'mu', 'b']
@@ -387,7 +382,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre></div>
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_22_1.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_22_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="c1"># OBC data of vx/vz</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
@@ -404,7 +399,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre></div>
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_23_1.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_23_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="p">),</span> <span class="mf">22.68</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">1.8299</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">3.8671</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
@@ -490,7 +485,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_27_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_27_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_m</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
@@ -528,17 +523,13 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre></div>
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../07_elastic_varying_parameters_files/07_elastic_varying_parameters_30_1.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_30_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">.410652</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">.210861</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </code></pre></div>
               
             </div>
           </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../06_elastic/" class="btn btn-neutral float-left" title="Elastic modeling with constant parameters"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../TLE_Forward/" class="btn btn-neutral float-right" title="Forward modeling">Next <span class="icon icon-circle-arrow-right"></span></a>
-    </div>
 
   <hr/>
 
@@ -565,10 +556,6 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
         </span>
     
     
-      <span><a href="../06_elastic/" style="color: #fcfcfc">&laquo; Previous</a></span>
-    
-    
-      <span><a href="../TLE_Forward/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

@@ -61,7 +61,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  <li class="toctree-l1"><a class="" href="../07_elastic_varying_parameters.md">Elastic modeling with varying parameters</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
@@ -102,7 +102,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic.acoustic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">RickerSource</span><span class="p">,</span> <span class="n">Receiver</span><span class="p">,</span> <span class="n">TimeAxis</span><span class="p">,</span> <span class="n">AcquisitionGeometry</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_log_level</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">benchmarks.user.tools.plotter</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinePlotter</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">cm</span>
@@ -152,7 +151,7 @@
 <div class="highlight"><pre><span></span><code><span class="c1"># Fine grid model</span>
 <span class="n">c0</span> <span class="o">=</span> <span class="mf">1.5</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ModelBench</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">c0</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">),</span> <span class="n">bcs</span><span class="o">=</span><span class="s2">&quot;damp&quot;</span><span class="p">,</span>
-                   <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">801</span><span class="p">,</span> <span class="mi">801</span><span class="p">),</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                   <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">801</span><span class="p">,</span> <span class="mi">801</span><span class="p">),</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># Source and receiver geometries</span>
 <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
@@ -246,10 +245,11 @@ r &= \sqrt{(x - x_{src})^2+(y - y_{src})^2}
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Analytic  data min,max,abs; </span><span class="si">%+.6e</span><span class="s2"> </span><span class="si">%+.6e</span><span class="s2"> </span><span class="si">%+.6e</span><span class="s2">&quot;</span> <span class="o">%</span> 
       <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">U_t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">U_t</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">U_t</span><span class="p">)))))</span>
 </code></pre></div>
-<pre><code>Numerical data min,max,abs; -5.349830e-03 +8.529913e-03 +8.529913e-03
+<pre><code>Numerical data min,max,abs; -5.349877e-03 +8.529867e-03 +8.529867e-03
 Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
 </code></pre>
-<div class="highlight"><pre><span></span><code><span class="c1"># Plot wavefield and source/rec position</span>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># Plot wavefield and source/rec position</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
 <span class="n">amax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ref_u</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">,:,:]))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ref_u</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">,:,:],</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">amax</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=+</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">amax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">)</span>
@@ -288,7 +288,7 @@ Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
 <span class="n">errors_plot</span> <span class="o">=</span> <span class="p">[(</span><span class="n">time</span><span class="p">,</span> <span class="n">U_t</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">error_time</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </code></pre></div>
-<pre><code>1.1274823771092997e-05
+<pre><code>1.1265077536675204e-05
 </code></pre>
 <h1 id="convergence-in-time">Convergence in time</h1>
 <p>We first show the convergence of the time discretization for a fix high-order spatial discretization (20<sup>th</sup> order).</p>
@@ -336,18 +336,19 @@ Analytic  data min,max,abs; -5.322232e-03 +8.543911e-03 +8.543911e-03
     <span class="n">errors_plot</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geometry</span><span class="o">.</span><span class="n">time_axis</span><span class="o">.</span><span class="n">time_values</span><span class="p">,</span> <span class="n">U_t1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_rec1_data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
 </code></pre></div>
 <pre><code>geometry.time_axes;  TimeAxis: start=0, stop=150.08, step=0.08, num=1877
-error for dt=0.0800 is 7.403730e-06 -- ratio dt^2,ratio err;     1.562500     1.522857
+error for dt=0.0800 is 7.419952e-06 -- ratio dt^2,ratio err;     1.562500     1.518214
 
 geometry.time_axes;  TimeAxis: start=0, stop=150, step=0.075, num=2001
-error for dt=0.0750 is 6.557951e-06 -- ratio dt^2,ratio err;     1.137778     1.128970
+error for dt=0.0750 is 6.582594e-06 -- ratio dt^2,ratio err;     1.137778     1.127208
 
 geometry.time_axes;  TimeAxis: start=0, stop=150, step=0.0625, num=2401
-error for dt=0.0625 is 4.647428e-06 -- ratio dt^2,ratio err;     1.440000     1.411093
+error for dt=0.0625 is 4.707689e-06 -- ratio dt^2,ratio err;     1.440000     1.398264
 
 geometry.time_axes;  TimeAxis: start=0, stop=150, step=0.05, num=3001
-error for dt=0.0500 is 3.026210e-06 -- ratio dt^2,ratio err;     1.562500     1.535726
+error for dt=0.0500 is 3.144849e-06 -- ratio dt^2,ratio err;     1.562500     1.496952
 </code></pre>
-<div class="highlight"><pre><span></span><code><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 <span class="n">theory</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">]</span>
 <span class="n">theory</span> <span class="o">=</span> <span class="p">[</span><span class="n">error_time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">th</span><span class="o">/</span><span class="n">theory</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">theory</span><span class="p">]</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">([</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dt</span><span class="p">],</span> <span class="n">error_time</span><span class="p">,</span> <span class="s1">&#39;-ob&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Numerical&#39;</span><span class="p">),</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
@@ -393,7 +394,7 @@ error for dt=0.0500 is 3.026210e-06 -- ratio dt^2,ratio err;     1.562500     1.
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence rate in time is: </span><span class="si">%.4f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.9</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">.1</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Convergence rate in time is: 1.8966
+<pre><code>Convergence rate in time is: 1.8403
 </code></pre>
 <h1 id="convergence-in-space">Convergence in space</h1>
 <p>We have a correct reference solution we can use for space discretization analysis</p>
@@ -439,23 +440,24 @@ error for dt=0.0500 is 3.026210e-06 -- ratio dt^2,ratio err;     1.562500     1.
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;starting space order </span><span class="si">%s</span><span class="s2"> with (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) grid points the error is </span><span class="si">%s</span><span class="s2"> for </span><span class="si">%s</span><span class="s2"> seconds runtime&quot;</span> <span class="o">%</span>
               <span class="p">(</span><span class="n">spc</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">nn</span><span class="p">,</span> <span class="n">errorl2</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">],</span> <span class="n">timing</span><span class="p">[</span><span class="n">ind_o</span><span class="p">,</span> <span class="n">ind_spc</span><span class="p">]))</span>
 </code></pre></div>
-<pre><code>starting space order 2 with (201, 201) grid points the error is 0.00376890390735257 for 0.11462100000000232 seconds runtime
-starting space order 2 with (161, 161) grid points the error is 0.005813084671822352 for 0.21845700000000504 seconds runtime
-starting space order 2 with (101, 101) grid points the error is 0.013011803756815122 for 0.032794999999999366 seconds runtime
-starting space order 4 with (201, 201) grid points the error is 0.0003403506132631831 for 0.0771300000000017 seconds runtime
-starting space order 4 with (161, 161) grid points the error is 0.0009417872279623022 for 0.07411399999999989 seconds runtime
-starting space order 4 with (101, 101) grid points the error is 0.006347337804825049 for 0.041079000000000594 seconds runtime
-starting space order 6 with (201, 201) grid points the error is 4.502665029531472e-05 for 0.08156900000000102 seconds runtime
-starting space order 6 with (161, 161) grid points the error is 0.00020691319261459238 for 0.07217499999999948 seconds runtime
-starting space order 6 with (101, 101) grid points the error is 0.0037431036246854867 for 0.04163999999999989 seconds runtime
-starting space order 8 with (201, 201) grid points the error is 4.1027806557032715e-05 for 0.10310699999999935 seconds runtime
-starting space order 8 with (161, 161) grid points the error is 7.128947664631205e-05 for 0.27055700000000116 seconds runtime
-starting space order 8 with (101, 101) grid points the error is 0.002573508922203025 for 0.04638000000000103 seconds runtime
-starting space order 10 with (201, 201) grid points the error is 4.4153663464842855e-05 for 0.1793579999999967 seconds runtime
-starting space order 10 with (161, 161) grid points the error is 4.9407728678141816e-05 for 0.21400200000000336 seconds runtime
-starting space order 10 with (101, 101) grid points the error is 0.0019485859969163928 for 0.08266899999999956 seconds runtime
+<pre><code>starting space order 2 with (201, 201) grid points the error is 0.0037682796393557704 for 0.0457010000000007 seconds runtime
+starting space order 2 with (161, 161) grid points the error is 0.005812459176798742 for 0.03416000000000019 seconds runtime
+starting space order 2 with (101, 101) grid points the error is 0.013011149171741464 for 0.021772000000000187 seconds runtime
+starting space order 4 with (201, 201) grid points the error is 0.0003400355796236851 for 0.05689200000000136 seconds runtime
+starting space order 4 with (161, 161) grid points the error is 0.0009414704657502754 for 0.04329800000000062 seconds runtime
+starting space order 4 with (101, 101) grid points the error is 0.00634686261474598 for 0.02876700000000098 seconds runtime
+starting space order 6 with (201, 201) grid points the error is 4.5490650020112585e-05 for 0.0717499999999997 seconds runtime
+starting space order 6 with (161, 161) grid points the error is 0.0002068743812472065 for 0.05577100000000119 seconds runtime
+starting space order 6 with (101, 101) grid points the error is 0.003742867493048817 for 0.033743000000000495 seconds runtime
+starting space order 8 with (201, 201) grid points the error is 4.1758297084644546e-05 for 0.09771699999999818 seconds runtime
+starting space order 8 with (161, 161) grid points the error is 7.16374344942322e-05 for 0.07235899999999956 seconds runtime
+starting space order 8 with (101, 101) grid points the error is 0.0025733941924053825 for 0.04383400000000102 seconds runtime
+starting space order 10 with (201, 201) grid points the error is 4.4878701635970325e-05 for 0.11604899999999843 seconds runtime
+starting space order 10 with (161, 161) grid points the error is 4.998218488476813e-05 for 0.08815700000000024 seconds runtime
+starting space order 10 with (101, 101) grid points the error is 0.0019484834503388081 for 0.054120000000001 seconds runtime
 </code></pre>
-<div class="highlight"><pre><span></span><code><span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
@@ -473,7 +475,8 @@ starting space order 10 with (101, 101) grid points the error is 0.0019485859969
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <p><img alt="png" src="../accuracy_files/accuracy_24_0.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">stylel</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-^k&#39;</span><span class="p">,</span> <span class="s1">&#39;-^b&#39;</span><span class="p">,</span> <span class="s1">&#39;-^r&#39;</span><span class="p">,</span> <span class="s1">&#39;-^g&#39;</span><span class="p">,</span> <span class="s1">&#39;-^c&#39;</span><span class="p">)</span>
 <span class="n">style2</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;--k&#39;</span><span class="p">,</span> <span class="s1">&#39;--b&#39;</span><span class="p">,</span> <span class="s1">&#39;--r&#39;</span><span class="p">,</span> <span class="s1">&#39;--g&#39;</span><span class="p">,</span> <span class="s1">&#39;--c&#39;</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
@@ -504,11 +507,11 @@ starting space order 10 with (101, 101) grid points the error is 0.0019485859969
     <span class="k">if</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">4</span><span class="p">:</span>
         <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">pf</span><span class="p">,</span> <span class="n">orders</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">.2</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Convergence rate for order 2 is 1.7762872863258858
-Convergence rate for order 4 is 4.196113606027213
-Convergence rate for order 6 is 6.343794127096714
-Convergence rate for order 8 is 7.630317382624955
-Convergence rate for order 10 is 5.827482875857245
+<pre><code>Convergence rate for order 2 is 1.7764468171576273
+Convergence rate for order 4 is 4.197237865060114
+Convergence rate for order 6 is 6.331251845625753
+Convergence rate for order 8 is 7.619862944985301
+Convergence rate for order 10 is 5.803734097693632
 </code></pre>
               
             </div>

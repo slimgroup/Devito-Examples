@@ -69,7 +69,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../06_elastic/">Elastic modeling with constant parameters</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../07_elastic_varying_parameters/">Elastic modeling with varying parameters</a>
+                  <li class="toctree-l1"><a class="" href="../07_elastic_varying_parameters.md">Elastic modeling with varying parameters</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
@@ -189,7 +189,8 @@
 <span class="n">geometry</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <p><img alt="png" src="../03_fwi_files/03_fwi_8_0.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Plot acquisition geometry</span>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># Plot acquisition geometry</span>
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">src_positions</span><span class="p">,</span>
               <span class="n">receiver</span><span class="o">=</span><span class="n">geometry</span><span class="o">.</span><span class="n">rec_positions</span><span class="p">[::</span><span class="mi">4</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
@@ -352,7 +353,7 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
 <p><img alt="png" src="../03_fwi_files/03_fwi_21_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_21_2.png" /></p>
 <p>We see that the gradient and the true perturbation have the same sign, therefore, with an appropriate scaling factor, we will update the model in the correct direction.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sympy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
 <span class="c1"># Define bounding box constraints on the solution.</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">update_with_box</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.5</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -393,11 +394,11 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
     <span class="c1"># Log the progress made</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Objective value is </span><span class="si">%f</span><span class="s1"> at iteration </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
 </code></pre></div>
-<pre><code>Objective value is 57285.103209 at iteration 1
-Objective value is 35766.902505 at iteration 2
-Objective value is 21002.932951 at iteration 3
-Objective value is 11548.234192 at iteration 4
-Objective value is 5786.186187 at iteration 5
+<pre><code>Objective value is 39292.605833 at iteration 1
+Objective value is 24506.628229 at iteration 2
+Objective value is 14386.573665 at iteration 3
+Objective value is 7907.616850 at iteration 4
+Objective value is 3960.106497 at iteration 5
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 
