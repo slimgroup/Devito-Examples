@@ -5,14 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Mathias Louboutin" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Elastic wave equation implementation on a staggered grid - SLIM's Devito examples</title>
+    <title>06 - Elastic wave equation implementation on a staggered grid - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Elastic wave equation implementation on a staggered grid";
+        var mkdocs_page_name = "06 - Elastic wave equation implementation on a staggered grid";
         var mkdocs_page_input_path = "tutorials/06_elastic_varying_parameters.md";
         var mkdocs_page_url = null;
       </script>
@@ -85,7 +85,7 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
-      <li class="breadcrumb-item active">Elastic wave equation implementation on a staggered grid</li>
+      <li class="breadcrumb-item active">06 - Elastic wave equation implementation on a staggered grid</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -94,7 +94,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="elastic-wave-equation-implementation-on-a-staggered-grid">Elastic wave equation implementation on a staggered grid</h1>
+                <h1 id="06-elastic-wave-equation-implementation-on-a-staggered-grid">06 - Elastic wave equation implementation on a staggered grid</h1>
 <p>This second elastic tutorial extends the previous constant parameter implementation to varying parameters (Lame parameters) and takes advantage of the Tensorial capabilities of Devito to write the elastic wave equation following its mathematical definition. The staggering is automated via the TensorFunction API.</p>
 <h2 id="explosive-source">Explosive source</h2>
 <p>We will first attempt to replicate the explosive source test case described in [1], Figure 4. We start by defining the source signature <span class="arithmatex"><span class="MathJax_Preview">g(t)</span><script type="math/tex">g(t)</script></span>, the derivative of a Gaussian pulse, given by Eq 4:</p>
@@ -125,10 +125,9 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">demo_model</span><span class="p">(</span><span class="n">preset</span><span class="o">=</span><span class="s1">&#39;layers-elastic&#39;</span><span class="p">,</span> <span class="n">nlayers</span><span class="o">=</span><span class="n">nlayers</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">301</span><span class="p">,</span> <span class="mi">301</span><span class="p">),</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">),</span>
                    <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `initdamp` run in 0.01 s
-Operator `padfunc` run in 0.01 s
-Operator `padfunc` run in 0.01 s
-Operator `padfunc` run in 0.01 s
+<pre><code>NUMA domain count autodetection failed
+Operator `initdamp` ran in 0.01 s
+Operator `initdamp` ran in 0.01 s
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="n">aspect_ratio</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -252,46 +251,42 @@ Operator `padfunc` run in 0.01 s
 <span class="c1"># Lame parameters</span>
 <span class="n">l</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">ro</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">b</span>
 
-<span class="c1"># fdelmodc reference implementation</span>
-<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">+</span> <span class="n">s</span><span class="o">*</span><span class="n">ro</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">)))</span>
-<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>  <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span>  <span class="p">(</span><span class="n">tau</span> <span class="o">+</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span>
-                                                <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">))))</span>
+<span class="c1"># First order elastic wave equation</span>
+<span class="n">pde_v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+<span class="n">pde_tau</span> <span class="o">=</span> <span class="n">tau</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">inner</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="c1"># Time update</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_v</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>  <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_tau</span><span class="p">,</span> <span class="n">tau</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="n">v</span><span class="o">.</span><span class="n">_time_order</span>
-</code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle 1</span><script type="math/tex">\displaystyle 1</script></span></p>
-<div class="highlight"><pre><span></span><code><span class="n">ro</span><span class="o">.</span><span class="n">_eval_at</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">evaluate</span>
-</code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle 0.5 b{\left(x,y \right)} + 0.5 b{\left(x + h_{x},y \right)}</span><script type="math/tex">\displaystyle 0.5 b{\left(x,y \right)} + 0.5 b{\left(x + h_{x},y \right)}</script></span></p>
 <p>We can now see that both the particle velocities and stress equations are vectorial and tensorial equations. Devito takes care of the discretization and staggered grids automatically for these types of object.</p>
 <div class="highlight"><pre><span></span><code><span class="n">u_v</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)}\\\operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\left(dt \left(\frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,y \right)} + \frac{\partial}{\partial y} \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) b{\left(x,y \right)} + \operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},y \right)}\right) \operatorname{damp}{\left(x,y \right)}\\\left(dt \left(\frac{\partial}{\partial x} \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)} + \frac{\partial}{\partial y} \operatorname{t_{yy}}{\left(t,x,y \right)}\right) b{\left(x,y \right)} + \operatorname{v_{y}}{\left(t,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)}\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)}\\\operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\end{matrix}\right] = \left[\begin{matrix}\left(dt \left(\frac{\partial}{\partial x} \operatorname{t_{xx}}{\left(t,x,y \right)} + \frac{\partial}{\partial y} \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) b{\left(x,y \right)} + \operatorname{v_{x}}{\left(t,x + \frac{h_{x}}{2},y \right)}\right) \operatorname{damp}{\left(x,y \right)}\\\left(dt \left(\frac{\partial}{\partial x} \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)} + \frac{\partial}{\partial y} \operatorname{t_{yy}}{\left(t,x,y \right)}\right) b{\left(x,y \right)} + \operatorname{v_{y}}{\left(t,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)}\end{matrix}\right]</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}v_x(t + dt, x + h_x/2, y)\\v_y(t + dt, x, y + h_y/2)\end{matrix}\right] = \left[\begin{matrix}dt \left(\left(\frac{\partial}{\partial x} t_xx(t, x, y) + \frac{\partial}{\partial y} t_xy(t, x + h_x/2, y + h_y/2)\right) b(x, y) + \frac{v_x(t, x + h_x/2, y)}{dt}\right) damp(x, y)\\dt \left(\left(\frac{\partial}{\partial x} t_xy(t, x + h_x/2, y + h_y/2) + \frac{\partial}{\partial y} t_yy(t, x, y)\right) b(x, y) + \frac{v_y(t, x, y + h_y/2)}{dt}\right) damp(x, y)\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}v_x(t + dt, x + h_x/2, y)\\v_y(t + dt, x, y + h_y/2)\end{matrix}\right] = \left[\begin{matrix}dt \left(\left(\frac{\partial}{\partial x} t_xx(t, x, y) + \frac{\partial}{\partial y} t_xy(t, x + h_x/2, y + h_y/2)\right) b(x, y) + \frac{v_x(t, x + h_x/2, y)}{dt}\right) damp(x, y)\\dt \left(\left(\frac{\partial}{\partial x} t_xy(t, x + h_x/2, y + h_y/2) + \frac{\partial}{\partial y} t_yy(t, x, y)\right) b(x, y) + \frac{v_y(t, x, y + h_y/2)}{dt}\right) damp(x, y)\end{matrix}\right]</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="n">u_t</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}\operatorname{t_{xx}}{\left(t + dt,x,y \right)} &amp; \operatorname{t_{xy}}{\left(t + dt,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\\\operatorname{t_{xy}}{\left(t + dt,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)} &amp; \operatorname{t_{yy}}{\left(t + dt,x,y \right)}\end{matrix}\right] = \left[\begin{matrix}\left(dt \left(\left(\frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{lam}{\left(x,y \right)} + 2 \mu{\left(x,y \right)} \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)}\right) + \operatorname{t_{xx}}{\left(t,x,y \right)}\right) \operatorname{damp}{\left(x,y \right)} &amp; \left(dt \left(\frac{\partial}{\partial y} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial x} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \mu{\left(x,y \right)} + \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)}\\\left(dt \left(\frac{\partial}{\partial y} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial x} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \mu{\left(x,y \right)} + \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)} &amp; \left(dt \left(\left(\frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{lam}{\left(x,y \right)} + 2 \mu{\left(x,y \right)} \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) + \operatorname{t_{yy}}{\left(t,x,y \right)}\right) \operatorname{damp}{\left(x,y \right)}\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}\operatorname{t_{xx}}{\left(t + dt,x,y \right)} & \operatorname{t_{xy}}{\left(t + dt,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\\\operatorname{t_{xy}}{\left(t + dt,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)} & \operatorname{t_{yy}}{\left(t + dt,x,y \right)}\end{matrix}\right] = \left[\begin{matrix}\left(dt \left(\left(\frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{lam}{\left(x,y \right)} + 2 \mu{\left(x,y \right)} \frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)}\right) + \operatorname{t_{xx}}{\left(t,x,y \right)}\right) \operatorname{damp}{\left(x,y \right)} & \left(dt \left(\frac{\partial}{\partial y} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial x} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \mu{\left(x,y \right)} + \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)}\\\left(dt \left(\frac{\partial}{\partial y} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial x} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \mu{\left(x,y \right)} + \operatorname{t_{xy}}{\left(t,x + \frac{h_{x}}{2},y + \frac{h_{y}}{2} \right)}\right) \operatorname{damp}{\left(x,y \right)} & \left(dt \left(\left(\frac{\partial}{\partial x} \operatorname{v_{x}}{\left(t + dt,x + \frac{h_{x}}{2},y \right)} + \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) \operatorname{lam}{\left(x,y \right)} + 2 \mu{\left(x,y \right)} \frac{\partial}{\partial y} \operatorname{v_{y}}{\left(t + dt,x,y + \frac{h_{y}}{2} \right)}\right) + \operatorname{t_{yy}}{\left(t,x,y \right)}\right) \operatorname{damp}{\left(x,y \right)}\end{matrix}\right]</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left[\begin{matrix}t_xx(t + dt, x, y) &amp; t_xy(t + dt, x + h_x/2, y + h_y/2)\\t_xy(t + dt, x + h_x/2, y + h_y/2) &amp; t_yy(t + dt, x, y)\end{matrix}\right] = \left[\begin{matrix}dt \left(\left(\frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial y} v_y(t + dt, x, y + h_y/2)\right) lam(x, y) + 2 mu(x, y) \frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, y) + \frac{t_xx(t, x, y)}{dt}\right) damp(x, y) &amp; dt \left(\left(\frac{\partial}{\partial y} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial x} v_y(t + dt, x, y + h_y/2)\right) mu(x, y) + \frac{t_xy(t, x + h_x/2, y + h_y/2)}{dt}\right) damp(x, y)\\dt \left(\left(\frac{\partial}{\partial y} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial x} v_y(t + dt, x, y + h_y/2)\right) mu(x, y) + \frac{t_xy(t, x + h_x/2, y + h_y/2)}{dt}\right) damp(x, y) &amp; dt \left(\left(\frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial y} v_y(t + dt, x, y + h_y/2)\right) lam(x, y) + 2 mu(x, y) \frac{\partial}{\partial y} v_y(t + dt, x, y + h_y/2) + \frac{t_yy(t, x, y)}{dt}\right) damp(x, y)\end{matrix}\right]</span><script type="math/tex">\displaystyle \left[\begin{matrix}t_xx(t + dt, x, y) & t_xy(t + dt, x + h_x/2, y + h_y/2)\\t_xy(t + dt, x + h_x/2, y + h_y/2) & t_yy(t + dt, x, y)\end{matrix}\right] = \left[\begin{matrix}dt \left(\left(\frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial y} v_y(t + dt, x, y + h_y/2)\right) lam(x, y) + 2 mu(x, y) \frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, y) + \frac{t_xx(t, x, y)}{dt}\right) damp(x, y) & dt \left(\left(\frac{\partial}{\partial y} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial x} v_y(t + dt, x, y + h_y/2)\right) mu(x, y) + \frac{t_xy(t, x + h_x/2, y + h_y/2)}{dt}\right) damp(x, y)\\dt \left(\left(\frac{\partial}{\partial y} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial x} v_y(t + dt, x, y + h_y/2)\right) mu(x, y) + \frac{t_xy(t, x + h_x/2, y + h_y/2)}{dt}\right) damp(x, y) & dt \left(\left(\frac{\partial}{\partial x} v_x(t + dt, x + h_x/2, y) + \frac{\partial}{\partial y} v_y(t + dt, x, y + h_y/2)\right) lam(x, y) + 2 mu(x, y) \frac{\partial}{\partial y} v_y(t + dt, x, y + h_y/2) + \frac{t_yy(t, x, y)}{dt}\right) damp(x, y)\end{matrix}\right]</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Partial ru for 1.2sec to plot the wavefield</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_M</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.75 s
+<pre><code>Operator `Kernel` ran in 0.24 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-  PerfEntry(time=0.6419339999999998, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.20876399999999995, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section1', rank=None),
-  PerfEntry(time=0.02470599999999997, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.005465999999999986, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section2', rank=None),
-  PerfEntry(time=0.029838999999999952, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.006060000000000051, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section3', rank=None),
-  PerfEntry(time=0.026982999999999972, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.005819000000000025, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section4', rank=None),
-  PerfEntry(time=0.018986000000000017, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+  PerfEntry(time=0.005770000000000034, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="n">scale</span> <span class="o">=</span> <span class="mf">.5</span><span class="o">*</span><span class="mf">1e-3</span>
@@ -336,31 +331,31 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_17_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_15_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">_physical_parameters</span>
 </code></pre></div>
-<pre><code>['damp', 'lam', 'mu', 'b']
+<pre><code>{'b', 'damp', 'lam', 'mu'}
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Full run for the data</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_m</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.89 s
+<pre><code>Operator `Kernel` ran in 0.24 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-  PerfEntry(time=0.7226290000000001, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.20832500000000054, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section1', rank=None),
-  PerfEntry(time=0.048404, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.0051239999999999775, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section2', rank=None),
-  PerfEntry(time=0.038736, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.006448000000000041, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section3', rank=None),
-  PerfEntry(time=0.05278400000000011, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.005776000000000028, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section4', rank=None),
-  PerfEntry(time=0.02340000000000003, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+  PerfEntry(time=0.005686000000000039, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1"># Data on a standard 2ms tim axis</span>
 <span class="n">rec_plot</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
@@ -382,7 +377,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre></div>
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_22_1.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_20_1.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="c1"># OBC data of vx/vz</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
@@ -399,13 +394,14 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre></div>
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_23_1.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="p">),</span> <span class="mf">22.68</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">1.8299</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">3.8671</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_21_1.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="p">),</span> <span class="mf">23.356</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">2.402</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">2.855</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="c1"># Now that looks pretty! But let&#39;s do it again with a 2nd order in time</span>
-<span class="n">so</span> <span class="o">=</span> <span class="mi">8</span>
+<h1 id="second-order-in-time">Second order in time</h1>
+<p>Now that looks pretty! But let's do it again with a 2<sup>nd</sup> order in time</p>
+<div class="highlight"><pre><span></span><code><span class="n">so</span> <span class="o">=</span> <span class="mi">8</span>
 <span class="n">v2</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v2&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">tau0</span> <span class="o">=</span> <span class="n">TensorFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;t0&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">)</span>
 <span class="c1"># The source injection term</span>
@@ -413,34 +409,37 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 <span class="n">src_zz</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">tau0</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">expr</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
 
 <span class="n">s</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">time_dim</span><span class="o">.</span><span class="n">spacing</span>
-<span class="c1"># fdelmodc reference implementation</span>
-<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v2</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">v2</span><span class="o">.</span><span class="n">backward</span> <span class="o">+</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">ro</span><span class="o">*</span><span class="n">div</span><span class="p">(</span><span class="n">tau0</span><span class="p">)))</span>
-<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau0</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="p">(</span><span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)))</span>
 
+<span class="c1"># Second order elastic wave equation</span>
+<span class="n">pde_v2</span> <span class="o">=</span> <span class="n">v2</span><span class="o">.</span><span class="n">dt2</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">div</span><span class="p">(</span><span class="n">tau0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span><span class="p">)</span> <span class="o">*</span> <span class="n">v2</span><span class="o">.</span><span class="n">dt</span>
 
-<span class="c1"># rec_term = rec.interpolate(expr=tau[0, 0] + tau[1, 1])</span>
-<span class="n">rec_term</span> <span class="o">=</span> <span class="n">rec2</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">v2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="n">rec_term</span> <span class="o">+=</span> <span class="n">rec3</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">v2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-<span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">)</span>
+<span class="c1"># Time update</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_v2</span><span class="p">,</span> <span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="c1"># The stress equation isn&#39;t time dependent so we don&#39;t need solve.</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau0</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="p">(</span><span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad</span><span class="p">(</span><span class="n">v2</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">inner</span><span class="o">=</span><span class="kc">False</span><span class="p">))))</span>
+
+<span class="n">rec_term2</span> <span class="o">=</span> <span class="n">rec2</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">v2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">rec_term2</span> <span class="o">+=</span> <span class="n">rec3</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">v2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">src_zz</span> <span class="o">+</span> <span class="n">rec_term2</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Partial ru for 1.2sec to plot the wavefield</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_M</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.69 s
+<pre><code>Operator `Kernel` ran in 0.23 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-  PerfEntry(time=0.6159669999999996, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.20099499999999973, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section1', rank=None),
-  PerfEntry(time=0.0222800000000001, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.006075000000000012, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section2', rank=None),
-  PerfEntry(time=0.02982499999999997, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.008102999999999957, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section3', rank=None),
-  PerfEntry(time=0.018444000000000012, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+  PerfEntry(time=0.00790399999999998, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 <span class="n">scale</span> <span class="o">=</span> <span class="mf">1e-4</span>
@@ -485,24 +484,24 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 
 <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_27_0.png" /></p>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_26_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">,</span> <span class="n">time_m</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">))</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` run in 0.65 s
+<pre><code>Operator `Kernel` ran in 0.22 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-  PerfEntry(time=0.5681579999999993, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.19751699999999936, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section1', rank=None),
-  PerfEntry(time=0.02465800000000001, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.00582200000000001, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section2', rank=None),
-  PerfEntry(time=0.028956999999999948, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+  PerfEntry(time=0.007948999999999973, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
  (PerfKey(name='section3', rank=None),
-  PerfEntry(time=0.018367000000000026, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+  PerfEntry(time=0.007753999999999983, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="n">rec2_plot2</span> <span class="o">=</span> <span class="n">rec2</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
 <span class="n">rec3_plot2</span> <span class="o">=</span> <span class="n">rec3</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
@@ -523,9 +522,109 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre></div>
 <pre><code>Text(0.5, 0, 'Receiver position (m)')
 </code></pre>
-<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_30_1.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">.410652</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">.210861</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_29_1.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">.3209</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">.26486</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</code></pre></div>
+<h1 id="rotated-staggered-grid">Rotated staggered grid</h1>
+<p>Now let's use the rotated staggered grid to avoid dispersion and instabilities. This method is usually used for TTI elastic modeling but we show it here for a simplified isotropic case</p>
+<h2 id="simple-example-of-rsfd">Simple example of RSFD</h2>
+<p>We first show the stencil generated by the RSFD method compared to the standard staggered grid method</p>
+<div class="highlight"><pre><span></span><code><span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">NODE</span><span class="p">)</span>
+<span class="n">dfdx</span><span class="p">,</span> <span class="n">dfdxrsfd</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">dx</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">dx45</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">dfdx</span><span class="o">.</span><span class="n">evaluate</span>
+</code></pre></div>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \frac{f(x, y)}{h_{x}} - \frac{f(x - h_x, y)}{h_{x}}</span><script type="math/tex">\displaystyle \frac{f(x, y)}{h_{x}} - \frac{f(x - h_x, y)}{h_{x}}</script></span></p>
+<div class="highlight"><pre><span></span><code><span class="n">dfdxrsfd</span><span class="o">.</span><span class="n">evaluate</span>
+</code></pre></div>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \left(- \frac{f(x - h_x, y - h_y)}{4 h_{x}} + \frac{f(x + h_x, y + h_y)}{4 h_{x}}\right) + \left(- \frac{f(x - h_x, y + h_y)}{4 h_{x}} + \frac{f(x + h_x, y - h_y)}{4 h_{x}}\right)</span><script type="math/tex">\displaystyle \left(- \frac{f(x - h_x, y - h_y)}{4 h_{x}} + \frac{f(x + h_x, y + h_y)}{4 h_{x}}\right) + \left(- \frac{f(x - h_x, y + h_y)}{4 h_{x}} + \frac{f(x + h_x, y - h_y)}{4 h_{x}}\right)</script></span></p>
+<h2 id="elastic-modeling">Elastic modeling</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">div45</span><span class="p">,</span> <span class="n">grad45</span>
+
+<span class="n">all_node</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NODE</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dim</span><span class="p">)]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dim</span><span class="p">)]</span>
+<span class="n">all_vert</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dimensions</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">dim</span><span class="p">)]</span> 
+
+<span class="n">so</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">v_rsfd</span> <span class="o">=</span> <span class="n">VectorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;vr&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">all_vert</span><span class="p">)</span>
+<span class="n">tau_rsfd</span> <span class="o">=</span> <span class="n">TensorTimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;tr&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="n">so</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">staggered</span><span class="o">=</span><span class="n">all_node</span><span class="p">)</span>
+
+<span class="c1"># The source injection term</span>
+<span class="n">src_xx</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="n">v_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span> <span class="n">expr</span><span class="o">=</span><span class="n">s</span><span class="o">*</span><span class="n">src</span><span class="p">)</span>
+
+<span class="c1"># First order elastic wave equation</span>
+<span class="n">pde_v</span> <span class="o">=</span> <span class="n">v_rsfd</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">ro</span> <span class="o">*</span> <span class="n">div45</span><span class="p">(</span><span class="n">tau_rsfd</span><span class="p">)</span>
+<span class="n">pde_tau</span> <span class="o">=</span> <span class="n">tau_rsfd</span><span class="o">.</span><span class="n">dt</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">diag</span><span class="p">(</span><span class="n">div45</span><span class="p">(</span><span class="n">v_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">grad45</span><span class="p">(</span><span class="n">v_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad45</span><span class="p">(</span><span class="n">v_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">inner</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="c1"># Time update</span>
+<span class="n">u_v</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">v_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_v</span><span class="p">,</span> <span class="n">v_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+<span class="n">u_t</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">tau_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>  <span class="n">model</span><span class="o">.</span><span class="n">damp</span> <span class="o">*</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde_tau</span><span class="p">,</span> <span class="n">tau_rsfd</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
+
+<span class="c1"># Receiver</span>
+<span class="n">rec_term</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">tau_rsfd</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">tau_rsfd</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">rec_term</span> <span class="o">+=</span> <span class="n">rec2</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">v_rsfd</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">rec_term</span> <span class="o">+=</span> <span class="n">rec3</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">expr</span><span class="o">=</span><span class="n">v_rsfd</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">u_v</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">u_t</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_xx</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<span class="n">op</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">)</span>
+</code></pre></div>
+<pre><code>Operator `Kernel` ran in 0.51 s
+
+
+
+
+
+PerformanceSummary([(PerfKey(name='section0', rank=None),
+  PerfEntry(time=0.44289700000000065, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section1', rank=None),
+  PerfEntry(time=0.011913000000000059, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section2', rank=None),
+  PerfEntry(time=0.016178000000000047, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section3', rank=None),
+  PerfEntry(time=0.01592700000000007, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+ (PerfKey(name='section4', rank=None),
+  PerfEntry(time=0.015612000000000046, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+</code></pre>
+<div class="highlight"><pre><span></span><code><span class="n">rec_plot2</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
+<span class="n">rec2_plot2</span> <span class="o">=</span> <span class="n">rec2</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
+<span class="n">rec3_plot2</span> <span class="o">=</span> <span class="n">rec3</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">1001</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
+<span class="c1"># Pressure (txx + tzz) data at sea surface</span>
+<span class="n">extent</span> <span class="o">=</span> <span class="p">[</span><span class="n">rec_plot</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rec_plot</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mf">1e-3</span><span class="o">*</span><span class="n">tn</span><span class="p">,</span> <span class="n">t0</span><span class="p">]</span>
+<span class="n">aspect</span> <span class="o">=</span> <span class="n">rec_plot</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="mf">1e-3</span><span class="o">*</span><span class="n">tn</span><span class="p">)</span><span class="o">/</span><span class="mf">.5</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">scale_for_plot</span><span class="p">,</span> <span class="n">rec_plot</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">.01</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">.01</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">,</span>
+           <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;lanczos&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="n">aspect</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Receiver position (m)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</code></pre></div>
+<pre><code>Text(0.5, 0, 'Receiver position (m)')
+</code></pre>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_40_1.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
+<span class="c1"># OBC data of vx/vz</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">rec2_plot</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">,</span>
+           <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;lanczos&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="n">aspect</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Receiver position (m)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">rec3_plot</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;seismic&quot;</span><span class="p">,</span>
+           <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;lanczos&#39;</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="n">aspect</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Time (s)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Receiver position (m)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</code></pre></div>
+<pre><code>Text(0.5, 0, 'Receiver position (m)')
+</code></pre>
+<p><img alt="png" src="../06_elastic_varying_parameters_files/06_elastic_varying_parameters_41_1.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="p">),</span> <span class="mf">30.49</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec2</span><span class="p">),</span> <span class="mf">3.5316</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">rec3</span><span class="p">),</span> <span class="mf">4.6891</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </code></pre></div>
               
             </div>
