@@ -8,7 +8,7 @@
     <title>Acoustic modeling - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
@@ -17,12 +17,11 @@
         var mkdocs_page_url = null;
       </script>
     
-    <script src="../../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -46,7 +45,7 @@
               </ul>
               <p class="caption"><span class="caption-text">Tutorials</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic modeling</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Acoustic modeling</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#modelling-workflow">Modelling workflow</a>
     </li>
@@ -91,9 +90,9 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Tutorials &raquo;</li>
-      <li>Acoustic modeling</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+      <li class="breadcrumb-item active">Acoustic modeling</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -153,7 +152,7 @@ The boundary conditions are Dirichlet conditions:
 <p>We describe here a step by step setup of seismic modelling with Devito in a simple 2D case. We will create a physical model of our domain and define a single source and an according set of receivers to model for the forward model. But first, we initialize some basic utilities.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Adding ignore due to (probably an np notebook magic) bug</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </code></pre></div>
 <h2 id="define-the-physical-problem">Define the physical problem</h2>
@@ -164,7 +163,7 @@ The boundary conditions are Dirichlet conditions:
 </ul>
 <p>We will create a simple velocity model here by hand for demonstration purposes. This model essentially consists of two layers, each with a different velocity: <span class="arithmatex"><span class="MathJax_Preview">1.5km/s</span><script type="math/tex">1.5km/s</script></span> in the top layer and <span class="arithmatex"><span class="MathJax_Preview">2.5km/s</span><script type="math/tex">2.5km/s</script></span> in the bottom layer. We will use this simple model a lot in the following tutorials, so we will rely on a utility function to create it again later.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">plot_velocity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">plot_velocity</span>
 
 <span class="c1"># Define a physical size</span>
 <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># Number of grid point (nx, nz)</span>
@@ -199,7 +198,7 @@ Operator `padfunc` run in 0.01 s
 \end{equation}</script>
 </div>
 <p>To fully define the source signature we first need to define the time duration for our model and the timestep size, which is dictated by the CFL condition and our grid spacing. Luckily, our <code>Model</code> utility provides us with the critical timestep size, so we can fully discretize our model time axis as an array:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">TimeAxis</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeAxis</span>
 
 <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>  <span class="c1"># Simulation starts a t=0</span>
 <span class="n">tn</span> <span class="o">=</span> <span class="mf">1000.</span>  <span class="c1"># Simulation last 1 second (1000 ms)</span>
@@ -209,7 +208,7 @@ Operator `padfunc` run in 0.01 s
 </code></pre></div>
 <p>The source is positioned at a <span class="arithmatex"><span class="MathJax_Preview">20m</span><script type="math/tex">20m</script></span> depth and at the middle of the <span class="arithmatex"><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> axis (<span class="arithmatex"><span class="MathJax_Preview">x_{src}=500m</span><script type="math/tex">x_{src}=500m</script></span>), with a peak wavelet frequency of <span class="arithmatex"><span class="MathJax_Preview">10Hz</span><script type="math/tex">10Hz</script></span>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">RickerSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RickerSource</span>
 
 <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.010</span>  <span class="c1"># Source peak frequency is 10Hz (0.010 kHz)</span>
 <span class="n">src</span> <span class="o">=</span> <span class="n">RickerSource</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span>
@@ -226,7 +225,7 @@ Operator `padfunc` run in 0.01 s
 <p>Similarly to our source object, we can now define our receiver geometry as a symbol of type <code>Receiver</code>. It is worth noting here that both utility classes, <code>RickerSource</code> and <code>Receiver</code> are thin wrappers around the Devito's <code>SparseTimeFunction</code> type, which encapsulates sparse point data and allows us to inject and interpolate values into and out of the computational grid. As we have already seen, both types provide a <code>.coordinates</code> property to define the position within the domain of all points encapsulated by that symbol. </p>
 <p>In this example we will position receivers at the same depth as the source, every <span class="arithmatex"><span class="MathJax_Preview">10m</span><script type="math/tex">10m</script></span> along the x axis. The <code>rec.data</code> property will be initialized, but left empty, as we will compute the receiver readings during the simulation.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Receiver</span>
 
 <span class="c1"># Create symbol for 101 receivers</span>
 <span class="n">rec</span> <span class="o">=</span> <span class="n">Receiver</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;rec&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">npoint</span><span class="o">=</span><span class="mi">101</span><span class="p">,</span> <span class="n">time_range</span><span class="o">=</span><span class="n">time_range</span><span class="p">)</span>
@@ -283,7 +282,7 @@ derivatives in the three dimensions:
 <div class="highlight"><pre><span></span><code><span class="c1"># In order to represent the wavefield u and the square slowness we need symbolic objects </span>
 <span class="c1"># corresponding to time-space-varying field (u, TimeFunction) and </span>
 <span class="c1"># space-varying field (m, Function)</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeFunction</span>
 
 <span class="c1"># Define the wavefield with the size of the model and the time dimension</span>
 <span class="n">u</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -298,7 +297,7 @@ derivatives in the three dimensions:
 <div class="highlight"><pre><span></span><code><span class="c1"># This discrete PDE can be solved in a time-marching way updating u(t+dt) from the previous time step</span>
 <span class="c1"># Devito as a shortcut for u(t+dt) which is u.forward. We can then rewrite the PDE as </span>
 <span class="c1"># a time marching updating equation known as a stencil using customized SymPy functions</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
 
 <span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 </code></pre></div>
@@ -332,7 +331,7 @@ On the receiver side, the problem is either as it only requires to record the da
 * <strong>DLE:</strong> The Devito Loop Engine will perform various loop-level optimizations to improve runtime performance.</p>
 <p><strong>Note</strong>: The argument <code>subs=model.spacing_map</code> causes the operator to substitute values for our current grid spacing into the expressions before code generation. This reduces the number of floating point operations executed by the kernel by pre-evaluating certain coefficients.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_term</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)</span>
 </code></pre></div>
@@ -355,7 +354,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 </code></pre>
 <p>After running our operator kernel, the data associated with the receiver symbol <code>rec.data</code> has now been populated due to the interpolation expression we inserted into the operator. This allows us the visualize the shot record:</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
@@ -402,15 +401,16 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
     
   </span>
 </div>
-    <script>var base_url = '../..';</script>
-    <script src="../../js/theme_extra.js" defer></script>
-    <script src="../../js/theme.js" defer></script>
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
-      <script src="../../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>

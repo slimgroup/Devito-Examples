@@ -8,7 +8,7 @@
     <title>Acoustic RTM - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
@@ -17,12 +17,11 @@
         var mkdocs_page_url = null;
       </script>
     
-    <script src="../../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -50,7 +49,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../accuracy/">Convergence analysis for the acoustic wave-equation</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic RTM</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Acoustic RTM</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#imaging-requirement">Imaging requirement</a>
     </li>
@@ -95,9 +94,9 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Tutorials &raquo;</li>
-      <li>Acoustic RTM</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+      <li class="breadcrumb-item active">Acoustic RTM</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -123,17 +122,17 @@
 <h2 id="notes-on-the-operators">Notes on the operators</h2>
 <p>As we have already described the creation of a forward modelling operator, we will use a thin wrapper function instead. This wrapper is provided by a utility class called <code>AcousticWaveSolver</code>, which provides all the necessary operators for seismic modeling, imaging and inversion. The <code>AcousticWaveSolver</code> provides a more concise API for common wave propagation operators and caches the Devito <code>Operator</code> objects to avoid unnecessary recompilation. Operators introduced for the first time in this tutorial will be properly described.</p>
 <p>As before we initialize printing and import some utilities. We also raise the Devito log level to avoid excessive logging for repeated operator invocations.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration</span>
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
 </code></pre></div>
 <h2 id="computational-considerations">Computational considerations</h2>
 <p>Seismic inversion algorithms are generally very computationally demanding and require a large amount of memory to store the forward wavefield. In order to keep this tutorial as lightweight as possible we are using a very simple
 velocity model that requires low temporal and spatial resolution. For a more realistic model, a second set of preset parameters for a reduced version of the 2D Marmousi data set [1] is provided below in comments. This can be run to create some more realistic subsurface images. However, this second preset is more computationally demanding and requires a slightly more powerful workstation.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Configure model presets</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">demo_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">demo_model</span>
 
 <span class="c1"># Enable model presets here:</span>
 <span class="n">preset</span> <span class="o">=</span> <span class="s1">&#39;layers-isotropic&#39;</span>  <span class="c1"># A simple but cheap model (recommended)</span>
@@ -141,7 +140,7 @@ velocity model that requires low temporal and spatial resolution. For a more rea
 
 <span class="c1"># Standard preset with a simple two-layer model</span>
 <span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="s1">&#39;layers-isotropic&#39;</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;layers-isotropic&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">),</span>
                           <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">10.</span><span class="p">,</span> <span class="mf">10.</span><span class="p">),</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">nlayers</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">filter_sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -154,7 +153,7 @@ velocity model that requires low temporal and spatial resolution. For a more rea
 
 <span class="c1"># A more computationally demanding preset based on the 2D Marmousi model</span>
 <span class="k">if</span> <span class="n">preset</span> <span class="o">==</span> <span class="s1">&#39;marmousi2d-isotropic&#39;</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_model</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">demo_model</span><span class="p">(</span><span class="s1">&#39;marmousi2d-isotropic&#39;</span><span class="p">,</span> <span class="n">data_path</span><span class="o">=</span><span class="s1">&#39;../../../../data/&#39;</span><span class="p">,</span>
                           <span class="n">grid</span><span class="o">=</span><span class="n">grid</span><span class="p">,</span> <span class="n">nbl</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
     <span class="n">filter_sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
@@ -167,8 +166,8 @@ velocity model that requires low temporal and spatial resolution. For a more rea
 <h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
 <p>First, we create the model data for the "true" model from a given demonstration preset. This model represents the subsurface topology for the purposes of this example and we will later use it to generate our synthetic data readings. We also generate a second model and apply a smoothing filter to it, which represents our initial model for the imaging algorithm. The perturbation between these two models can be thought of as the image we are trying to recover.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">gaussian_smooth</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">gaussian_smooth</span>
 
 <span class="c1"># Create true model from a preset</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">()</span>
@@ -190,7 +189,7 @@ velocity model that requires low temporal and spatial resolution. For a more rea
 which again depends on the grid spacing used in our model. For consistency this initial setup will look exactly as in the previous modelling tutorial, although we will vary the position of our source later on during the actual imaging algorithm.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Define acquisition geometry: source</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 
 <span class="c1"># First, position source centrally in all dimensions, then set depth</span>
 <span class="n">src_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
@@ -216,7 +215,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 <p>We can now generate the shot record (receiver readings) corresponding to our true and initial models. The difference between these two records will be the basis of the imaging procedure.</p>
 <p>For this purpose we will use the same forward modelling operator that was introduced in the previous tutorial, provided by the <code>AcousticWaveSolver</code> utility class. This object instantiates a set of pre-defined operators according to an initial definition of the acquisition geometry, consisting of source and receiver symbols. The solver objects caches the individual operators and provides a slightly more high-level API that allows us to invoke the modelling modelling operators from the initial tutorial in a single line. In the following cells we use this to generate shot data by only specifying the respective model symbol <code>m</code> to use, and the solver will create and return a new <code>Receiver</code> object the represents the readings at the previously defined receiver coordinates.  </p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
-<span class="kn">from</span> <span class="nn">examples.seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic.acoustic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 
 <span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">true_d</span> <span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
@@ -226,7 +225,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Plot shot record for true and smooth velocity model and the difference</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">smooth_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
@@ -279,10 +278,10 @@ which again depends on the grid spacing used in our model. For consistency this 
 * Injection of the data residual at the adjoint source (forward receiver) location
 * Correlation of <code>u</code> and <code>v</code> to compute the image contribution at each timestep</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Define gradient operator for imaging</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">PointSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointSource</span>
 
-<span class="k">def</span> <span class="nf">ImagingOperator</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ImagingOperator</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
     <span class="c1"># Define the wavefield with the size of the model and the time dimension</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">TimeFunction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">time_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
@@ -327,7 +326,7 @@ which again depends on the grid spacing used in our model. For consistency this 
 </code></pre></div>
 <p><img alt="png" src="../02_rtm_files/02_rtm_16_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Run imaging loop over shots</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span>
 
 <span class="c1"># Create image symbol and instantiate the previously defined imaging operator</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
@@ -374,13 +373,13 @@ Imaging source 20 out of 21
 Imaging source 21 out of 21
 </code></pre>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_image</span>
 
 <span class="c1"># Plot the inverted image</span>
 <span class="n">plot_image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 </code></pre></div>
 <p><img alt="png" src="../02_rtm_files/02_rtm_18_0.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">norm</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span>
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="mf">1e7</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e1</span><span class="p">)</span>
 </code></pre></div>
 <p>And we have an image of the subsurface with a strong reflector at the original location.</p>
@@ -426,15 +425,16 @@ Imaging source 21 out of 21
     
   </span>
 </div>
-    <script>var base_url = '../..';</script>
-    <script src="../../js/theme_extra.js" defer></script>
-    <script src="../../js/theme.js" defer></script>
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
-      <script src="../../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>

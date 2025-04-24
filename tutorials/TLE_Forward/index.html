@@ -8,7 +8,7 @@
     <title>Forward modeling - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
@@ -17,12 +17,11 @@
         var mkdocs_page_url = null;
       </script>
     
-    <script src="../../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -65,7 +64,7 @@
               </ul>
               <p class="caption"><span class="caption-text">The Leading Edge tutorials</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Forward modeling</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Forward modeling</a>
     <ul class="current">
     </ul>
                   </li>
@@ -87,9 +86,9 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>The Leading Edge tutorials &raquo;</li>
-      <li>Forward modeling</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">The Leading Edge tutorials</li>
+      <li class="breadcrumb-item active">Forward modeling</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -98,8 +97,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+                <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 </code></pre></div>
@@ -157,7 +156,7 @@ m(x, y) \frac{\mathrm{d}^2 u(t, x, y)}{\mathrm{d}t^2}\ -\ \Delta u(t, x, y)\ +\ 
 </div>
 <p>where <span class="arithmatex"><span class="MathJax_Preview">\Delta</span><script type="math/tex">\Delta</script></span> is the Laplace operator, <span class="arithmatex"><span class="MathJax_Preview">q(t, x, y;x_\mathrm{s}, y_\mathrm{s})</span><script type="math/tex">q(t, x, y;x_\mathrm{s}, y_\mathrm{s})</script></span> is the seismic source, located at <span class="arithmatex"><span class="MathJax_Preview">(x_\mathrm{s}, y_\mathrm{s})</span><script type="math/tex">(x_\mathrm{s}, y_\mathrm{s})</script></span> and <span class="arithmatex"><span class="MathJax_Preview">\eta(x, y)</span><script type="math/tex">\eta(x, y)</script></span> is a space-dependent dampening parameter for the absorbing boundary layer (Cerjan et al. 1985). As shown in Figure 1, the physical model is extended in every direction by <code>nbpml</code> grid points to mimic an infinite domain. The dampening term <span class="arithmatex"><span class="MathJax_Preview">\eta\, \mathrm{d}u/\mathrm{d}t</span><script type="math/tex">\eta\, \mathrm{d}u/\mathrm{d}t</script></span> attenuates the waves in the dampening layer and prevents waves from reflecting at the model boundaries. In Devito, the discrete representations of <span class="arithmatex"><span class="MathJax_Preview">m</span><script type="math/tex">m</script></span> and <span class="arithmatex"><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> are contained in a <code>model</code> object that contains a <code>grid</code> object with all relevant information such as the origin of the coordinate system, grid spacing, size of the model and dimensions <code>time, x, y</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># FIGURE 1</span>
-<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>
 <span class="n">HTML</span><span class="p">(</span><span class="s2">&quot;../Figures/Figure1_composed.svg&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>../Figures/Figure1_composed.svg</p>
@@ -165,7 +164,7 @@ m(x, y) \frac{\mathrm{d}^2 u(t, x, y)}{\mathrm{d}t^2}\ -\ \Delta u(t, x, y)\ +\ 
 <p>Figure 1: (a) Diagram showing the model domain, with the perfectly matched layer (PML) as an absorbing layer to attenuate the wavefield at the model boundary. (b) The example model used in this tutorial, with the source and receivers indicated. The grid lines show the cell boundaries.</p>
 </blockquote>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">demo_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">demo_model</span>
 
 <span class="n">N</span> <span class="o">=</span> <span class="p">(</span><span class="mi">401</span><span class="p">,</span> <span class="mi">401</span><span class="p">)</span>
 </code></pre></div>
@@ -203,8 +202,8 @@ Operator `pad_vp` ran in 0.01 s
 </ul>
 <p>To demonstrate Devito's symbolic capabilities, let us consider a time-dependent function <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}(\text{time}, x, y)</span><script type="math/tex">\mathbf{u}(\text{time}, x, y)</script></span> representing the discrete forward wavefield:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">TimeFunction</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">TimeAxis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeFunction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeAxis</span>
 
 <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>     <span class="c1"># Simulation starts a t=0</span>
 <span class="n">tn</span> <span class="o">=</span> <span class="mf">3000.</span>  <span class="c1"># Simulation last 1 second (1000 ms)</span>
@@ -251,7 +250,7 @@ Operator `pad_vp` ran in 0.01 s
 </div>
 <p>We can rearrange our <code>pde</code> expression automatically using the SymPy utility function <code>solve</code>, then create an expression which defines the update of the wavefield for the new time step <span class="arithmatex"><span class="MathJax_Preview">\mathbf{u}(\text{time}+\text{dt})</span><script type="math/tex">\mathbf{u}(\text{time}+\text{dt})</script></span>, with the command <code>u.forward</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 <span class="n">stencil</span>
@@ -271,7 +270,7 @@ Operator `pad_vp` ran in 0.01 s
 <p>Since the source appears on the right-hand side in the original equation (Equation 1), the term also needs to be multiplied with <span class="arithmatex"><span class="MathJax_Preview">\frac{\text{dt}^2}{\mathbf{m}}</span><script type="math/tex">\frac{\text{dt}^2}{\mathbf{m}}</script></span> (this follows from rearranging Equation 2, with the source on the right-hand side in place of 0). Unlike the discrete wavefield <code>u</code> however, the source <code>q</code> is typically localized in space and only a function of time, which means the time-dependent source wavelet is injected into the propagating wavefield at a specified source location. The same applies when we sample the wavefield at  receiver locations to simulate a shot record, i.e. the simulated wavefield needs to be sampled at specified receiver locations only. Source and receiver both do not necessarily coincide with the modeling grid.</p>
 <p>Here, <code>RickerSource</code> acts as a wrapper around <code>SparseFunction</code> and models a Ricker wavelet with a peak frequency <code>f0</code> and source coordinates <code>src_coords</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">RickerSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RickerSource</span>
 
 <span class="c1"># Src is halfway across model, at depth of 20 m.</span>
 <span class="n">x_extent</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">domain_size</span>
@@ -285,7 +284,7 @@ Operator `pad_vp` ran in 0.01 s
 </code></pre></div>
 <p>To extract the wavefield at a predetermined set of receiver locations, there is a corresponding wrapper function for receivers as well, which creates a <code>SparseFunction</code> object for a given number <code>npoint</code> of receivers, number <code>nt</code> of time samples, and specified receiver coordinates <code>rec_coords</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Receiver</span>
 
 <span class="c1"># Recs are distributed across model, at depth of 20 m.</span>
 <span class="n">x_locs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_extent</span><span class="p">,</span> <span class="n">N</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -298,8 +297,8 @@ Operator `pad_vp` ran in 0.01 s
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="c1"># PLOTS HALF OF FIGURE 1.</span>
-<span class="kn">import</span> <span class="nn">matplotlib.patches</span> <span class="k">as</span> <span class="nn">patches</span>
-<span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="n">MultipleLocator</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">patches</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.ticker</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultipleLocator</span>
 
 <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
 
@@ -342,7 +341,7 @@ Operator `pad_vp` ran in 0.01 s
 <h2 id="forward-simulation">Forward simulation</h2>
 <p>We can now define our forward propagator by adding the source and receiver terms to our stencil object:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="n">op_fwd</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_term</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">)</span>
 </code></pre></div>
@@ -366,7 +365,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 <p>When this has finished running, the resulting wavefield is stored in <code>u.data</code> and the shot record is in <code>rec.data</code>. We can easily plot this 2D array as an image, as shown in Figure 2.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
 <span class="c1"># GENERATES FIGURE 2</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">cm</span>
 
 <span class="n">fig1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
 <span class="n">l</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">.1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">gray</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -425,8 +424,8 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 <p>Figure 3. Three time steps from the wavefield simulation that resulted in the shot record in Figure 2. You can generate an animated version in the Notebook at github.com/seg.</p>
 </blockquote>
 <div class="highlight"><pre><span></span><code><span class="c1"># NOT FOR MANUSCRIPT</span>
-<span class="kn">import</span> <span class="nn">matplotlib.animation</span> <span class="k">as</span> <span class="nn">animation</span>
-<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">HTML</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.animation</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">animation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>
 
 <span class="n">nt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">num</span>
 
@@ -441,7 +440,7 @@ PerformanceSummary([(PerfKey(name='section0', rank=None),
 <span class="n">im2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">vp</span><span class="p">),</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">GnBu</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1e-3</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">spacing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                          <span class="n">model</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1e-3</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">spacing</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">.4</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">updatefig</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">updatefig</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
     <span class="n">im</span><span class="o">.</span><span class="n">set_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="mi">5</span><span class="p">,</span><span class="mi">40</span><span class="p">:</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="p">:</span><span class="o">-</span><span class="mi">40</span><span class="p">]))</span>
     <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">im2</span>
 
@@ -6010,15 +6009,16 @@ bwAAAB1kYXRhAAAAAQAAAABMYXZmNTkuMjcuMTAw
     
   </span>
 </div>
-    <script>var base_url = '../..';</script>
-    <script src="../../js/theme_extra.js" defer></script>
-    <script src="../../js/theme.js" defer></script>
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
-      <script src="../../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>

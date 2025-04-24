@@ -8,7 +8,7 @@
     <title>Acoustic FWI - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
@@ -17,12 +17,11 @@
         var mkdocs_page_url = null;
       </script>
     
-    <script src="../../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -52,7 +51,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../02_rtm/">Acoustic RTM</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Acoustic FWI</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Acoustic FWI</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#inversion-requirement">Inversion requirement</a>
     </li>
@@ -95,9 +94,9 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Tutorials &raquo;</li>
-      <li>Acoustic FWI</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+      <li class="breadcrumb-item active">Acoustic FWI</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -122,10 +121,10 @@
 <p>In this tutorial, we will introduce the gradient operator. This operator corresponds to the imaging condition introduced in the previous tutorial with some minor modifications that are defined by the objective function (also referred to in the tutorial series as the <em>functional</em>, <em>f</em>) and its gradient, <em>g</em>. We will define these two terms in the tutorial too.</p>
 <h2 id="notes-on-the-operators">Notes on the operators</h2>
 <p>As we have already described the creation of a forward modelling operator, we will only call a wrapper function here. This wrapper already contains all the necessary operators for seismic modeling, imaging and inversion. Operators introduced for the first time in this tutorial will be properly described.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">configuration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration</span>
 <span class="n">configuration</span><span class="p">[</span><span class="s1">&#39;log-level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;WARNING&#39;</span>
 </code></pre></div>
 <h2 id="computational-considerations">Computational considerations</h2>
@@ -137,7 +136,7 @@
 <h1 id="true-and-smooth-velocity-models">True and smooth velocity models</h1>
 <p>We will use a very simple model domain, consisting of a circle within a 2D domain. We will again use the "true" model to generate our synthetic shot data and use a "smooth" model as our initial guess. In this case the smooth model is very smooth indeed - it is simply a constant background velocity without any features.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">demo_model</span><span class="p">,</span> <span class="n">plot_velocity</span><span class="p">,</span> <span class="n">plot_perturbation</span>
 
 <span class="c1"># Define true and initial model</span>
 <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">101</span><span class="p">,</span> <span class="mi">101</span><span class="p">)</span>  <span class="c1"># Number of grid point (nx, nz)</span>
@@ -165,7 +164,7 @@
 <p>In this tutorial, we will use the easiest case for inversion, namely a transmission experiment. The sources are located on one side of the model and the receivers on the other side. This allows to record most of the information necessary for inversion, as reflections usually lead to poor inversion results.</p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Define acquisition geometry: source</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AcquisitionGeometry</span>
 
 <span class="n">t0</span> <span class="o">=</span> <span class="mf">0.</span>
 <span class="n">tn</span> <span class="o">=</span> <span class="mf">1000.</span> 
@@ -198,7 +197,7 @@
 <h2 id="true-and-smooth-data">True and smooth data</h2>
 <p>We can generate shot records for the true and smoothed initial velocity models, since the difference between them will again form the basis of our imaging procedure.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Compute synthetic data with forward operator </span>
-<span class="kn">from</span> <span class="nn">examples.seismic.acoustic</span> <span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic.acoustic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AcousticWaveSolver</span>
 
 <span class="n">solver</span> <span class="o">=</span> <span class="n">AcousticWaveSolver</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">space_order</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">true_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
@@ -207,7 +206,7 @@
 <span class="n">smooth_d</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">vp</span><span class="o">=</span><span class="n">model0</span><span class="o">.</span><span class="n">vp</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_shotrecord</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
 <span class="c1"># Plot shot record for true and smooth velocity model and the difference</span>
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">true_d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
@@ -272,10 +271,10 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source_locations</span><span class="p">)</span>
 </code></pre></div>
 <p><img alt="png" src="../03_fwi_files/03_fwi_16_0.png" /></p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Operator</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Operator</span>
 
 <span class="c1"># Computes the residual between observed and synthetic data into the residual</span>
-<span class="k">def</span> <span class="nf">compute_residual</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">dobs</span><span class="p">,</span> <span class="n">dsyn</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_residual</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">dobs</span><span class="p">,</span> <span class="n">dsyn</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">residual</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">distributor</span><span class="o">.</span><span class="n">is_parallel</span><span class="p">:</span>
         <span class="c1"># If we run with MPI, we have to compute the residual via an operator</span>
         <span class="c1"># First make sure we can take the difference and that receivers are at the </span>
@@ -293,11 +292,11 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
     <span class="k">return</span> <span class="n">residual</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># Create FWI gradient kernel </span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">norm</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">Receiver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">TimeFunction</span><span class="p">,</span> <span class="n">norm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Receiver</span>
 
-<span class="kn">import</span> <span class="nn">scipy</span>
-<span class="k">def</span> <span class="nf">fwi_gradient</span><span class="p">(</span><span class="n">vp_in</span><span class="p">):</span>    
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fwi_gradient</span><span class="p">(</span><span class="n">vp_in</span><span class="p">):</span>    
     <span class="c1"># Create symbols to hold the gradient</span>
     <span class="n">grad</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;grad&quot;</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">grid</span><span class="p">)</span>
     <span class="c1"># Create placeholders for the data residual and data</span>
@@ -335,8 +334,8 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ff</span><span class="p">,</span> <span class="mi">57283</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e0</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">mmax</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">mmax</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_image</span>
 
 <span class="c1"># Plot the FWI gradient</span>
 <span class="n">plot_image</span><span class="p">(</span><span class="o">-</span><span class="n">update</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">1e4</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">)</span>
@@ -353,9 +352,9 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
 <p><img alt="png" src="../03_fwi_files/03_fwi_21_1.png" /></p>
 <p><img alt="png" src="../03_fwi_files/03_fwi_21_2.png" /></p>
 <p>We see that the gradient and the true perturbation have the same sign, therefore, with an appropriate scaling factor, we will update the model in the correct direction.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">sympy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Min</span><span class="p">,</span> <span class="n">Max</span>
 <span class="c1"># Define bounding box constraints on the solution.</span>
-<span class="k">def</span> <span class="nf">update_with_box</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.5</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_with_box</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mf">3.5</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply gradient update in-place to vp with box constraint</span>
 
@@ -370,7 +369,7 @@ adjoint-state method to evaluate the gradient <span class="arithmatex"><span cla
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
 
-<span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="n">mmax</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">mmax</span>
 
 <span class="c1"># Run FWI with gradient descent</span>
 <span class="n">history</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">fwi_iterations</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -407,7 +406,7 @@ Objective value is 5786.186187 at iteration 5
 </code></pre></div>
 <p><img alt="png" src="../03_fwi_files/03_fwi_25_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_SKIP</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="c1"># Plot objective function decrease</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
@@ -462,15 +461,16 @@ Objective value is 5786.186187 at iteration 5
     
   </span>
 </div>
-    <script>var base_url = '../..';</script>
-    <script src="../../js/theme_extra.js" defer></script>
-    <script src="../../js/theme.js" defer></script>
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
-      <script src="../../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>

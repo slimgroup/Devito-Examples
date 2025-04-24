@@ -8,7 +8,7 @@
     <title>Elastic modeling with constant parameters - SLIM's Devito examples</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
@@ -17,12 +17,11 @@
         var mkdocs_page_url = null;
       </script>
     
-    <script src="../../js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="../../js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -58,7 +57,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../05_staggered_acoustic/">First order acoustic modeling</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Elastic modeling with constant parameters</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Elastic modeling with constant parameters</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#explosive-source">Explosive source</a>
     </li>
@@ -89,9 +88,9 @@
       <div class="wy-nav-content">
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Tutorials &raquo;</li>
-      <li>Elastic modeling with constant parameters</li>
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+      <li class="breadcrumb-item active">Elastic modeling with constant parameters</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -111,12 +110,12 @@
 <div class="MathJax_Preview">g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}</div>
 <script type="math/tex; mode=display">g(t) = -2 \alpha(t - t_0)e^{-\alpha(t-t_0)^2}</script>
 </div>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">devito</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">examples.seismic.source</span> <span class="kn">import</span> <span class="n">WaveletSource</span><span class="p">,</span> <span class="n">RickerSource</span><span class="p">,</span> <span class="n">GaborSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
-<span class="kn">from</span> <span class="nn">examples.seismic</span> <span class="kn">import</span> <span class="n">plot_image</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic.source</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaveletSource</span><span class="p">,</span> <span class="n">RickerSource</span><span class="p">,</span> <span class="n">GaborSource</span><span class="p">,</span> <span class="n">TimeAxis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">init_printing</span><span class="p">,</span> <span class="n">latex</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sympy</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_printing</span><span class="p">,</span> <span class="n">latex</span>
 <span class="n">init_printing</span><span class="p">(</span><span class="n">use_latex</span><span class="o">=</span><span class="s1">&#39;mathjax&#39;</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="c1"># Initial grid: 1km x 1km, with spacing 100m</span>
@@ -126,9 +125,9 @@
 <span class="n">z</span> <span class="o">=</span> <span class="n">SpaceDimension</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;h_z&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
 <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">DGaussSource</span><span class="p">(</span><span class="n">WaveletSource</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DGaussSource</span><span class="p">(</span><span class="n">WaveletSource</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">wavelet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wavelet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="n">a</span> <span class="o">=</span> <span class="mf">0.004</span>
         <span class="k">return</span> <span class="o">-</span><span class="mf">2.</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">f0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
@@ -287,15 +286,16 @@
     
   </span>
 </div>
-    <script>var base_url = '../..';</script>
-    <script src="../../js/theme_extra.js" defer></script>
-    <script src="../../js/theme.js" defer></script>
-      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML" defer></script>
-      <script src="../../search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>
