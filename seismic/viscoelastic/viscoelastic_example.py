@@ -1,5 +1,8 @@
 import numpy as np
-import pytest
+try:
+    import pytest
+except ImportError:
+    pass
 
 from devito import norm
 from devito.logger import info
@@ -38,14 +41,13 @@ def run(shape=(50, 50), spacing=(20.0, 20.0), tn=1000.0,
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
 def test_viscoelastic(dtype):
     _, _, _, [rec1, rec2, v, tau] = run(dtype=dtype)
-    assert np.isclose(norm(rec1), 12.28040, atol=1e-3, rtol=0)
-    assert np.isclose(norm(rec2), 0.312461, atol=1e-3, rtol=0)
+    assert np.isclose(norm(rec1), 12.62339, atol=1e-3, rtol=0)
+    assert np.isclose(norm(rec2), 0.320817, atol=1e-3, rtol=0)
 
 
-@pytest.mark.parametrize('ndim', [1, 2, 3])
-def test_viscoelastic_stability(ndim):
-    shape = tuple([11]*ndim)
-    spacing = tuple([20]*ndim)
+@pytest.mark.parametrize('shape', [(51, 51), (16, 16, 16)])
+def test_viscoelastic_stability(shape):
+    spacing = tuple([20]*len(shape))
     _, _, _, [rec1, rec2, v, tau] = run(shape=shape, spacing=spacing, tn=20000.0, nbl=0)
     assert np.isfinite(norm(rec1))
 

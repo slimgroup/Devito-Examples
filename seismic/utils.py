@@ -1,25 +1,30 @@
 import numpy as np
-from argparse import ArgumentParser, Action
+from argparse import Action, ArgumentError, ArgumentParser
 
 from devito import error, configuration, warning
 from devito.tools import Pickable
+from devito.types.sparse import _default_radius
 
 from .source import *
 
 __all__ = ['AcquisitionGeometry', 'setup_geometry', 'seismic_args']
 
 
-def setup_geometry(model, tn, f0=0.010):
+def setup_geometry(model, tn, f0=0.010, interpolation='linear', **kwargs):
     # Source and receiver geometries
     src_coordinates = np.empty((1, model.dim))
-    src_coordinates[0, :] = np.array(model.domain_size) * .5
     if model.dim > 1:
+        src_coordinates[0, :] = np.array(model.domain_size) * .5
         src_coordinates[0, -1] = model.origin[-1] + model.spacing[-1]
+    else:
+        src_coordinates[0, 0] = 2 * model.spacing[0]
 
     rec_coordinates = setup_rec_coords(model)
 
+    r = kwargs.get('r', _default_radius[interpolation])
     geometry = AcquisitionGeometry(model, rec_coordinates, src_coordinates,
-                                   t0=0.0, tn=tn, src_type='Ricker', f0=f0)
+                                   t0=0.0, tn=tn, src_type='Ricker', f0=f0,
+                                   interpolation=interpolation, r=r)
 
     return geometry
 
@@ -50,12 +55,15 @@ def setup_rec_coords(model):
 class AcquisitionGeometry(Pickable):
     """
     Encapsulate the geometry of an acquisition:
-    - receiver positions and number
     - source positions and number
+    - receiver positions and number
 
     In practice this would only point to a segy file with the
     necessary information
     """
+
+    __rargs__ = ('grid', 'rec_positions', 'src_positions', 't0', 'tn')
+    __rkwargs__ = ('f0', 'src_type', 'interpolation', 'r')
 
     def __init__(self, model, rec_positions, src_positions, t0, tn, **kwargs):
         """
@@ -69,18 +77,25 @@ class AcquisitionGeometry(Pickable):
         self.src_positions = src_positions
         self._nsrc = src_positions.shape[0]
         self._src_type = kwargs.get('src_type')
-        assert self.src_type in sources
+        assert (self.src_type in sources or self.src_type is None)
         self._f0 = kwargs.get('f0')
         self._a = kwargs.get('a', None)
         self._t0w = kwargs.get('t0w', None)
         if self._src_type is not None and self._f0 is None:
-            error("Peak frequency must be provided in KH" +
+            error("Peak frequency must be provided in KHz" +
                   " for source of type %s" % self._src_type)
 
+        self._grid = model.grid
         self._model = model
         self._dt = model.critical_dt
         self._t0 = t0
         self._tn = tn
+        self._interpolation = kwargs.get('interpolation', 'linear')
+        self._r = kwargs.get('r', _default_radius[self.interpolation])
+
+        # Initialize to empty, created at new src/rec
+        self._src_coordinates = None
+        self._rec_coordinates = None
 
     def resample(self, dt):
         self._dt = dt
@@ -91,20 +106,18 @@ class AcquisitionGeometry(Pickable):
         return TimeAxis(start=self.t0, stop=self.tn, step=self.dt)
 
     @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, model):
-        self._model = model
-
-    @property
     def src_type(self):
         return self._src_type
 
     @property
     def grid(self):
-        return self.model.grid
+        return self._grid
+
+    @property
+    def model(self):
+        warning("Model is kept for backward compatibility but should not be"
+                "obtained from the geometry")
+        return self._model
 
     @property
     def f0(self):
@@ -139,23 +152,35 @@ class AcquisitionGeometry(Pickable):
         return self.grid.dtype
 
     @property
+    def r(self):
+        return self._r
+
+    @property
+    def interpolation(self):
+        return self._interpolation
+
+    @property
     def rec(self):
         return self.new_rec()
 
-    def new_rec(self, name='rec'):
-        return Receiver(name=name, grid=self.grid,
-                        time_range=self.time_axis, npoint=self.nrec,
-                        coordinates=self.rec_positions)
+    def new_rec(self, name='rec', coordinates=None):
+        coords = coordinates or self.rec_positions
+        rec = Receiver(name=name, grid=self.grid,
+                       time_range=self.time_axis, npoint=self.nrec,
+                       interpolation=self.interpolation, r=self._r,
+                       coordinates=coords)
+
+        return rec
 
     @property
     def adj_src(self):
         if self.src_type is None:
-            warning("No surce type defined, returning uninitiallized (zero) shot record")
-            return self.rec
+            return self.new_rec()
+        coords = self.rec_positions
         adj_src = sources[self.src_type](name='rec', grid=self.grid, f0=self.f0,
                                          time_range=self.time_axis, npoint=self.nrec,
-                                         coordinates=self.rec_positions,
-                                         t0=self._t0w, a=self._a)
+                                         interpolation=self.interpolation, r=self._r,
+                                         coordinates=coords, t0=self._t0w, a=self._a)
         # Revert time axis to have a proper shot record and not compute on zeros
         for i in range(self.nrec):
             adj_src.data[:, i] = adj_src.wavelet[::-1]
@@ -163,19 +188,24 @@ class AcquisitionGeometry(Pickable):
 
     @property
     def src(self):
-        if self.src_type is None:
-            warning("No surce type defined, returning uninistiallized (zero) source")
-            return PointSource(name='src', grid=self.grid,
-                               time_range=self.time_axis, npoint=self.nsrc,
-                               coordinates=self.src_positions)
-        else:
-            return sources[self.src_type](name='src', grid=self.grid, f0=self.f0,
-                                          time_range=self.time_axis, npoint=self.nsrc,
-                                          coordinates=self.src_positions,
-                                          t0=self._t0w, a=self._a)
+        return self.new_src()
 
-    _pickle_args = ['model', 'rec_positions', 'src_positions', 't0', 'tn']
-    _pickle_kwargs = ['f0', 'src_type']
+    def new_src(self, name='src', src_type='self', coordinates=None):
+        coords = coordinates or self.src_positions
+        if self.src_type is None or src_type is None:
+            warning("No source type defined, returning uninitiallized (zero) source")
+            src = PointSource(name=name, grid=self.grid,
+                              time_range=self.time_axis, npoint=self.nsrc,
+                              coordinates=coords,
+                              interpolation=self.interpolation, r=self._r)
+        else:
+            src = sources[self.src_type](name=name, grid=self.grid, f0=self.f0,
+                                         time_range=self.time_axis, npoint=self.nsrc,
+                                         coordinates=coords,
+                                         t0=self._t0w, a=self._a,
+                                         interpolation=self.interpolation, r=self._r)
+
+        return src
 
 
 sources = {'Wavelet': WaveletSource, 'Ricker': RickerSource, 'Gabor': GaborSource}
@@ -189,6 +219,23 @@ def seismic_args(description):
     class _dtype_store(Action):
         def __call__(self, parser, args, values, option_string=None):
             values = {'float32': np.float32, 'float64': np.float64}[values]
+            setattr(args, self.dest, values)
+
+    class _opt_action(Action):
+        def __call__(self, parser, args, values, option_string=None):
+            try:
+                # E.g., `('advanced', {'par-tile': True})`
+                values = eval(values)
+                if not isinstance(values, tuple) and len(values) >= 1:
+                    raise ArgumentError(self, ("Invalid choice `%s` (`opt` must be "
+                                               "either str or tuple)" % str(values)))
+                opt = values[0]
+            except NameError:
+                # E.g. `'advanced'`
+                opt = values
+            if opt not in configuration._accepted['opt']:
+                raise ArgumentError(self, ("Invalid choice `%s` (choose from %s)"
+                                           % (opt, str(configuration._accepted['opt']))))
             setattr(args, self.dest, values)
 
     parser = ArgumentParser(description=description)
@@ -205,9 +252,8 @@ def seismic_args(description):
     parser.add_argument("--constant", default=False, action='store_true',
                         help="Constant velocity model, default is a two layer model")
     parser.add_argument("--checkpointing", default=False, action='store_true',
-                        help="Constant velocity model, default is a two layer model")
-    parser.add_argument("-opt", default="advanced",
-                        choices=configuration._accepted['opt'],
+                        help="Use checkpointing, default is False")
+    parser.add_argument("-opt", default="advanced", action=_opt_action,
                         help="Performance optimization level")
     parser.add_argument('-a', '--autotune', default='off',
                         choices=(configuration._accepted['autotuning']),
@@ -216,4 +262,6 @@ def seismic_args(description):
                         type=float, help="Simulation time in millisecond")
     parser.add_argument("-dtype", action=_dtype_store, dest="dtype", default=np.float32,
                         choices=['float32', 'float64'])
+    parser.add_argument("-interp", dest="interp", default="linear",
+                        choices=['linear', 'sinc'])
     return parser

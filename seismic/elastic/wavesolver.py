@@ -1,11 +1,10 @@
 from devito.tools import memoized_meth
 from devito import VectorTimeFunction, TensorTimeFunction
 
-from examples.seismic import Receiver
 from examples.seismic.elastic.operators import ForwardOperator
 
 
-class ElasticWaveSolver(object):
+class ElasticWaveSolver:
     """
     Solver object that provides operators for seismic inversion problems
     and encapsulates the time and space discretization for a given problem
@@ -23,6 +22,7 @@ class ElasticWaveSolver(object):
     """
     def __init__(self, model, geometry, space_order=4, **kwargs):
         self.model = model
+        self.model._initialize_bcs(bcs="mask")
         self.geometry = geometry
 
         self.space_order = space_order
@@ -39,8 +39,8 @@ class ElasticWaveSolver(object):
         return ForwardOperator(self.model, save=save, geometry=self.geometry,
                                space_order=self.space_order, **self._kwargs)
 
-    def forward(self, src=None, rec1=None, rec2=None, lam=None, mu=None, b=None,
-                v=None, tau=None, save=None, **kwargs):
+    def forward(self, src=None, rec1=None, rec2=None, v=None, tau=None,
+                model=None, save=None, **kwargs):
         """
         Forward modelling function that creates the necessary
         data objects for running a forward modelling operator.
@@ -57,14 +57,16 @@ class ElasticWaveSolver(object):
             The computed particle velocity.
         tau : TensorTimeFunction, optional
             The computed symmetric stress tensor.
+        model : Model, optional
+            Object containing the physical parameters.
         lam : Function, optional
             The time-constant first Lame parameter `rho * (vp**2 - 2 * vs **2)`.
         mu : Function, optional
             The Shear modulus `(rho * vs*2)`.
         b : Function, optional
             The time-constant inverse density (b=1 for water).
-        save : int or Buffer, optional
-            Option to store the entire (unrolled) wavefield.
+        save : bool, optional
+            Whether or not to save the entire (unrolled) wavefield.
 
         Returns
         -------
@@ -74,23 +76,22 @@ class ElasticWaveSolver(object):
         # Source term is read-only, so re-use the default
         src = src or self.geometry.src
         # Create a new receiver object to store the result
-        rec1 = rec1 or Receiver(name='rec1', grid=self.model.grid,
-                                time_range=self.geometry.time_axis,
-                                coordinates=self.geometry.rec_positions)
-        rec2 = rec2 or Receiver(name='rec2', grid=self.model.grid,
-                                time_range=self.geometry.time_axis,
-                                coordinates=self.geometry.rec_positions)
+        rec1 = rec1 or self.geometry.new_rec(name='rec1')
+        rec2 = rec2 or self.geometry.new_rec(name='rec2')
 
         # Create all the fields vx, vz, tau_xx, tau_zz, tau_xz
         save_t = src.nt if save else None
-        v = VectorTimeFunction(name='v', grid=self.model.grid, save=save_t,
-                               space_order=self.space_order, time_order=1)
-        tau = TensorTimeFunction(name='tau', grid=self.model.grid, save=save_t,
-                                 space_order=self.space_order, time_order=1)
+        v = v or VectorTimeFunction(name='v', grid=self.model.grid, save=save_t,
+                                    space_order=self.space_order, time_order=1)
+        tau = tau or TensorTimeFunction(name='tau', grid=self.model.grid, save=save_t,
+                                        space_order=self.space_order, time_order=1)
         kwargs.update({k.name: k for k in v})
         kwargs.update({k.name: k for k in tau})
+
+        model = model or self.model
         # Pick Lame parameters from model unless explicitly provided
-        kwargs.update(self.model.physical_params(lam=lam, mu=mu, b=b))
+        kwargs.update(model.physical_params(**kwargs))
+
         # Execute operator and return wavefield and receiver data
         summary = self.op_fwd(save).apply(src=src, rec1=rec1, rec2=rec2,
                                           dt=kwargs.pop('dt', self.dt), **kwargs)

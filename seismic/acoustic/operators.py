@@ -1,8 +1,5 @@
-from sympy import sign
-
-from devito import Eq, Operator, Function, TimeFunction, Inc, solve
-from devito.symbolics import retrieve_functions, INT
-from examples.seismic import PointSource, Receiver
+from devito import Eq, Operator, Function, TimeFunction, Inc, solve, sign
+from devito.symbolics import retrieve_functions, INT, retrieve_derivatives
 
 
 def freesurface(model, eq):
@@ -17,13 +14,21 @@ def freesurface(model, eq):
     eq : Eq
         Time-stepping stencil (time update) to mirror at the freesurface.
     """
-    lhs, rhs = eq.evaluate.args
+    lhs, rhs = eq.args
     # Get vertical dimension and corresponding subdimension
-    zfs = model.grid.subdomains['fsdomain'].dimensions[-1]
+    fsdomain = model.grid.subdomains['fsdomain']
+    zfs = fsdomain.dimensions[-1]
     z = zfs.parent
 
-    # Functions present in the stencil
-    funcs = retrieve_functions(rhs)
+    # Retrieve vertical derivatives
+    dzs = {d for d in retrieve_derivatives(rhs) if z in d.dims}
+    # Remove inner duplicate
+    dzs = dzs - {d for D in dzs for d in retrieve_derivatives(D.expr) if z in d.dims}
+    dzs = {d: d._eval_at(lhs).evaluate for d in dzs}
+
+    # Finally get functions for evaluated derivatives
+    funcs = {f for f in retrieve_functions(dzs.values())}
+
     mapper = {}
     # Antisymmetric mirror at negative indices
     # TODO: Make a proper "mirror_indices" tool function
@@ -32,7 +37,14 @@ def freesurface(model, eq):
         if (zind - z).as_coeff_Mul()[0] < 0:
             s = sign(zind.subs({z: zfs, z.spacing: 1}))
             mapper.update({f: s * f.subs({zind: INT(abs(zind))})})
-    return Eq(lhs, rhs.subs(mapper), subdomain=model.grid.subdomains['fsdomain'])
+
+    # Mapper for vertical derivatives
+    dzmapper = {d: v.subs(mapper) for d, v in dzs.items()}
+
+    fs_eq = [eq.func(lhs, rhs.subs(dzmapper), subdomain=fsdomain)]
+    fs_eq.append(eq.func(lhs._subs(z, 0), 0, subdomain=fsdomain))
+
+    return fs_eq
 
 
 def laplacian(field, model, kernel):
@@ -121,11 +133,8 @@ def ForwardOperator(model, geometry, space_order=4,
     u = TimeFunction(name='u', grid=model.grid,
                      save=geometry.nt if save else None,
                      time_order=2, space_order=space_order)
-    src = PointSource(name='src', grid=geometry.grid, time_range=geometry.time_axis,
-                      npoint=geometry.nsrc)
-
-    rec = Receiver(name='rec', grid=geometry.grid, time_range=geometry.time_axis,
-                   npoint=geometry.nrec)
+    src = geometry.src
+    rec = geometry.rec
 
     s = model.grid.stepping_dim.spacing
     eqn = iso_stencil(u, model, kernel)
@@ -135,6 +144,7 @@ def ForwardOperator(model, geometry, space_order=4,
 
     # Create interpolation expression for receivers
     rec_term = rec.interpolate(expr=u)
+
     # Substitute spacing terms to reduce flops
     return Operator(eqn + src_term + rec_term, subs=model.spacing_map,
                     name='Forward', **kwargs)
@@ -161,10 +171,8 @@ def AdjointOperator(model, geometry, space_order=4,
 
     v = TimeFunction(name='v', grid=model.grid, save=None,
                      time_order=2, space_order=space_order)
-    srca = PointSource(name='srca', grid=model.grid, time_range=geometry.time_axis,
-                       npoint=geometry.nsrc)
-    rec = Receiver(name='rec', grid=model.grid, time_range=geometry.time_axis,
-                   npoint=geometry.nrec)
+    srca = geometry.new_src(name='srca', src_type=None)
+    rec = geometry.rec
 
     s = model.grid.stepping_dim.spacing
     eqn = iso_stencil(v, model, kernel, forward=False)
@@ -207,16 +215,15 @@ def GradientOperator(model, geometry, space_order=4, save=True,
                      else None, time_order=2, space_order=space_order)
     v = TimeFunction(name='v', grid=model.grid, save=None,
                      time_order=2, space_order=space_order)
-    rec = Receiver(name='rec', grid=model.grid, time_range=geometry.time_axis,
-                   npoint=geometry.nrec)
+    rec = geometry.rec
 
     s = model.grid.stepping_dim.spacing
     eqn = iso_stencil(v, model, kernel, forward=False)
 
     if kernel == 'OT2':
-        gradient_update = Inc(grad, - u.dt2 * v)
+        gradient_update = Inc(grad, - u * v.dt2)
     elif kernel == 'OT4':
-        gradient_update = Inc(grad, - (u.dt2 + s**2 / 12.0 * u.biharmonic(m**(-2))) * v)
+        gradient_update = Inc(grad, - u * v.dt2 - s**2 / 12.0 * u.biharmonic(m**(-2)) * v)
     # Add expression for receiver injection
     receivers = rec.inject(field=v.backward, expr=rec * s**2 / m)
 
@@ -245,11 +252,8 @@ def BornOperator(model, geometry, space_order=4,
     m = model.m
 
     # Create source and receiver symbols
-    src = Receiver(name='src', grid=model.grid, time_range=geometry.time_axis,
-                   npoint=geometry.nsrc)
-
-    rec = Receiver(name='rec', grid=model.grid, time_range=geometry.time_axis,
-                   npoint=geometry.nrec)
+    src = geometry.src
+    rec = geometry.rec
 
     # Create wavefields and a dm field
     u = TimeFunction(name="u", grid=model.grid, save=None,

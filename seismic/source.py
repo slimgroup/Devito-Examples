@@ -1,5 +1,5 @@
+from functools import cached_property
 from scipy import interpolate
-from cached_property import cached_property
 import numpy as np
 try:
     import matplotlib.pyplot as plt
@@ -12,11 +12,11 @@ __all__ = ['PointSource', 'Receiver', 'Shot', 'WaveletSource',
            'RickerSource', 'GaborSource', 'DGaussSource', 'TimeAxis']
 
 
-class TimeAxis(object):
+class TimeAxis:
     """
     Data object to store the TimeAxis. Exactly three of the four key arguments
-    must be prescribed. Because of remainder values it is not possible to create
-    a TimeAxis that exactly adhears to the inputs therefore start, stop, step
+    must be prescribed. Because of remainder values, it is not possible to create
+    a TimeAxis that exactly adheres to the inputs; therefore, start, stop, step
     and num values should be taken from the TimeAxis object rather than relying
     upon the input values.
 
@@ -58,10 +58,10 @@ class TimeAxis(object):
         if not isinstance(num, int):
             raise TypeError("input argument must be of type int")
 
-        self.start = start
-        self.stop = stop
-        self.step = step
-        self.num = num
+        self.start = float(start)
+        self.stop = float(stop)
+        self.step = float(step)
+        self.num = int(num)
 
     def __str__(self):
         return "TimeAxis: start=%g, stop=%g, step=%g, num=%g" % \
@@ -102,12 +102,15 @@ class PointSource(SparseTimeFunction):
         Represents the number of points in this source.
     """
 
+    __rkwargs__ = list(SparseTimeFunction.__rkwargs__) + ['time_range']
+    __rkwargs__.remove('nt')  # `nt` is inferred from `time_range`
+
     @classmethod
     def __args_setup__(cls, *args, **kwargs):
         kwargs['nt'] = kwargs['time_range'].num
 
         # Either `npoint` or `coordinates` must be provided
-        npoint = kwargs.get('npoint')
+        npoint = kwargs.get('npoint', kwargs.get('npoint_global'))
         if npoint is None:
             coordinates = kwargs.get('coordinates', kwargs.get('coordinates_data'))
             if coordinates is None:
@@ -121,7 +124,7 @@ class PointSource(SparseTimeFunction):
         data = kwargs.pop('data', None)
 
         kwargs.setdefault('time_order', 2)
-        super(PointSource, self).__init_finalize__(*args, **kwargs)
+        super().__init_finalize__(*args, **kwargs)
 
         self._time_range = time_range._rebuild()
 
@@ -169,10 +172,6 @@ class PointSource(SparseTimeFunction):
         return PointSource(name=self.name, grid=self.grid, data=new_traces,
                            time_range=new_time_range, coordinates=self.coordinates.data)
 
-    # Pickling support
-    _pickle_kwargs = SparseTimeFunction._pickle_kwargs + ['time_range']
-    _pickle_kwargs.remove('nt')  # `nt` is inferred from `time_range`
-
 
 Receiver = PointSource
 Shot = PointSource
@@ -181,7 +180,7 @@ Shot = PointSource
 class WaveletSource(PointSource):
 
     """
-    Abstract base class for symbolic objects that encapsulate a set of
+    Abstract base class for symbolic objects that encapsulates a set of
     sources with a pre-defined source signal wavelet.
 
     Parameters
@@ -200,20 +199,24 @@ class WaveletSource(PointSource):
         Firing time (defaults to 1 / f0)
     """
 
+    __rkwargs__ = PointSource.__rkwargs__ + ['f0', 'a', 't0']
+
     @classmethod
     def __args_setup__(cls, *args, **kwargs):
         kwargs.setdefault('npoint', 1)
 
-        return super(WaveletSource, cls).__args_setup__(*args, **kwargs)
+        return super().__args_setup__(*args, **kwargs)
 
     def __init_finalize__(self, *args, **kwargs):
-        super(WaveletSource, self).__init_finalize__(*args, **kwargs)
+        super().__init_finalize__(*args, **kwargs)
 
         self.f0 = kwargs.get('f0')
         self.a = kwargs.get('a')
         self.t0 = kwargs.get('t0')
-        for p in range(kwargs['npoint']):
-            self.data[:, p] = self.wavelet
+
+        if not self.alias:
+            for p in range(kwargs['npoint']):
+                self.data[:, p] = self.wavelet
 
     @property
     def wavelet(self):
@@ -241,14 +244,11 @@ class WaveletSource(PointSource):
         plt.tick_params()
         plt.show()
 
-    # Pickling support
-    _pickle_kwargs = PointSource._pickle_kwargs + ['f0', 'a', 'f0']
-
 
 class RickerSource(WaveletSource):
 
     """
-    Symbolic object that encapsulate a set of sources with a
+    Symbolic object that encapsulates a set of sources with a
     pre-defined Ricker wavelet:
 
     http://subsurfwiki.org/wiki/Ricker_wavelet
@@ -280,7 +280,7 @@ class RickerSource(WaveletSource):
 class GaborSource(WaveletSource):
 
     """
-    Symbolic object that encapsulate a set of sources with a
+    Symbolic object that encapsulates a set of sources with a
     pre-defined Gabor wavelet:
 
     https://en.wikipedia.org/wiki/Gabor_wavelet
@@ -313,7 +313,7 @@ class GaborSource(WaveletSource):
 class DGaussSource(WaveletSource):
 
     """
-    Symbolic object that encapsulate a set of sources with a
+    Symbolic object that encapsulates a set of sources with a
     pre-defined 1st derivative wavelet of a Gaussian Source.
 
     Notes

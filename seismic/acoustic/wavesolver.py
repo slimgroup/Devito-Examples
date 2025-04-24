@@ -1,14 +1,11 @@
-from devito import Function, TimeFunction
+from devito import Function, TimeFunction, DevitoCheckpoint, CheckpointOperator, Revolver
 from devito.tools import memoized_meth
-from examples.seismic import PointSource
 from examples.seismic.acoustic.operators import (
     ForwardOperator, AdjointOperator, GradientOperator, BornOperator
 )
-from examples.checkpointing.checkpoint import DevitoCheckpoint, CheckpointOperator
-from pyrevolve import Revolver
 
 
-class AcousticWaveSolver(object):
+class AcousticWaveSolver:
     """
     Solver object that provides operators for seismic inversion problems
     and encapsulates the time and space discretization for a given problem
@@ -28,9 +25,10 @@ class AcousticWaveSolver(object):
     """
     def __init__(self, model, geometry, kernel='OT2', space_order=4, **kwargs):
         self.model = model
+        self.model._initialize_bcs(bcs="damp")
         self.geometry = geometry
 
-        assert self.model.grid == geometry.model.grid
+        assert self.model.grid == geometry.grid
 
         self.space_order = space_order
         self.kernel = kernel
@@ -73,7 +71,7 @@ class AcousticWaveSolver(object):
                             kernel=self.kernel, space_order=self.space_order,
                             **self._kwargs)
 
-    def forward(self, src=None, rec=None, u=None, vp=None, save=None, **kwargs):
+    def forward(self, src=None, rec=None, u=None, model=None, save=None, **kwargs):
         """
         Forward modelling function that creates the necessary
         data objects for running a forward modelling operator.
@@ -86,10 +84,12 @@ class AcousticWaveSolver(object):
             The interpolated receiver data.
         u : TimeFunction, optional
             Stores the computed wavefield.
+        model : Model, optional
+            Object containing the physical parameters.
         vp : Function or float, optional
             The time-constant velocity.
-        save : int or Buffer, optional
-            The entire (unrolled) wavefield.
+        save : bool, optional
+            Whether or not to save the entire (unrolled) wavefield.
 
         Returns
         -------
@@ -105,15 +105,17 @@ class AcousticWaveSolver(object):
                               save=self.geometry.nt if save else None,
                               time_order=2, space_order=self.space_order)
 
+        model = model or self.model
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(model.physical_params(**kwargs))
 
         # Execute operator and return wavefield and receiver data
-        summary = self.op_fwd(save).apply(src=src, rec=rec, u=u, vp=vp,
+        summary = self.op_fwd(save).apply(src=src, rec=rec, u=u,
                                           dt=kwargs.pop('dt', self.dt), **kwargs)
+
         return rec, u, summary
 
-    def adjoint(self, rec, srca=None, v=None, vp=None, **kwargs):
+    def adjoint(self, rec, srca=None, v=None, model=None, **kwargs):
         """
         Adjoint modelling function that creates the necessary
         data objects for running an adjoint modelling operator.
@@ -128,6 +130,8 @@ class AcousticWaveSolver(object):
             original source location.
         v: TimeFunction, optional
             The computed wavefield.
+        model : Model, optional
+            Object containing the physical parameters.
         vp : Function or float, optional
             The time-constant velocity.
 
@@ -136,23 +140,22 @@ class AcousticWaveSolver(object):
         Adjoint source, wavefield and performance summary.
         """
         # Create a new adjoint source and receiver symbol
-        srca = srca or PointSource(name='srca', grid=self.model.grid,
-                                   time_range=self.geometry.time_axis,
-                                   coordinates=self.geometry.src_positions)
+        srca = srca or self.geometry.new_src(name='srca', src_type=None)
 
         # Create the adjoint wavefield if not provided
         v = v or TimeFunction(name='v', grid=self.model.grid,
                               time_order=2, space_order=self.space_order)
 
+        model = model or self.model
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(model.physical_params(**kwargs))
 
         # Execute operator and return wavefield and receiver data
-        summary = self.op_adj().apply(srca=srca, rec=rec, v=v, vp=vp,
+        summary = self.op_adj().apply(srca=srca, rec=rec, v=v,
                                       dt=kwargs.pop('dt', self.dt), **kwargs)
         return srca, v, summary
 
-    def jacobian_adjoint(self, rec, u, v=None, grad=None, vp=None,
+    def jacobian_adjoint(self, rec, u, src=None, v=None, grad=None, model=None,
                          checkpointing=False, **kwargs):
         """
         Gradient modelling function for computing the adjoint of the
@@ -169,6 +172,8 @@ class AcousticWaveSolver(object):
             Stores the computed wavefield.
         grad : Function, optional
             Stores the gradient field.
+        model : Model, optional
+            Object containing the physical parameters.
         vp : Function or float, optional
             The time-constant velocity.
 
@@ -184,29 +189,31 @@ class AcousticWaveSolver(object):
         v = v or TimeFunction(name='v', grid=self.model.grid,
                               time_order=2, space_order=self.space_order)
 
+        model = model or self.model
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(model.physical_params(**kwargs))
 
         if checkpointing:
             u = TimeFunction(name='u', grid=self.model.grid,
                              time_order=2, space_order=self.space_order)
             cp = DevitoCheckpoint([u])
             n_checkpoints = None
-            wrap_fw = CheckpointOperator(self.op_fwd(save=False), src=self.geometry.src,
-                                         u=u, vp=vp, dt=dt)
+            wrap_fw = CheckpointOperator(self.op_fwd(save=False),
+                                         src=src or self.geometry.src,
+                                         u=u, dt=dt, **kwargs)
             wrap_rev = CheckpointOperator(self.op_grad(save=False), u=u, v=v,
-                                          vp=vp, rec=rec, dt=dt, grad=grad)
+                                          rec=rec, dt=dt, grad=grad, **kwargs)
 
             # Run forward
             wrp = Revolver(cp, wrap_fw, wrap_rev, n_checkpoints, rec.data.shape[0]-2)
             wrp.apply_forward()
             summary = wrp.apply_reverse()
         else:
-            summary = self.op_grad().apply(rec=rec, grad=grad, v=v, u=u, vp=vp,
-                                           dt=dt, **kwargs)
+            summary = self.op_grad().apply(rec=rec, grad=grad, v=v, u=u, dt=dt,
+                                           **kwargs)
         return grad, summary
 
-    def jacobian(self, dmin, src=None, rec=None, u=None, U=None, vp=None, **kwargs):
+    def jacobian(self, dmin, src=None, rec=None, u=None, U=None, model=None, **kwargs):
         """
         Linearized Born modelling function that creates the necessary
         data objects for running an adjoint modelling operator.
@@ -221,6 +228,8 @@ class AcousticWaveSolver(object):
             The forward wavefield.
         U : TimeFunction, optional
             The linearized wavefield.
+        model : Model, optional
+            Object containing the physical parameters.
         vp : Function or float, optional
             The time-constant velocity.
         """
@@ -235,12 +244,13 @@ class AcousticWaveSolver(object):
         U = U or TimeFunction(name='U', grid=self.model.grid,
                               time_order=2, space_order=self.space_order)
 
+        model = model or self.model
         # Pick vp from model unless explicitly provided
-        vp = vp or self.model.vp
+        kwargs.update(model.physical_params(**kwargs))
 
         # Execute operator and return wavefield and receiver data
         summary = self.op_born().apply(dm=dmin, u=u, U=U, src=src, rec=rec,
-                                       vp=vp, dt=kwargs.pop('dt', self.dt), **kwargs)
+                                       dt=kwargs.pop('dt', self.dt), **kwargs)
         return rec, u, U, summary
 
     # Backward compatibility

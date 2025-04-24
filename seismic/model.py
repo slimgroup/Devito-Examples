@@ -1,8 +1,12 @@
 import numpy as np
-from sympy import sin, Abs, finite_diff_weights as fd_w
+from sympy import finite_diff_weights as fd_w
+try:
+    import pytest
+except:
+    pass
 
-from devito import (Grid, SubDomain, Function, Constant,
-                    SubDimension, Eq, Inc, Operator, div)
+from devito import (Grid, SubDomain, Function, Constant, warning,
+                    SubDimension, Eq, Inc, Operator, div, sin, Abs)
 from devito.builtins import initialize_function, gaussian_smooth, mmax, mmin
 from devito.tools import as_tuple
 
@@ -10,7 +14,7 @@ __all__ = ['SeismicModel', 'Model', 'ModelElastic',
            'ModelViscoelastic', 'ModelViscoacoustic']
 
 
-def initialize_damp(damp, nbl, spacing, abc_type="damp", fs=False):
+def initialize_damp(damp, padsizes, spacing, abc_type="damp", fs=False):
     """
     Initialize damping field with an absorbing boundary layer.
 
@@ -27,11 +31,11 @@ def initialize_damp(damp, nbl, spacing, abc_type="damp", fs=False):
         mask => 1 inside the domain and decreases in the layer
         not mask => 0 inside the domain and increase in the layer
     """
-    dampcoeff = 1.5 * np.log(1.0 / 0.001) / (nbl)
 
-    eqs = [Eq(damp, 1.0)] if abc_type == "mask" else []
-    for d in damp.dimensions:
+    eqs = [Eq(damp, 1.0 if abc_type == "mask" else 0.0)]
+    for (nbl, nbr), d in zip(padsizes, damp.dimensions):
         if not fs or d is not damp.dimensions[-1]:
+            dampcoeff = 1.5 * np.log(1.0 / 0.001) / (nbl)
             # left
             dim_l = SubDimension.left(name='abc_%s_l' % d.name, parent=d,
                                       thickness=nbl)
@@ -40,9 +44,10 @@ def initialize_damp(damp, nbl, spacing, abc_type="damp", fs=False):
             val = -val if abc_type == "mask" else val
             eqs += [Inc(damp.subs({d: dim_l}), val/d.spacing)]
         # right
+        dampcoeff = 1.5 * np.log(1.0 / 0.001) / (nbr)
         dim_r = SubDimension.right(name='abc_%s_r' % d.name, parent=d,
-                                   thickness=nbl)
-        pos = Abs((nbl - (d.symbolic_max - dim_r) + 1) / float(nbl))
+                                   thickness=nbr)
+        pos = Abs((nbr - (d.symbolic_max - dim_r) + 1) / float(nbr))
         val = dampcoeff * (pos - sin(2*np.pi*pos)/(2*np.pi))
         val = -val if abc_type == "mask" else val
         eqs += [Inc(damp.subs({d: dim_r}), val/d.spacing)]
@@ -55,7 +60,7 @@ class PhysicalDomain(SubDomain):
     name = 'physdomain'
 
     def __init__(self, so, fs=False):
-        super(PhysicalDomain, self).__init__()
+        super().__init__()
         self.so = so
         self.fs = fs
 
@@ -71,7 +76,7 @@ class FSDomain(SubDomain):
     name = 'fsdomain'
 
     def __init__(self, so):
-        super(FSDomain, self).__init__()
+        super().__init__()
         self.size = so
 
     def define(self, dimensions):
@@ -83,13 +88,13 @@ class FSDomain(SubDomain):
                 for d in dimensions}
 
 
-class GenericModel(object):
+class GenericModel:
     """
     General model class with common properties
     """
     def __init__(self, origin, spacing, shape, space_order, nbl=20,
                  dtype=np.float32, subdomains=(), bcs="damp", grid=None,
-                 fs=False):
+                 fs=False, topology=None):
         self.shape = shape
         self.space_order = space_order
         self.nbl = int(nbl)
@@ -114,21 +119,39 @@ class GenericModel(object):
             # Physical extent is calculated per cell, so shape - 1
             extent = tuple(np.array(spacing) * (shape_pml - 1))
             self.grid = Grid(extent=extent, shape=shape_pml, origin=origin_pml,
-                             dtype=dtype, subdomains=subdomains)
+                             dtype=dtype, subdomains=subdomains, topology=topology)
         else:
             self.grid = grid
 
+        self._physical_parameters = set()
+        self.damp = None
+        self._initialize_bcs(bcs=bcs)
+
+    def _initialize_bcs(self, bcs="damp"):
         # Create dampening field as symbol `damp`
-        if self.nbl != 0:
-            self.damp = Function(name="damp", grid=self.grid)
-            if callable(bcs):
-                bcs(self.damp, self.nbl)
-            else:
-                initialize_damp(self.damp, self.nbl, self.spacing, abc_type=bcs, fs=fs)
-            self._physical_parameters = ['damp']
-        else:
+        if self.nbl == 0:
             self.damp = 1 if bcs == "mask" else 0
-            self._physical_parameters = []
+            return
+
+        # First initialization
+        init = self.damp is None
+        # Get current Function if already initialized
+        self.damp = self.damp or Function(name="damp", grid=self.grid,
+                                          space_order=self.space_order)
+        if callable(bcs):
+            bcs(self.damp, self.nbl)
+        else:
+            re_init = ((bcs == "mask" and mmin(self.damp) == 0) or
+                       (bcs == "damp" and mmax(self.damp) == 1))
+            if init or re_init:
+                if re_init and not init:
+                    bcs_o = "damp" if bcs == "mask" else "mask"
+                    warning("Re-initializing damp profile from %s to %s" % (bcs_o, bcs))
+                    warning("Model has to be created with `bcs=\"%s\"`"
+                            "for this WaveSolver" % bcs)
+                initialize_damp(self.damp, self.padsizes, self.spacing,
+                                abc_type=bcs, fs=self.fs)
+        self._physical_parameters.update(['damp'])
 
     @property
     def padsizes(self):
@@ -147,16 +170,16 @@ class GenericModel(object):
         return {i.name: kwargs.get(i.name, i) or i for i in known}
 
     def _gen_phys_param(self, field, name, space_order, is_param=True,
-                        default_value=0):
+                        default_value=0, avg_mode='arithmetic', **kwargs):
         if field is None:
             return default_value
         if isinstance(field, np.ndarray):
             function = Function(name=name, grid=self.grid, space_order=space_order,
-                                parameter=is_param)
+                                parameter=is_param, avg_mode=avg_mode)
             initialize_function(function, field, self.padsizes)
         else:
             function = Constant(name=name, value=field, dtype=self.grid.dtype)
-        self._physical_parameters.append(name)
+        self._physical_parameters.update([name])
         return function
 
     @property
@@ -249,9 +272,10 @@ class SeismicModel(GenericModel):
                          'theta', 'phi', 'qp', 'qs', 'lam', 'mu']
 
     def __init__(self, origin, spacing, shape, space_order, vp, nbl=20, fs=False,
-                 dtype=np.float32, subdomains=(), bcs="mask", grid=None, **kwargs):
-        super(SeismicModel, self).__init__(origin, spacing, shape, space_order, nbl,
-                                           dtype, subdomains, grid=grid, bcs=bcs, fs=fs)
+                 dtype=np.float32, subdomains=(), bcs="mask", grid=None,
+                 topology=None, **kwargs):
+        super().__init__(origin, spacing, shape, space_order, nbl, dtype, subdomains,
+                         topology=topology, grid=grid, bcs=bcs, fs=fs)
 
         # Initialize physics
         self._initialize_physics(vp, space_order, **kwargs)
@@ -284,7 +308,8 @@ class SeismicModel(GenericModel):
             vs = kwargs.pop('vs')
             self.lam = self._gen_phys_param((vp**2 - 2. * vs**2)/b, 'lam', space_order,
                                             is_param=True)
-            self.mu = self._gen_phys_param(vs**2 / b, 'mu', space_order, is_param=True)
+            self.mu = self._gen_phys_param(vs**2 / b, 'mu', space_order, is_param=True,
+                                           avg_mode='harmonic')
         else:
             # All other seismic models have at least a velocity
             self.vp = self._gen_phys_param(vp, 'vp', space_order)
@@ -329,7 +354,7 @@ class SeismicModel(GenericModel):
         if 'lam' in self._physical_parameters or 'vs' in self._physical_parameters:
             coeffs = fd_w(1, range(-self.space_order//2+1, self.space_order//2+1), .5)
             c_fd = sum(np.abs(coeffs[-1][-1])) / 2
-            return np.sqrt(self.dim) / self.dim / c_fd
+            return .95 * np.sqrt(self.dim) / self.dim / c_fd
         a1 = 4  # 2nd order in time
         coeffs = fd_w(2, range(-self.space_order, self.space_order+1), 0)[-1][-1]
         return np.sqrt(a1/float(self.grid.dim * sum(np.abs(coeffs))))
@@ -344,11 +369,10 @@ class SeismicModel(GenericModel):
         # The CFL condtion is then given by
         # dt <= coeff * h / (max(velocity))
         dt = self._cfl_coeff * np.min(self.spacing) / (self._thomsen_scale*self._max_vp)
-        dt = self.dt_scale * dt
+        dt = self.dtype("%.3e" % (self.dt_scale * dt))
         if self._dt:
-            # assert self._dt < dt
             return self._dt
-        return self.dtype("%.3e" % dt)
+        return dt
 
     def update(self, name, value):
         """
@@ -358,9 +382,9 @@ class SeismicModel(GenericModel):
             param = getattr(self, name)
         except AttributeError:
             # No physical parameter with tha name, create it
-            setattr(self, name, self._gen_phys_param(name, value, self.space_order))
+            setattr(self, name, self._gen_phys_param(value, name, self.space_order))
             return
-        # Update the square slowness according to new value
+        # Update the physical parameter according to new value
         if isinstance(value, np.ndarray):
             if value.shape == param.shape:
                 param.data[:] = value[:]
@@ -404,6 +428,55 @@ class SeismicModel(GenericModel):
         for i in physical_parameters:
             gaussian_smooth(model_parameters[i], sigma=sigma)
         return
+
+
+@pytest.mark.parametrize('shape', [(51, 51), (16, 16, 16)])
+def test_model_update(shape):
+
+    # Set physical properties as numpy arrays
+    vp = np.full(shape, 2.5, dtype=np.float32)  # vp constant of 2.5 km/s
+    qp = 3.516*((vp[:]*1000.)**2.2)*10**(-6)  # Li's empirical formula
+    b = 1 / (0.31*(vp[:]*1000.)**0.25)  # Gardner's relation
+
+    # Define a simple visco-acoustic model from the physical parameters above
+    va_model = SeismicModel(space_order=4, vp=vp, qp=qp, b=b, nbl=10,
+                            origin=tuple([0. for _ in shape]), shape=shape,
+                            spacing=[20. for _ in shape],)
+
+    # Define a simple acoustic model with vp=1.5 km/s
+    model = SeismicModel(space_order=4, vp=np.full_like(vp, 1.5), nbl=10,
+                         origin=tuple([0. for _ in shape]), shape=shape,
+                         spacing=[20. for _ in shape],)
+
+    # Define a velocity Function
+    vp_fcn = Function(name='vp0', grid=model.grid, space_order=4)
+    vp_fcn.data[:] = 2.5
+
+    # Test 1. Update vp of acoustic model from array
+    model.update('vp', vp)
+    assert np.array_equal(va_model.vp.data, model.vp.data)
+
+    # Test 2. Update vp of acoustic model from Function
+    model.update('vp', vp_fcn.data)
+    assert np.array_equal(va_model.vp.data, model.vp.data)
+
+    # Test 3. Create a new physical parameter in the acoustic model from array
+    model.update('qp', qp)
+    assert np.array_equal(va_model.qp.data, model.qp.data)
+
+    # Make a set of physical parameters from each model
+    tpl1_set = set(va_model.physical_parameters)
+    tpl2_set = set(model.physical_parameters)
+
+    # Physical parameters in either set but not in the intersection.
+    diff_phys_par = tuple(tpl1_set ^ tpl2_set)
+
+    # Turn acoustic model (it is just lacking 'b') into a visco-acoustic model
+    slices = tuple(slice(model.nbl, -model.nbl) for _ in range(model.dim))
+    for i in diff_phys_par:
+        # Test 4. Create a new physical parameter in the acoustic model from function
+        model.update(i, getattr(va_model, i).data[slices])
+        assert np.array_equal(getattr(model, i).data, getattr(va_model, i).data)
 
 
 # For backward compatibility

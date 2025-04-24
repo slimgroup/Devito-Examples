@@ -7,6 +7,16 @@ from examples.seismic.model import SeismicModel
 __all__ = ['demo_model']
 
 
+def Gardners(vp, normalize=True):
+    """
+    Gardner's relation for vp in km/s
+    """
+    b = 1 / (0.31 * (1e3*vp)**0.25)
+    if normalize:
+        b[vp < 1.51] = 1.0
+    return b
+
+
 def demo_model(preset, **kwargs):
     """
     Utility function to create preset `Model` objects for
@@ -49,6 +59,7 @@ def demo_model(preset, **kwargs):
     vp = kwargs.pop('vp', 1.5)
     nlayers = kwargs.pop('nlayers', 3)
     fs = kwargs.pop('fs', False)
+    density = kwargs.pop('density', False)
 
     if preset.lower() in ['constant-elastic']:
         # A constant single-layer model in a 2D or 3D domain
@@ -76,7 +87,8 @@ def demo_model(preset, **kwargs):
     if preset.lower() in ['constant-isotropic']:
         # A constant single-layer model in a 2D or 3D domain
         # with velocity 1.5 km/s.
-
+        if density:
+            kwargs['b'] = 1
         return SeismicModel(space_order=space_order, vp=vp, origin=origin, shape=shape,
                             dtype=dtype, spacing=spacing, nbl=nbl, fs=fs, **kwargs)
 
@@ -87,21 +99,21 @@ def demo_model(preset, **kwargs):
         b = 1/2.
 
         return SeismicModel(space_order=space_order, vp=vp, qp=qp, b=b, nbl=nbl,
-                            origin=origin, shape=shape, spacing=spacing, **kwargs)
+                            dtype=dtype, origin=origin, shape=shape,
+                            spacing=spacing, **kwargs)
 
-    elif preset.lower() in ['constant-tti']:
+    elif preset.lower() in ['constant-tti', 'constant-tti-noazimuth']:
         # A constant single-layer model in a 2D or 3D domain
         # with velocity 1.5 km/s.
-        v = np.empty(shape, dtype=dtype)
-        v[:] = 1.5
-        epsilon = .3*np.ones(shape, dtype=dtype)
-        delta = .2*np.ones(shape, dtype=dtype)
-        theta = .7*np.ones(shape, dtype=dtype)
+        epsilon = .3
+        delta = .2
+        theta = .7
         phi = None
-        if len(shape) > 2:
-            phi = .35*np.ones(shape, dtype=dtype)
-
-        return SeismicModel(space_order=space_order, vp=v, origin=origin, shape=shape,
+        if len(shape) > 2 and preset.lower() not in ['constant-tti-noazimuth']:
+            phi = .35
+        if density:
+            kwargs['b'] = 1
+        return SeismicModel(space_order=space_order, vp=vp, origin=origin, shape=shape,
                             dtype=dtype, spacing=spacing, nbl=nbl, epsilon=epsilon,
                             delta=delta, theta=theta, phi=phi, bcs="damp", **kwargs)
 
@@ -119,6 +131,9 @@ def demo_model(preset, **kwargs):
         vp_i = np.linspace(vp_top, vp_bottom, nlayers)
         for i in range(1, nlayers):
             v[..., i*int(shape[-1] / nlayers):] = vp_i[i]  # Bottom velocity
+
+        if density:
+            kwargs['b'] = Gardners(v)
 
         return SeismicModel(space_order=space_order, vp=v, origin=origin, shape=shape,
                             dtype=dtype, spacing=spacing, nbl=nbl, bcs="damp",
@@ -140,8 +155,7 @@ def demo_model(preset, **kwargs):
             v[..., i*int(shape[-1] / nlayers):] = vp_i[i]  # Bottom velocity
 
         vs = 0.5 * v[:]
-        b = 1 / (0.31 * (1e3*v)**0.25)
-        b[v < 1.51] = 1.0
+        b = Gardners(v)
         vs[v < 1.51] = 0.0
 
         return SeismicModel(space_order=space_order, vp=v, vs=vs, b=b,
@@ -208,16 +222,20 @@ def demo_model(preset, **kwargs):
         for i in range(1, nlayers):
             v[..., i*int(shape[-1] / nlayers):] = vp_i[i]  # Bottom velocity
 
-        epsilon = .3*(v - 1.5)
-        delta = .2*(v - 1.5)
-        theta = .5*(v - 1.5)
+        epsilon = .1*(v - vp_top)
+        delta = .05*(v - vp_top)
+        theta = .5*(v - vp_top)
         phi = None
         if len(shape) > 2 and preset.lower() not in ['layers-tti-noazimuth']:
-            phi = .25*(v - 1.5)
+            phi = .25*(v - vp_top)
+
+        if density:
+            kwargs['b'] = Gardners(v)
 
         model = SeismicModel(space_order=space_order, vp=v, origin=origin, shape=shape,
                              dtype=dtype, spacing=spacing, nbl=nbl, epsilon=epsilon,
-                             delta=delta, theta=theta, phi=phi, bcs="damp", **kwargs)
+                             delta=delta, theta=theta, phi=phi, bcs="damp",
+                             fs=fs, **kwargs)
 
         if kwargs.get('smooth', False):
             if len(shape) > 2 and preset.lower() not in ['layers-tti-noazimuth']:
@@ -244,6 +262,9 @@ def demo_model(preset, **kwargs):
         a, b = shape[0] / 2, shape[1] / 2
         y, x = np.ogrid[-a:shape[0]-a, -b:shape[1]-b]
         v[x*x + y*y <= r*r] = vp
+
+        if density:
+            kwargs['b'] = Gardners(v)
 
         return SeismicModel(space_order=space_order, vp=v, origin=origin, shape=shape,
                             dtype=dtype, spacing=spacing, nbl=nbl, bcs="damp",
@@ -347,10 +368,11 @@ def demo_model(preset, **kwargs):
 
         qp[:] = 3.516*((vp[:]*1000.)**2.2)*10**(-6)  # Li's empirical formula
 
-        b = 1 / (0.31*(vp[:]*1000.)**0.25)  # Gardner's relation
+        b = Gardners(vp, normalize=False)
 
         return SeismicModel(space_order=space_order, vp=vp, qp=qp, b=b, nbl=nbl,
-                            origin=origin, shape=shape, spacing=spacing, **kwargs)
+                            dtype=dtype, origin=origin, shape=shape,
+                            spacing=spacing, **kwargs)
 
     else:
         raise ValueError("Unknown model preset name")
