@@ -1,6 +1,12 @@
-from devito import (Eq, Operator, Function, TimeFunction, NODE, Inc, solve,
-                    cos, sin, sqrt, div, grad)
+from devito import NODE, Eq, Function, Inc, Operator, TimeFunction, cos, sin, solve, sqrt
 from examples.seismic.acoustic.operators import freesurface
+
+
+def _subs(func, d, d0):
+    try:
+        return func._subs(d, d0)
+    except AttributeError:
+        return func
 
 
 def second_order_stencil(model, u, v, H0, Hz, qu, qv, forward=True):
@@ -78,17 +84,17 @@ def Gzz_centered(model, field):
     x, y, z = field.grid.dimensions
     dx, dy, dz = x.spacing/2, y.spacing/2, z.spacing/2
 
-    Gz = (sintheta * cosphi * field.dx(fd_order=order1, x0=x+dx) +
-          sintheta * sinphi * field.dy(fd_order=order1, x0=y+dy) +
-          costheta * field.dz(fd_order=order1, x0=z+dz))
+    Gz = (_subs(b, x, x+dx) * sintheta * cosphi * field.dx(fd_order=order1, x0=x+dx) +
+          _subs(b, y, y+dy) * sintheta * sinphi * field.dy(fd_order=order1, x0=y+dy) +
+          _subs(b, z, z+dz) * costheta * field.dz(fd_order=order1, x0=z+dz))
 
-    Gzz = (b * Gz * costheta).dz(fd_order=order1, x0=z-dz)
+    Gzz = (Gz * costheta).dz(fd_order=order1, x0=z-dz)
     # Add rotated derivative if angles are not zero. If angles are
     # zeros then `0*Gz = 0` and doesn't have any `.dy` ....
     if sintheta != 0:
-        Gzz += (b * Gz * sintheta * cosphi).dx(fd_order=order1, x0=x-dx)
+        Gzz += (Gz * sintheta * cosphi).dx(fd_order=order1, x0=x-dx)
     if sinphi != 0:
-        Gzz += (b * Gz * sintheta * sinphi).dy(fd_order=order1, x0=y-dy)
+        Gzz += (Gz * sintheta * sinphi).dy(fd_order=order1, x0=y-dy)
 
     return Gzz
 
@@ -115,14 +121,14 @@ def Gzz_centered_2d(model, field):
     x, y = field.grid.dimensions
     dx, dy = x.spacing/2, y.spacing/2
 
-    Gz = (sintheta * field.dx(fd_order=order1, x0=x+dx) +
-          costheta * field.dy(fd_order=order1, x0=y+dy))
-    Gzz = (b * Gz * costheta).dy(fd_order=order1, x0=y-dy)
+    Gz = (_subs(b, x, x+dx) * sintheta * field.dx(fd_order=order1, x0=x+dx) +
+          _subs(b, y, y+dy) * costheta * field.dy(fd_order=order1, x0=y+dy))
+    Gzz = (Gz * costheta).dy(fd_order=order1, x0=y-dy)
 
     # Add rotated derivative if angles are not zero. If angles are
     # zeros then `0*Gz = 0` and doesn't have any `.dy` ....
     if sintheta != 0:
-        Gzz += (b * Gz * sintheta).dx(fd_order=order1, x0=x-dx)
+        Gzz += (Gz * sintheta).dx(fd_order=order1, x0=x-dx)
     return Gzz
 
 
@@ -145,14 +151,17 @@ def Gh_centered(model, field):
     -------
     Sum of the 3D rotated second order derivative in the direction x and y.
     """
-    if model.dim == 3:
-        Gzz = Gzz_centered(model, field)
-    else:
-        Gzz = Gzz_centered_2d(model, field)
+    Gzz = Gzz_centered(model, field) if model.dim == 3 else Gzz_centered_2d(model, field)
     b = getattr(model, 'b', None)
     if b is not None:
+        _diff = lambda f, d: getattr(f, f'd{d.name}')
         so = field.space_order // 2
-        lap = div(b * grad(field, shift=.5, order=so), shift=-.5, order=so)
+        lap = 0
+        for d in model.space_dimensions:
+            x0 = d + d.spacing / 2
+            x0m = d - d.spacing / 2
+            lap += _diff(_subs(b, d, x0) * _diff(field, d)(x0=x0, fd_order=so),
+                         d)(x0=x0m, fd_order=so)
     else:
         lap = field.laplace
     return lap - Gzz
@@ -271,7 +280,6 @@ def kernel_staggered_2d(model, u, v, **kwargs):
     epsilon = 1 + 2 * epsilon
     delta = sqrt(1 + 2 * delta)
     s = model.grid.stepping_dim.spacing
-    x, z = model.grid.dimensions
 
     # Get source
     qu = kwargs.get('qu', 0)
@@ -282,14 +290,14 @@ def kernel_staggered_2d(model, u, v, **kwargs):
 
     if forward:
         # Stencils
-        phdx = costheta * u.dx - sintheta * u.dyc
+        phdx = costheta * u.dx - sintheta * u.dy
         u_vx = Eq(vx.forward, dampl * vx - dampl * s * phdx)
 
-        pvdz = sintheta * v.dxc + costheta * v.dy
+        pvdz = sintheta * v.dx + costheta * v.dy
         u_vz = Eq(vz.forward, dampl * vz - dampl * s * pvdz)
 
-        dvx = costheta * vx.forward.dx - sintheta * vx.forward.dyc
-        dvz = sintheta * vz.forward.dxc + costheta * vz.forward.dy
+        dvx = costheta * vx.forward.dx - sintheta * vx.forward.dy
+        dvz = sintheta * vz.forward.dx + costheta * vz.forward.dy
 
         # u and v equations
         pv_eq = Eq(v.forward, dampl * (v - s / m * (delta * dvx + dvz)) + s / m * qv)
@@ -297,16 +305,16 @@ def kernel_staggered_2d(model, u, v, **kwargs):
                    s / m * qu)
     else:
         # Stencils
-        phdx = ((costheta*epsilon*u).dx - (sintheta*epsilon*u).dyc +
-                (costheta*delta*v).dx - (sintheta*delta*v).dyc)
+        a = epsilon * u + delta * v
+        phdx = (costheta * a).dx - (sintheta * a).dy
         u_vx = Eq(vx.backward, dampl * vx + dampl * s * phdx)
 
-        pvdz = ((sintheta*delta*u).dxc + (costheta*delta*u).dy +
-                (sintheta*v).dxc + (costheta*v).dy)
+        b = delta * u + v
+        pvdz = (sintheta * b).dx + (costheta * b).dy
         u_vz = Eq(vz.backward, dampl * vz + dampl * s * pvdz)
 
-        dvx = (costheta * vx.backward).dx - (sintheta * vx.backward).dyc
-        dvz = (sintheta * vz.backward).dxc + (costheta * vz.backward).dy
+        dvx = (costheta * vx.backward).dx - (sintheta * vx.backward).dy
+        dvz = (sintheta * vz.backward).dx + (costheta * vz.backward).dy
 
         # u and v equations
         pv_eq = Eq(v.backward, dampl * (v + s / m * dvz))
@@ -347,24 +355,24 @@ def kernel_staggered_3d(model, u, v, **kwargs):
     if forward:
         # Stencils
         phdx = (costheta * cosphi * u.dx +
-                costheta * sinphi * u.dyc -
-                sintheta * u.dzc)
+                costheta * sinphi * u.dy -
+                sintheta * u.dz)
         u_vx = Eq(vx.forward, dampl * vx - dampl * s * phdx)
 
-        phdy = -sinphi * u.dxc + cosphi * u.dy
+        phdy = -sinphi * u.dx + cosphi * u.dy
         u_vy = Eq(vy.forward, dampl * vy - dampl * s * phdy)
 
-        pvdz = (sintheta * cosphi * v.dxc +
-                sintheta * sinphi * v.dyc +
+        pvdz = (sintheta * cosphi * v.dx +
+                sintheta * sinphi * v.dy +
                 costheta * v.dz)
         u_vz = Eq(vz.forward, dampl * vz - dampl * s * pvdz)
 
         dvx = (costheta * cosphi * vx.forward.dx +
-               costheta * sinphi * vx.forward.dyc -
-               sintheta * vx.forward.dzc)
-        dvy = -sinphi * vy.forward.dxc + cosphi * vy.forward.dy
-        dvz = (sintheta * cosphi * vz.forward.dxc +
-               sintheta * sinphi * vz.forward.dyc +
+               costheta * sinphi * vx.forward.dy -
+               sintheta * vx.forward.dz)
+        dvy = -sinphi * vy.forward.dx + cosphi * vy.forward.dy
+        dvz = (sintheta * cosphi * vz.forward.dx +
+               sintheta * sinphi * vz.forward.dy +
                costheta * vz.forward.dz)
         # u and v equations
         pv_eq = Eq(v.forward, dampl * (v - s / m * (delta * (dvx + dvy) + dvz)) +
@@ -374,30 +382,27 @@ def kernel_staggered_3d(model, u, v, **kwargs):
                                                     delta * dvz)) + s / m * qu)
     else:
         # Stencils
-        phdx = ((costheta * cosphi * epsilon*u).dx +
-                (costheta * sinphi * epsilon*u).dyc -
-                (sintheta * epsilon*u).dzc + (costheta * cosphi * delta*v).dx +
-                                             (costheta * sinphi * delta*v).dyc -
-                                             (sintheta * delta*v).dzc)
+        a = epsilon * u + delta * v
+        phdx = ((costheta * cosphi * a).dx +
+                (costheta * sinphi * a).dy -
+                (sintheta * a).dz)
         u_vx = Eq(vx.backward, dampl * vx + dampl * s * phdx)
 
-        phdy = (-(sinphi * epsilon*u).dxc + (cosphi * epsilon*u).dy -
-                (sinphi * delta*v).dxc + (cosphi * delta*v).dy)
+        phdy = (-(sinphi * a).dx + (cosphi * a).dy)
         u_vy = Eq(vy.backward, dampl * vy + dampl * s * phdy)
 
-        pvdz = ((sintheta * cosphi * delta*u).dxc +
-                (sintheta * sinphi * delta*u).dyc +
-                (costheta * delta*u).dz + (sintheta * cosphi * v).dxc +
-                                          (sintheta * sinphi * v).dyc +
-                                          (costheta * v).dz)
+        b = delta * u + v
+        pvdz = ((sintheta * cosphi * b).dx +
+                (sintheta * sinphi * b).dy +
+                (costheta * b).dz)
         u_vz = Eq(vz.backward, dampl * vz + dampl * s * pvdz)
 
         dvx = ((costheta * cosphi * vx.backward).dx +
-               (costheta * sinphi * vx.backward).dyc -
-               (sintheta * vx.backward).dzc)
-        dvy = (-sinphi * vy.backward).dxc + (cosphi * vy.backward).dy
-        dvz = ((sintheta * cosphi * vz.backward).dxc +
-               (sintheta * sinphi * vz.backward).dyc +
+               (costheta * sinphi * vx.backward).dy -
+               (sintheta * vx.backward).dz)
+        dvy = (-sinphi * vy.backward).dx + (cosphi * vy.backward).dy
+        dvz = ((sintheta * cosphi * vz.backward).dx +
+               (sintheta * sinphi * vz.backward).dy +
                (costheta * vz.backward).dz)
         # u and v equations
         pv_eq = Eq(v.backward, dampl * (v + s / m * dvz))
