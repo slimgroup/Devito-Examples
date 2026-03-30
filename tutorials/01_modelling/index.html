@@ -150,7 +150,7 @@ The boundary conditions are Dirichlet conditions:
 <p>where <span class="arithmatex"><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> is the damping mask equal to <span class="arithmatex"><span class="MathJax_Preview">0</span><script type="math/tex">0</script></span> inside the physical domain and increasing inside the sponge layer. Multiple choice of profile can be chosen for <span class="arithmatex"><span class="MathJax_Preview">\eta</span><script type="math/tex">\eta</script></span> from linear to exponential.</p>
 <h1 id="seismic-modelling-with-devito">Seismic modelling with devito</h1>
 <p>We describe here a step by step setup of seismic modelling with Devito in a simple 2D case. We will create a physical model of our domain and define a single source and an according set of receivers to model for the forward model. But first, we initialize some basic utilities.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="c1"># Adding ignore due to (probably an np notebook magic) bug</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
@@ -162,7 +162,7 @@ The boundary conditions are Dirichlet conditions:
 <li>What is the velocity profile of this physical domain</li>
 </ul>
 <p>We will create a simple velocity model here by hand for demonstration purposes. This model essentially consists of two layers, each with a different velocity: <span class="arithmatex"><span class="MathJax_Preview">1.5km/s</span><script type="math/tex">1.5km/s</script></span> in the top layer and <span class="arithmatex"><span class="MathJax_Preview">2.5km/s</span><script type="math/tex">2.5km/s</script></span> in the bottom layer. We will use this simple model a lot in the following tutorials, so we will rely on a utility function to create it again later.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">plot_velocity</span>
 
 <span class="c1"># Define a physical size</span>
@@ -184,9 +184,8 @@ The boundary conditions are Dirichlet conditions:
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </code></pre></div>
 <pre><code>Operator `initdamp` ran in 0.01 s
-Operator `pad_vp` ran in 0.01 s
 </code></pre>
-<p><img alt="svg" src="../01_modelling_files/01_modelling_5_1.svg" /></p>
+<p><img alt="png" src="../01_modelling_files/01_modelling_5_1.png" /></p>
 <h1 id="acquisition-geometry">Acquisition geometry</h1>
 <p>To fully define our problem setup we also need to define the source that injects the wave to model and the set of receiver locations at which to sample the wavefield. The source time signature will be modelled using a Ricker wavelet defined as</p>
 <div class="arithmatex">
@@ -207,7 +206,7 @@ Operator `pad_vp` ran in 0.01 s
 <span class="n">time_range</span> <span class="o">=</span> <span class="n">TimeAxis</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">tn</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">dt</span><span class="p">)</span>
 </code></pre></div>
 <p>The source is positioned at a <span class="arithmatex"><span class="MathJax_Preview">20m</span><script type="math/tex">20m</script></span> depth and at the middle of the <span class="arithmatex"><span class="MathJax_Preview">x</span><script type="math/tex">x</script></span> axis (<span class="arithmatex"><span class="MathJax_Preview">x_{src}=500m</span><script type="math/tex">x_{src}=500m</script></span>), with a peak wavelet frequency of <span class="arithmatex"><span class="MathJax_Preview">10Hz</span><script type="math/tex">10Hz</script></span>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RickerSource</span>
 
 <span class="n">f0</span> <span class="o">=</span> <span class="mf">0.010</span>  <span class="c1"># Source peak frequency is 10Hz (0.010 kHz)</span>
@@ -221,10 +220,10 @@ Operator `pad_vp` ran in 0.01 s
 <span class="c1"># We can plot the time signature to see the wavelet</span>
 <span class="n">src</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<p><img alt="svg" src="../01_modelling_files/01_modelling_9_0.svg" /></p>
+<p><img alt="png" src="../01_modelling_files/01_modelling_9_0.png" /></p>
 <p>Similarly to our source object, we can now define our receiver geometry as a symbol of type <code>Receiver</code>. It is worth noting here that both utility classes, <code>RickerSource</code> and <code>Receiver</code> are thin wrappers around the Devito's <code>SparseTimeFunction</code> type, which encapsulates sparse point data and allows us to inject and interpolate values into and out of the computational grid. As we have already seen, both types provide a <code>.coordinates</code> property to define the position within the domain of all points encapsulated by that symbol. </p>
 <p>In this example we will position receivers at the same depth as the source, every <span class="arithmatex"><span class="MathJax_Preview">10m</span><script type="math/tex">10m</script></span> along the x axis. The <code>rec.data</code> property will be initialized, but left empty, as we will compute the receiver readings during the simulation.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Receiver</span>
 
 <span class="c1"># Create symbol for 101 receivers</span>
@@ -240,7 +239,7 @@ Operator `pad_vp` ran in 0.01 s
 <span class="n">plot_velocity</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
               <span class="n">receiver</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">coordinates</span><span class="o">.</span><span class="n">data</span><span class="p">[::</span><span class="mi">4</span><span class="p">,</span> <span class="p">:])</span>
 </code></pre></div>
-<p><img alt="svg" src="../01_modelling_files/01_modelling_11_0.svg" /></p>
+<p><img alt="png" src="../01_modelling_files/01_modelling_11_0.png" /></p>
 <h1 id="finite-difference-discretization">Finite-difference discretization</h1>
 <p>Devito is a finite-difference DSL that solves the discretized wave-equation on a Cartesian grid. The finite-difference approximation is derived from Taylor expansions of the continuous field after removing the error term.</p>
 <h2 id="time-discretization">Time discretization</h2>
@@ -279,8 +278,8 @@ derivatives in the three dimensions:
 \end{aligned}
 \end{equation}</script>
 </p>
-<div class="highlight"><pre><span></span><code><span class="c1"># In order to represent the wavefield u and the square slowness we need symbolic objects </span>
-<span class="c1"># corresponding to time-space-varying field (u, TimeFunction) and </span>
+<div class="highlight"><pre><span></span><code><span class="c1"># In order to represent the wavefield u and the square slowness we need symbolic objects</span>
+<span class="c1"># corresponding to time-space-varying field (u, TimeFunction) and</span>
 <span class="c1"># space-varying field (m, Function)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeFunction</span>
 
@@ -293,16 +292,16 @@ derivatives in the three dimensions:
 <span class="c1"># The PDE representation is as on paper</span>
 <span class="n">pde</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle \operatorname{damp}{\left(x,y \right)} \frac{\partial}{\partial t} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\frac{\partial^{2}}{\partial t^{2}} u{\left(t,x,y \right)}}{\operatorname{vp}^{2}{\left(x,y \right)}}</span><script type="math/tex">\displaystyle \operatorname{damp}{\left(x,y \right)} \frac{\partial}{\partial t} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} - \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\frac{\partial^{2}}{\partial t^{2}} u{\left(t,x,y \right)}}{\operatorname{vp}^{2}{\left(x,y \right)}}</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle damp(x, y) \frac{\partial}{\partial t} u(t, x, y) - \frac{\partial^{2}}{\partial x^{2}} u(t, x, y) - \frac{\partial^{2}}{\partial y^{2}} u(t, x, y) + \frac{\frac{\partial^{2}}{\partial t^{2}} u(t, x, y)}{vp(x, y)}</span><script type="math/tex">\displaystyle damp(x, y) \frac{\partial}{\partial t} u(t, x, y) - \frac{\partial^{2}}{\partial x^{2}} u(t, x, y) - \frac{\partial^{2}}{\partial y^{2}} u(t, x, y) + \frac{\frac{\partial^{2}}{\partial t^{2}} u(t, x, y)}{vp(x, y)}</script></span></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># This discrete PDE can be solved in a time-marching way updating u(t+dt) from the previous time step</span>
-<span class="c1"># Devito as a shortcut for u(t+dt) which is u.forward. We can then rewrite the PDE as </span>
+<span class="c1"># Devito as a shortcut for u(t+dt) which is u.forward. We can then rewrite the PDE as</span>
 <span class="c1"># a time marching updating equation known as a stencil using customized SymPy functions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">solve</span>
 
 <span class="n">stencil</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="n">pde</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">forward</span><span class="p">))</span>
 <span class="n">stencil</span>
 </code></pre></div>
-<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle u{\left(t + dt,x,y \right)} = \frac{- \frac{- \frac{2.0 u{\left(t,x,y \right)}}{dt^{2}} + \frac{u{\left(t - dt,x,y \right)}}{dt^{2}}}{\operatorname{vp}^{2}{\left(x,y \right)}} + \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} + \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\operatorname{damp}{\left(x,y \right)} u{\left(t,x,y \right)}}{dt}}{\frac{\operatorname{damp}{\left(x,y \right)}}{dt} + \frac{1}{dt^{2} \operatorname{vp}^{2}{\left(x,y \right)}}}</span><script type="math/tex">\displaystyle u{\left(t + dt,x,y \right)} = \frac{- \frac{- \frac{2.0 u{\left(t,x,y \right)}}{dt^{2}} + \frac{u{\left(t - dt,x,y \right)}}{dt^{2}}}{\operatorname{vp}^{2}{\left(x,y \right)}} + \frac{\partial^{2}}{\partial x^{2}} u{\left(t,x,y \right)} + \frac{\partial^{2}}{\partial y^{2}} u{\left(t,x,y \right)} + \frac{\operatorname{damp}{\left(x,y \right)} u{\left(t,x,y \right)}}{dt}}{\frac{\operatorname{damp}{\left(x,y \right)}}{dt} + \frac{1}{dt^{2} \operatorname{vp}^{2}{\left(x,y \right)}}}</script></span></p>
+<p><span class="arithmatex"><span class="MathJax_Preview">\displaystyle u(t + dt, x, y) = \frac{- \frac{- \frac{2.0 u(t, x, y)}{dt^{2}} + \frac{u(t - dt, x, y)}{dt^{2}}}{vp(x, y)} + \frac{\partial^{2}}{\partial x^{2}} u(t, x, y) + \frac{\partial^{2}}{\partial y^{2}} u(t, x, y) + \frac{damp(x, y) u(t, x, y)}{dt}}{\frac{damp(x, y)}{dt} + \frac{1}{dt^{2} vp(x, y)}}</span><script type="math/tex">\displaystyle u(t + dt, x, y) = \frac{- \frac{- \frac{2.0 u(t, x, y)}{dt^{2}} + \frac{u(t - dt, x, y)}{dt^{2}}}{vp(x, y)} + \frac{\partial^{2}}{\partial x^{2}} u(t, x, y) + \frac{\partial^{2}}{\partial y^{2}} u(t, x, y) + \frac{damp(x, y) u(t, x, y)}{dt}}{\frac{damp(x, y)}{dt} + \frac{1}{dt^{2} vp(x, y)}}</script></span></p>
 <h1 id="source-injection-and-receiver-interpolation">Source injection and receiver interpolation</h1>
 <p>With a numerical scheme to solve the homogenous wave equation, we need to add the source to introduce seismic waves and to implement the measurement operator, and interpolation operator. This operation is linked to the discrete scheme and needs to be done at the proper time step. The semi-discretized in time wave equation with a source reads:</p>
 <div class="arithmatex">
@@ -332,35 +331,35 @@ On the receiver side, the problem is either as it only requires to record the da
 * <strong>DSE:</strong> The Devito Symbolics Engine will attempt to reduce the number of operations required by the kernel.
 * <strong>DLE:</strong> The Devito Loop Engine will perform various loop-level optimizations to improve runtime performance.</p>
 <p><strong>Note</strong>: The argument <code>subs=model.spacing_map</code> causes the operator to substitute values for our current grid spacing into the expressions before code generation. This reduces the number of floating point operations executed by the kernel by pre-evaluating certain coefficients.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">devito</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 
 <span class="n">op</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">([</span><span class="n">stencil</span><span class="p">]</span> <span class="o">+</span> <span class="n">src_term</span> <span class="o">+</span> <span class="n">rec_term</span><span class="p">,</span> <span class="n">subs</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">spacing_map</span><span class="p">)</span>
 </code></pre></div>
 <p>Now we can execute the create operator for a number of timesteps. We specify the number of timesteps to compute with the keyword <code>time</code> and the timestep size with <code>dt</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="n">op</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">time_range</span><span class="o">.</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">critical_dt</span><span class="p">)</span>
 </code></pre></div>
-<pre><code>Operator `Kernel` ran in 0.01 s
+<pre><code>Operator `Kernel` ran in 0.02 s
 
 
 
 
 
 PerformanceSummary([(PerfKey(name='section0', rank=None),
-                     PerfEntry(time=0.004936999999999981, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+                     PerfEntry(time=0.0063620000000000195, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
                     (PerfKey(name='section1', rank=None),
-                     PerfEntry(time=2.600000000000001e-05, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
+                     PerfEntry(time=0.0019160000000000086, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[])),
                     (PerfKey(name='section2', rank=None),
-                     PerfEntry(time=0.0007560000000000057, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
+                     PerfEntry(time=0.0027800000000000025, gflopss=0.0, gpointss=0.0, oi=0.0, ops=0, itershapes=[]))])
 </code></pre>
 <p>After running our operator kernel, the data associated with the receiver symbol <code>rec.data</code> has now been populated due to the interpolation expression we inserted into the operator. This allows us the visualize the shot record:</p>
-<div class="highlight"><pre><span></span><code><span class="c1">#NBVAL_IGNORE_OUTPUT</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">examples.seismic</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_shotrecord</span>
 
 <span class="n">plot_shotrecord</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tn</span><span class="p">)</span>
 </code></pre></div>
-<p><img alt="svg" src="../01_modelling_files/01_modelling_22_0.svg" /></p>
+<p><img alt="png" src="../01_modelling_files/01_modelling_22_0.png" /></p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="mi">370</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
               
